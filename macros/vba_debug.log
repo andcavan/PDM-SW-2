@@ -1,0 +1,59 @@
+04/03/2026 23:00:08  CMD: "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\python.exe" "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\sw_bridge.py" --action import_props --file "C:\Users\prog3\Desktop\APP MECCANICA\_ws2\AAA_0100-0003.SLDPRT"
+04/03/2026 23:00:08  RC: 0
+04/03/2026 23:00:35  CMD: "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\python.exe" "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\sw_bridge.py" --action import_props --file "C:\Users\prog3\Desktop\APP MECCANICA\_ws2\AAA_0100-0003.SLDPRT"
+04/03/2026 23:00:35  RC: 0
+04/03/2026 23:01:02  CMD: "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\python.exe" "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\sw_bridge.py" --action export_props --file "C:\Users\prog3\Desktop\APP MECCANICA\_ws2\AAA_0100-0003.SLDPRT"
+04/03/2026 23:01:03  RC: 0
+04/03/2026 23:02:40  CMD: "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\python.exe" "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\sw_bridge.py" --action import_props --file "C:\Users\prog3\Desktop\APP MECCANICA\_ws2\AAA_0100-0003.SLDPRT"
+04/03/2026 23:02:41  RC: 0
+04/03/2026 23:09:17  ExportPropsFromSW: count=47
+04/03/2026 23:09:18    prop: Codice = AAA_0100-0003
+04/03/2026 23:09:18    prop: Numero Parte = 
+04/03/2026 23:09:18    prop: Revision = 00
+04/03/2026 23:09:18    prop: Descrizione = 
+04/03/2026 23:09:18    prop: Descrizioneagg. = 
+04/03/2026 23:09:18    prop: Simile = 
+04/03/2026 23:09:18    prop: Data = 
+04/03/2026 23:09:18    prop: Ricavatoda: = 
+04/03/2026 23:09:18    prop: Disegnatoda = 
+04/03/2026 23:09:18    prop: Autore = Andrea Cavani
+04/03/2026 23:09:18    prop: Approvato da = 
+04/03/2026 23:09:18    prop: data approvato = 
+04/03/2026 23:09:18    prop: Materiale in tabella o nota = Vedi tabella o nota
+04/03/2026 23:09:18    prop: Massa = 0.00
+04/03/2026 23:09:18    prop: Descrizionematerialegrezzo = 
+04/03/2026 23:09:18    prop: Larghezza = 
+04/03/2026 23:09:18    prop: Lunghezza = 
+04/03/2026 23:09:18    prop: Certificato conformità materiale = 
+04/03/2026 23:09:18    prop: Certificato conformità lavorazioni = 
+04/03/2026 23:09:18    prop: Certificato conformità trattamenti = 
+04/03/2026 23:09:18    prop: CodiceGrezzo = 
+04/03/2026 23:09:18    prop: Fusione = 
+04/03/2026 23:09:18    prop: N°pezzi = 
+04/03/2026 23:09:18    prop: Q.tamateriale = 
+04/03/2026 23:09:18    prop: Fraz. = 
+04/03/2026 23:09:18    prop: Smussinonquotati = 0,5X45
+04/03/2026 23:09:18    prop: Ragginonquotati = R.0,5
+04/03/2026 23:09:18    prop: TrattamentoTermico = 
+04/03/2026 23:09:18    prop: Finitura = 
+04/03/2026 23:09:18    prop: Tolleranzegeneralidimensionali = m
+04/03/2026 23:09:18    prop: Tolleranzegeneraligeometriche = K
+04/03/2026 23:09:18    prop: SaldatureGenerale = C
+04/03/2026 23:09:18    prop: toll_fill = 6H - 6g
+04/03/2026 23:09:18    prop: R. = 
+04/03/2026 23:09:18    prop: HB = 
+04/03/2026 23:09:18    prop: CM = 
+04/03/2026 23:09:18    prop: HRC = 
+04/03/2026 23:09:18    prop: NT = 
+04/03/2026 23:09:18    prop: HV = 
+04/03/2026 23:09:18    prop: SHORE = 
+04/03/2026 23:09:18    prop: famdes = 
+04/03/2026 23:09:18    prop: famtip = 
+04/03/2026 23:09:18    prop: famgrp = 
+04/03/2026 23:09:18    prop: FAMILY_COMM = 
+04/03/2026 23:09:18    prop: FORNITORE_COMM = 
+04/03/2026 23:09:18    prop: CODICE_COMM = 
+04/03/2026 23:09:18    prop: DESCRIZ_COMM = 
+04/03/2026 23:09:18  Props scritte in C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\sw_props_temp.json
+04/03/2026 23:09:18  CMD: "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\python.exe" "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\sw_bridge.py" --action import_props_json --file "C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\archive\AAA_0100-0003\00\AAA_0100-0003.SLDPRT"
+04/03/2026 23:09:18  RC: 0

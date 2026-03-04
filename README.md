@@ -1,0 +1,399 @@
+# PDM-SW – Sistema PDM per SolidWorks
+
+> **Versione 2.1.2** – Fix verifica errori e metodo mancante
+
+Sistema PDM (Product Data Management) leggero, senza server, per la gestione di documenti SolidWorks in ambiente di rete con architettura peer‑to‑peer.
+
+---
+
+## Changelog
+
+### v2.1.2
+**Fix verifica errori**
+
+- **Bug fix**: ripristinato metodo `FileManager.export_to_workspace()` — era stato rimosso ma ancora referenziato in `DocumentDialog._esporta_ws()`
+- **Type hints**: corretti parametri `Optional[int]` e `Optional[set]` in `DocumentDialog` e `AsmManager`
+
+### v2.1.1
+**Elenco componenti nei dialog checkout/checkin per assiemi**
+
+- **Checkout dialog ASM**: aggiunta tabella con elenco componenti (codice, tipo, revisione, titolo) al posto del semplice contatore
+- **Checkin dialog ASM**: aggiunta tabella BOM struttura assieme (con quantità) sopra la tabella dei file in workspace
+- Migliorata leggibilità: l'utente vede esattamente quali file sono coinvolti nell'operazione
+
+### v2.1.0
+**Sync automatico proprietà e BOM al check-in + fix import manuale**
+
+- **Check-in automatico**: ogni check-in da SolidWorks ora importa automaticamente le proprietà custom dal file aperto nel PDM
+- **Check-in ASM**: per i documenti Assieme, il check-in aggiorna anche la struttura BOM dal file attivo
+- **Blocco check-in**: se l'importazione proprietà/BOM fallisce (file non aperto in SW), il check-in viene bloccato con messaggio esplicito
+- **BOM import manuale**: il bottone "Importa struttura da SW" non chiede più il file — legge direttamente dal documento attivo in SolidWorks
+- **Nuovo metodo**: `AsmManager.import_bom_from_active_doc()` — legge BOM via `GetActiveObject` + `ActiveDoc.GetComponents`
+- **Fix proprietà COM**: `read_from_sw_file()` ora usa `ActiveDoc` come primo tentativo, `GetNames` come proprietà (non metodo), `Get()` al posto di `Get5()` (che fallisce con GetActiveObject)
+- **Fix errori silenziosi**: errore `_error` ora viene mostrato all'utente con `QMessageBox.warning` anziché essere filtrato silenziosamente
+- **Fix salvataggio**: le proprietà importate manualmente vengono ora salvate nel DB e la tabella ricaricata
+
+### v2.0.7 (merged)
+- Fix bottone "Importa da SW" nel dialog Proprietà – non faceva nulla
+
+### v2.0.6
+**Fix trasferimento proprietà SolidWorks ↔ PDM**
+
+- **Root cause import**: Python tentava `OpenDoc6` su un file già aperto in SolidWorks → falliva silenziosamente → 0 proprietà lette
+- **Root cause export**: `OpenDoc6` con parametri `int` per ByRef → errore COM "Incompatibilità tra tipi"
+- **Soluzione import (azione 4)**: La VBA legge le proprietà direttamente dal modello aperto, le scrive in `sw_props_temp.json`, Python le salva nel DB. Nuovo pattern VBA→JSON→Python che bypassa completamente i problemi COM cross-process
+- **Soluzione export/read COM**: `GetActiveObject` + `GetOpenDocumentByName` per riusare il doc già aperto, `OpenDoc6` con `VARIANT(VT_BYREF|VT_I4)` per parametri ByRef corretti, `Get5` con fallback a `Get` per versioni SW vecchie
+- Nuova azione `import_props_json` nel bridge Python
+- Errori `_error` non più silenziati (venivano rimossi con `pop`)
+- Logging dettagliato su ogni step di import/export
+**Fix comunicazione macro: MessageBox non visibile da SolidWorks**
+
+- **Root cause**: `MessageBoxW` chiamata dal processo Python lanciato con window mode `0` (nascosto) non viene visualizzata in SolidWorks. Il processo gira, l'azione viene eseguita, ma l'utente non vede alcun feedback.
+- **Soluzione**: Nuovo pattern di comunicazione result-file:
+  - `sw_bridge.py` scrive il risultato in `macros/sw_bridge_result.txt` (prima riga `OK`/`ERR`, resto = messaggio)
+  - `PDM_Integration.swb` legge il file dopo che il processo termina e mostra `MsgBox` nel contesto di SolidWorks (dove è **garantito** che sia visibile)
+- `sw_bridge.py`: mantenuto logging su file (`macros/sw_bridge.log`) per debug
+- `sw_bridge.py`: `MessageBoxW` con `MB_TOPMOST` come fallback (se non in SolidWorks)
+- `PDM_Integration.swb`: cancella file risultato prima di ogni esecuzione
+- `PDM_Integration.swb`: lettura file Unicode con `TristateTrue`
+
+### v2.0.3
+**Fix macro SolidWorks: silent failure da SolidWorks**
+
+- `sw_bridge.py`: aggiunto **logging su file** (`macros/sw_bridge.log`) — cattura ogni errore anche con `pythonw.exe` (che non ha console)
+- `sw_bridge.py`: wrapper `main()` con try/except globale che scrive traceback completo nel log
+- `PDM_Integration.swb`: `wsShell.CurrentDirectory = appDir` — **setta CWD** alla directory PDM prima di eseguire (SolidWorks imposta CWD alla propria dir di installazione)
+- `PDM_Integration.swb`: usa `python.exe` (non `pythonw.exe`) come priorità per debug visibile
+- `PDM_Integration.swb`: rimosso `fso.GetAbsolutePathName(".")` (inutilizzabile dentro SolidWorks)
+- `PDM_Integration.swb`: quoting robusto con `Chr(34)` per percorsi con spazi
+- Aggiunto `macros/test_macro.bat` per test manuale del bridge
+- Messaggio errore VBA ora include path del file log
+
+### v2.0.2
+**Fix macro SolidWorks (sw_bridge.py + PDM_Integration.swb)**
+
+- `sw_bridge.py` aggiornato all'API v2.0: `checkout()` e `checkin()` usano la nuova firma senza parametri path
+- Aggiunta azione `undo_checkout` (mancante)
+- Lookup documento per codice+tipo (dal nome file workspace) invece che solo `file_name`
+- Usa `pythonw.exe` dal venv (`.venv\Scripts\pythonw.exe`) invece del sistema
+- `PDM_Integration.swb`: corretto passaggio parametri ai sub, aggiunto `PDM_UndoCheckout`
+- Menu macro aggiornato con tutte le 6 azioni disponibili
+- Verifica esistenza `sw_bridge.py` prima di lanciare il comando
+
+### v2.0.1
+**Bugfix: "no such table: main._documents_old" durante checkin/checkout**
+
+- **Root cause**: SQLite >= 3.25 aggiorna automaticamente i FK in tutte le tabelle durante `ALTER TABLE RENAME`. La migration del UNIQUE constraint rinominava `documents` in `_documents_old`, corrompendo i FK di `checkout_log`, `workflow_history`, `asm_components` ecc.
+- **Fix 1 – Riparazione DB**: nuovo metodo `_repair_stale_fk_references()` che usa `PRAGMA writable_schema` per correggere direttamente i riferimenti corrotti in `sqlite_master` all'avvio
+- **Fix 2 – Prevenzione**: aggiunto `PRAGMA legacy_alter_table=ON` prima del RENAME per impedire la propagazione automatica dei FK
+- **Fix 3 – Schema completo**: `NEW_TABLE_DDL` nella migration ora include le colonne `checkout_md5/size/mtime`; la copia dati gestisce dinamicamente le colonne presenti nella vecchia tabella
+
+### v2.0.0
+**Revisione completa checkout/checkin e gestione archivio/workspace**
+
+#### Checkout / Checkin
+- **Blocco checkout/checkin** su stati `Revisionato`, `Rilasciato`, `Obsoleto` (costante `READONLY_STATES`)
+- **Snapshot MD5** al checkout: al checkin confronta hash per rilevare modifiche reali e conflitti
+- **Checkout ASM ricorsivo**: copia tutti i componenti BOM in workspace senza lock (role `component`)
+- **Checkbox DRW**: opzione per includere il Disegno associato nel checkout
+- **Consultazione**: copia in workspace senza lock, registrata come role `consultation`
+- **Annulla checkout**: solo l'admin puo revocare il checkout di altri utenti
+- **Tabella workspace_files**: tracking persistente di tutti i file in workspace per utente
+
+#### Workflow
+- **Propagazione bidirezionale PRT/ASM <-> DRW**: cambio stato sincronizzato automaticamente (stessa revisione)
+- **Auto-obsolescenza**: rilascio di nuova revisione rende obsolete le revisioni precedenti rilasciate
+- **Nuova revisione**: copia file archiviato come base + crea automaticamente revisione DRW companion
+- **cancel_revision()**: eliminazione revisione non rilasciata con pulizia file archivio
+
+#### File Manager
+- **import_file()**: accetta file solo dalla workspace configurata (no percorsi esterni)
+- **create_from_external_file()**: unico entry-point per file esterni, copia in workspace con codice PDM
+- **export_from_workspace()**: esporta dalla workspace (non dall'archivio direttamente)
+- Rimossi `export_file()` e `export_to_workspace()` (sostituiti)
+
+#### UI
+- **Archivio CAD**: QTreeWidget raggruppato per codice, nodi padre = codice, figli = tipo+revisione
+- **Filtro tipo**: agisce solo sui nodi figlio (nasconde tipi non corrispondenti)
+- **Workspace view**: due sezioni separate — "In Checkout (modificabili)" e "In Workspace (copie/consultazione)"
+- **CheckoutDialog**: dialog conferma checkout con opzione DRW, info componenti ASM
+- **CheckinDialog**: dialog checkin con rilevamento modifica (verde/giallo/rosso), tabella ASM selezionabile
+- **Menu contestuale archivio**: Checkout, Checkin, Annulla checkout, Consultazione, Esporta da workspace, Cambia stato, Nuova revisione, Proprieta
+
+#### Database
+- Nuove colonne `documents`: `checkout_md5`, `checkout_size`, `checkout_mtime`
+- Nuove colonne `checkout_log`: `checkout_md5`, `checkout_size`, `checkout_mtime`
+- Nuova tabella `workspace_files`: tracking file in workspace per utente con ruolo e parent
+
+### v1.4.1
+**Bugfix: recovery da migration DB rotta**
+
+- `_migrate_documents_unique()` riscritta con gestione dei tre stati possibili:
+  - **Recovery**: se `_documents_old` esiste ma `documents` no (crash a metà migration precedente) → completa automaticamente senza RENAME
+  - **Pulizia**: se entrambe esistono (migration già completata) → drop del residuo
+  - **Normale**: migration completa con rollback esplicito in caso di errore (rimosso `pass` silenzioso)
+- Estratto helper `_create_doc_indexes()` per riuso
+
+### v1.4.0
+**Architettura workspace-first – i file SI aprono e si salvano SOLO nella workspace locale:**
+
+- **Crea in SW**: crea file da template nella workspace; per PRT/ASM propone opzione DRW
+- **Crea da file** (NUOVO): seleziona file da qualsiasi cartella, lo copia in workspace con codice PDM; per PRT/ASM cerca DRW nella stessa cartella
+- **Importa in PDM** (ex "Importa File"): cerca `{codice}.SLDPRT/ASM/DRW` nella workspace e lo archivia; per PRT/ASM importa automaticamente anche il DRW se presente
+- **Esporta in WS**: copia dall’archivio PDM nella workspace (non più cartella libera)
+- **Apri in SW**: copia dall’archivio in workspace (se non già presente) e apre — **mai apre dall’archivio direttamente**
+- Estensione attesa determinata dal `doc_type` del documento (`Parte→.SLDPRT`, `Assieme→.SLDASM`, `Disegno→.SLDDRW`)
+- Helper FileManager: `copy_to_workspace()`, `import_from_workspace()`, `open_from_workspace()`, `export_to_workspace()`
+
+### v1.3.0
+- **Template SolidWorks**: estensioni corrette `.prtdot`, `.asmdot`, `.drwdot` (con mapping → `.SLDPRT`, `.SLDASM`, `.SLDDRW`)
+- **Crea in SW**: per PRT/ASM propone opzione "Crea anche DRW" → copia `.drwdot` e crea documento Disegno in DB con stesso codice
+- **Importa file**: filtra automaticamente le estensioni in base al tipo documento; per PRT/ASM rileva automaticamente il DRW companion (stesso nome base) e propone di importarlo
+- **Esporta file**: per PRT/ASM propone di esportare anche il DRW associato
+- `is_code_available()`: permette stesso codice con `doc_type` diverso (Disegno può condividere codice col PRT/ASM padre)
+- Nuovi metodi `FileManager`: `get_drw_document()`, `get_or_create_drw_document()`, `find_companion_drw()`
+
+### v1.2.0
+- Nuovo dialog **Configurazione SolidWorks** (Strumenti → Configurazione SolidWorks)
+  - Template PRT / ASM / DRW configurabili per workstation
+  - File `.reg` SolidWorks: scelta e applicazione al registro di Windows
+  - Workspace locale: cartella di lavoro predefinita
+- Pulsante **Crea in SW** nel dettaglio documento: copia il template, rinomina col codice PDM, apre in SolidWorks
+- **Import file**: rinomina automaticamente con il codice PDM (`ABC_COMP-0001.SLDPRT`)
+- **DRW (Disegno)**: livello dedicato nella creazione documento con link opzionale al documento padre (PRT/ASM)
+- DB: aggiunto campo `parent_doc_id` (DRW → PRT/ASM)
+
+### v1.1.1
+- Fix crash tab Contatori (`session.current_user` → `session.user`)
+- Tab Contatori carica i dati automaticamente all'apertura
+- Descrizioni macchine e gruppi forzate in maiuscolo
+- Revisioni formato numerico `00`, `01`, `02`…
+
+### v1.1.0
+- **Codifica gerarchica**: Macchine → Gruppi → Livelli (LIV0/LIV1/LIV2)
+- Schema codici: `MMM_V001` (macchina), `MMM_GGGG-V001` (gruppo), `MMM_GGGG-0001` (parte PRT), `MMM_GGGG-9999` (sottogruppo ASM)
+- Contatori versione indipendenti per macchina e per coppia macchina+gruppo
+- Warning automatico collisione contatori LIV2 (parti↑ / sottogruppi↓)
+- Nuovo dialogo "Configurazione Codifica" con tab Macchine / Gruppi / Contatori
+- Flusso creazione documento aggiornato: Macchina → Livello → Gruppo → codice auto-generato
+- Migrazione automatica DB (aggiunge `machine_id`, `group_id`, `doc_level` a documenti esistenti)
+
+### v1.0.0
+- Versione iniziale con archivio, checkout/checkin, workflow, macro VBA
+
+---
+
+## Caratteristiche principali
+
+| Funzione | Dettaglio |
+|---|---|
+| **Architettura** | SQLite su cartella condivisa di rete – nessun server |
+| **Utenti simultanei** | Max 5 (locking ottimistico su file) |
+| **File supportati** | `.SLDPRT`, `.SLDASM`, `.SLDDRW` |
+| **Workflow** | In Lavorazione → In Revisione → Revisionato → Rilasciato → Obsoleto |
+| **Check-in / Checkout** | Con lock per file e storico completo |
+| **Codifica gerarchica** | LIV0 Macchina → LIV1 Gruppo → LIV2 Parte/Sottogruppo |
+| **Proprietà SW** | Import/Export da/verso SolidWorks via COM API |
+| **BOM** | Gestione struttura assieme con import da file .SLDASM |
+| **Macro VBA** | Integrazione diretta da SolidWorks |
+
+---
+
+## Struttura progetto
+
+```
+PDM-SW-2/
+├── main.py                   # Entry point applicazione
+├── setup_app.py              # Wizard configurazione iniziale
+├── config.py                 # Configurazione globale
+├── requirements.txt
+├── core/
+│   ├── database.py           # Gestione SQLite condiviso
+│   ├── user_manager.py       # Utenti e autenticazione
+│   ├── coding_manager.py     # Codifica documenti
+│   ├── file_manager.py       # Gestione file archivio
+│   ├── checkout_manager.py   # Check-in / Check-out
+│   ├── workflow_manager.py   # Workflow stati
+│   ├── properties_manager.py # Proprietà SolidWorks
+│   └── asm_manager.py        # Struttura assieme (BOM)
+├── ui/
+│   ├── main_window.py        # Finestra principale
+│   ├── session.py            # Sessione globale
+│   ├── styles.py             # Tema dark
+│   ├── setup_dialog.py       # Config percorso rete
+│   ├── login_dialog.py       # Login utente
+│   ├── archive_view.py       # Vista archivio CAD
+│   ├── workspace_view.py     # Vista workspace utente
+│   ├── document_dialog.py    # Dettaglio documento
+│   ├── document_selector.py  # Selezione documento
+│   ├── coding_dialog.py      # Config codifica
+│   ├── workflow_dialog.py    # Cambio stato workflow
+│   └── users_dialog.py       # Gestione utenti
+└── macros/
+    ├── PDM_Integration.swb   # Macro SolidWorks (VBA/Basic)
+    └── sw_bridge.py          # Bridge Python ↔ macro SW
+```
+
+---
+
+## Installazione
+
+### 1. Requisiti Python
+
+```powershell
+pip install -r requirements.txt
+```
+
+Pacchetti installati:
+- `PyQt6` – interfaccia grafica
+- `pywin32` – integrazione COM SolidWorks
+- `Pillow` – anteprime immagini
+- `openpyxl` – import/export Excel
+- `filelock` – locking database concorrente
+
+### 2. Prima configurazione (una sola volta)
+
+Eseguire il wizard di setup:
+
+```powershell
+python setup_app.py
+```
+
+Il wizard:
+1. Configura il percorso della cartella condivisa di rete
+2. Crea la struttura delle cartelle PDM
+3. Inizializza il database
+4. Configura l'utente amministratore
+5. Imposta la codifica documenti
+
+### 3. Configurazione su PC aggiuntivi
+
+Su ogni PC che usa il PDM, eseguire solo `main.py`:
+
+```powershell
+python main.py
+```
+
+Al primo avvio, viene chiesto il percorso della cartella condivisa.
+
+---
+
+## Avvio applicazione
+
+```powershell
+python main.py
+```
+
+---
+
+## Struttura cartella condivisa
+
+La cartella di rete condivisa avrà questa struttura:
+
+```
+\PDM\
+├── database\
+│   ├── pdm.db          # Database SQLite
+│   └── pdm.lock        # File lock per scritture concorrenti
+├── archive\
+│   └── {CODICE}\
+│       └── {REVISIONE}\
+│           └── file.SLDPRT   # File archiviati
+├── workspace\
+│   └── {username}\           # Workspace per utente
+├── thumbnails\
+├── config\
+└── temp\
+```
+
+---
+
+## Workflow documenti
+
+```
+[Nuovo] → In Lavorazione
+              │
+              ├──→ In Revisione → Revisionato ─┐
+              │                                 │
+              └─────────────────────────────────┴──→ Rilasciato → Obsoleto
+```
+
+### Transizioni consentite:
+| Da | A |
+|---|---|
+| In Lavorazione | In Revisione, Rilasciato |
+| In Revisione | Revisionato, In Lavorazione |
+| Revisionato | Rilasciato, In Lavorazione |
+| Rilasciato | In Revisione, Obsoleto |
+
+---
+
+## Integrazione SolidWorks
+
+### Macro VBA (`macros/PDM_Integration.swb`)
+
+1. In SolidWorks: **Strumenti → Macro → Esegui**
+2. Selezionare `PDM_Integration.swb`
+
+Oppure per accesso rapido:
+1. **Strumenti → Personalizza → Barra strumenti**
+2. Aggiungere pulsante macro
+
+**Sub disponibili nella macro:**
+- `PDM_Menu()` – menu interattivo con tutte le azioni
+- `PDM_Checkout()` – checkout del file aperto
+- `PDM_Checkin()` – salva e check-in del file aperto
+- `PDM_ImportProperties()` – importa proprietà da SW nel PDM
+- `PDM_ExportProperties()` – esporta proprietà PDM in SW
+- `PDM_OpenApp()` – apre l'interfaccia PDM
+
+### Bridge Python (`macros/sw_bridge.py`)
+
+Chiamato automaticamente dalla macro VBA:
+
+```powershell
+pythonw sw_bridge.py --action checkout --file "C:\...\parte.SLDPRT"
+pythonw sw_bridge.py --action checkin  --file "C:\...\parte.SLDPRT"
+pythonw sw_bridge.py --action import_props --file "..."
+pythonw sw_bridge.py --action export_props --file "..."
+pythonw sw_bridge.py --action open
+```
+
+---
+
+## Gestione utenti
+
+Ruoli disponibili (da Strumenti → Gestione utenti, solo admin):
+
+| Ruolo | Checkout | Check-in | Crea doc | Rilascia | Admin |
+|---|---|---|---|---|---|
+| Utente | ✗ | ✗ | ✗ | ✗ | ✗ |
+| Progettista | ✓ | ✓ | ✓ | ✗ | ✗ |
+| Responsabile | ✓ | ✓ | ✓ | ✓ | ✗ |
+| Amministratore | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+**Credenziali default:**
+- Username: `admin`
+- Password: `admin`
+
+---
+
+## Consigli per ambiente di produzione
+
+1. **Backup**: pianificare backup periodici di `\PDM\database\pdm.db`
+2. **Permessi cartella**: tutti gli utenti devono avere R/W sulla cartella condivisa
+3. **Antivirus**: escludere la cartella PDM dalla scansione in tempo reale (causa lentezza SQLite)
+4. **Rete lenta**: in caso di rete lenta aumentare il timeout in `database.py` (`timeout=10`)
+5. **SolidWorks + PDM**: configurare SolidWorks per non bloccare i file con il proprio lock (usare il lock PDM)
+6. **Monitoraggio**: usare la vista Workspace per vedere chi ha file in checkout
+
+---
+
+## Estensioni consigliate
+
+Possibili sviluppi futuri:
+- **Viste 3D inline**: anteprima modelli con VTK o Open CASCADE
+- **PDF automatico**: generazione automatica PDF da disegni alla release
+- **Email notifiche**: notifiche email sui cambi di stato
+- **Report Excel**: esportazione BOM completa in Excel
+- **Integrazione ERP**: export dati verso sistemi gestionali
