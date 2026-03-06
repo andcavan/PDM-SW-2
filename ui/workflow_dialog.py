@@ -1,5 +1,5 @@
 # =============================================================================
-#  ui/workflow_dialog.py  –  Cambio stato workflow documento
+#  ui/workflow_dialog.py  –  Cambio stato workflow documento  v3.0
 # =============================================================================
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
@@ -17,7 +17,7 @@ class WorkflowDialog(QDialog):
     def __init__(self, document_id: int, parent=None):
         super().__init__(parent)
         self.document_id = document_id
-        self.setWindowTitle("Gestione Workflow")
+        self.setWindowTitle("Workflow")
         self.setMinimumWidth(420)
         self._build_ui()
         self._load()
@@ -34,6 +34,8 @@ class WorkflowDialog(QDialog):
         form_curr.addRow("Stato:", self.lbl_state)
         self.lbl_code = QLabel("—")
         form_curr.addRow("Documento:", self.lbl_code)
+        self.lbl_lock = QLabel("")
+        form_curr.addRow("Checkout:", self.lbl_lock)
         layout.addWidget(grp_curr)
 
         # Cambio stato
@@ -52,19 +54,15 @@ class WorkflowDialog(QDialog):
         # Bottoni
         btn_row = QHBoxLayout()
         btn_row.addStretch()
-        btn_apply = QPushButton("Applica transizione")
-        btn_apply.setObjectName("btn_primary")
-        btn_apply.clicked.connect(self._apply_transition)
-
-        if session.can("release"):
-            btn_release = QPushButton("⚡ Rilascia direttamente")
-            btn_release.setObjectName("btn_success")
-            btn_release.clicked.connect(self._release_direct)
-            btn_row.addWidget(btn_release)
 
         btn_close = QPushButton("Chiudi")
         btn_close.clicked.connect(self.accept)
         btn_row.addWidget(btn_close)
+
+        btn_apply = QPushButton("Applica transizione")
+        btn_apply.setObjectName("btn_primary")
+        btn_apply.clicked.connect(self._apply_transition)
+        self._btn_apply = btn_apply
         btn_row.addWidget(btn_apply)
         layout.addLayout(btn_row)
 
@@ -79,7 +77,21 @@ class WorkflowDialog(QDialog):
         self.lbl_state.setTextFormat(Qt.TextFormat.RichText)
         self.lbl_code.setText(f"{doc['code']} rev.{doc['revision']}  –  {doc['title']}")
 
+        # Mostra stato checkout
+        if doc.get("is_locked"):
+            locker = doc.get("locked_by_name", f"utente {doc.get('locked_by','')}")
+            self.lbl_lock.setText(f"⚠️  In checkout: {locker}")
+            self.lbl_lock.setStyleSheet("color:#f38ba8; font-weight:bold;")
+        else:
+            self.lbl_lock.setText("—")
+            self.lbl_lock.setStyleSheet("")
+
+        # Blocca transizioni se in checkout
+        locked = bool(doc.get("is_locked"))
+        self._btn_apply.setEnabled(not locked)
+
         transitions = session.workflow.get_available_transitions(state)
+        self.cmb_target.blockSignals(True)
         self.cmb_target.clear()
         for t in transitions:
             self.cmb_target.addItem(t)
@@ -87,7 +99,11 @@ class WorkflowDialog(QDialog):
         if not transitions:
             self.cmb_target.addItem("Nessuna transizione disponibile")
             self.cmb_target.setEnabled(False)
+            self._btn_apply.setEnabled(False)
+        else:
+            self.cmb_target.setEnabled(not locked)
 
+        self.cmb_target.blockSignals(False)
         self.cmb_target.currentTextChanged.connect(self._update_dot)
         self._update_dot()
 
@@ -107,7 +123,8 @@ class WorkflowDialog(QDialog):
         notes = self.txt_notes.toPlainText().strip()
         try:
             session.workflow.change_state(
-                self.document_id, target, session.user["id"], notes
+                self.document_id, target, session.user["id"], notes,
+                shared_paths=session.sp,
             )
             QMessageBox.information(
                 self, "OK", f"Stato cambiato in: {target}"
@@ -115,20 +132,3 @@ class WorkflowDialog(QDialog):
             self._load()
         except Exception as e:
             QMessageBox.critical(self, "Errore", str(e))
-
-    def _release_direct(self):
-        notes = self.txt_notes.toPlainText().strip()
-        r = QMessageBox.question(
-            self, "Rilascio diretto",
-            "Rilasciare direttamente il documento?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-        )
-        if r == QMessageBox.StandardButton.Yes:
-            try:
-                session.workflow.release_document(
-                    self.document_id, session.user["id"], notes
-                )
-                QMessageBox.information(self, "OK", "Documento Rilasciato")
-                self._load()
-            except Exception as e:
-                QMessageBox.critical(self, "Errore", str(e))

@@ -84,7 +84,6 @@ class DocumentDialog(QDialog):
             self.cmb_level.addItem("LIV1 – Gruppo   (ASM)",   1)
             self.cmb_level.addItem("LIV2 – Parte    (PRT)",   2)
             self.cmb_level.addItem("LIV2 – Sottogruppo (ASM)", 3)
-            self.cmb_level.addItem("Disegno  (DRW)",            4)
             self.cmb_level.currentIndexChanged.connect(self._on_level_changed)
             form.addRow("Livello:", self.cmb_level)
 
@@ -93,12 +92,6 @@ class DocumentDialog(QDialog):
             self.cmb_group.currentIndexChanged.connect(self._update_code_preview)
             self._lbl_group = form.labelForField(self.cmb_group) if False else QLabel("Gruppo:")
             form.addRow("Gruppo:", self.cmb_group)
-
-            # Documento padre (solo per DRW)
-            self.cmb_parent = QComboBox()
-            self.cmb_parent.setMinimumWidth(220)
-            self.cmb_parent.setVisible(False)
-            form.addRow("Doc. padre (PRT/ASM):", self.cmb_parent)
 
             # Anteprima codice auto
             self.lbl_code_preview = QLabel("—")
@@ -197,6 +190,19 @@ class DocumentDialog(QDialog):
             self.lbl_locked = QLabel("—")
             state_form.addRow("Stato:", self.lbl_state)
             state_form.addRow("Checkout:", self.lbl_locked)
+
+            # Documento companion (DRW ↔ PRT/ASM)
+            self.grp_companion = QGroupBox("Documento collegato")
+            companion_layout = QHBoxLayout(self.grp_companion)
+            self.lbl_companion = QLabel("—")
+            self.btn_companion = QPushButton("")
+            self.btn_companion.setObjectName("btn_primary")
+            self.btn_companion.setVisible(False)
+            companion_layout.addWidget(self.lbl_companion)
+            companion_layout.addWidget(self.btn_companion)
+            companion_layout.addStretch()
+            state_form.addRow("Associato:", self.grp_companion)
+
             layout.addWidget(grp_state)
 
         layout.addStretch()
@@ -310,23 +316,7 @@ class DocumentDialog(QDialog):
         level = self.cmb_level.currentData()
         # Nascondi gruppo solo per LIV0 (macchina)
         self.cmb_group.setVisible(level != 0)
-        # Mostra parent solo per DRW
-        self.cmb_parent.setVisible(level == 4)
-        if level == 4:
-            self._load_parent_combo()
         self._update_code_preview()
-
-    def _load_parent_combo(self):
-        """Popola il combo documento padre con PRT e ASM disponibili."""
-        self.cmb_parent.clear()
-        self.cmb_parent.addItem("(nessuno)", None)
-        docs = session.files.search_documents()
-        for d in docs:
-            if d["doc_type"] in ("Parte", "Assieme"):
-                self.cmb_parent.addItem(
-                    f"{d['code']}  rev.{d['revision']}  –  {d['title']}",
-                    d["id"]
-                )
 
     def _update_code_preview(self):
         if not self.is_new:
@@ -334,7 +324,7 @@ class DocumentDialog(QDialog):
         machine_id = self.cmb_machine.currentData()
         group_id   = self.cmb_group.currentData()
         level_data = self.cmb_level.currentData()
-        level_map  = {0: (0, "ASM"), 1: (1, "ASM"), 2: (2, "PRT"), 3: (2, "ASM"), 4: (2, "PRT")}
+        level_map  = {0: (0, "ASM"), 1: (1, "ASM"), 2: (2, "PRT"), 3: (2, "ASM")}
         level, subtype = level_map.get(level_data, (2, "PRT"))
         if not machine_id:
             self.lbl_code_preview.setText("—")
@@ -367,15 +357,11 @@ class DocumentDialog(QDialog):
         if not machine_id:
             QMessageBox.warning(self, "Errore", "Seleziona una macchina")
             return
-        if level_data in (1, 2, 3, 4) and not group_id:
+        if level_data in (1, 2, 3) and not group_id:
             QMessageBox.warning(self, "Errore", "Seleziona un gruppo")
             return
 
-        # Per DRW: parent è facoltativo
         parent_doc_id = None
-        if level_data == 4:
-            parent_doc_id = self.cmb_parent.currentData()  # può essere None
-            group_id = self.cmb_group.currentData() if self.cmb_group.isVisible() else None
 
         # Mappa livello → (func, doc_type, doc_level)
         try:
@@ -396,10 +382,6 @@ class DocumentDialog(QDialog):
                 code      = session.coding.next_code_liv2_subgroup(machine_id, group_id)
                 doc_type  = "Assieme"
                 doc_level = 2
-            else:  # 4 = Disegno DRW
-                code      = session.coding.next_code_liv2_part(machine_id, group_id)
-                doc_type  = "Disegno"
-                doc_level = 2
         except Exception as e:
             QMessageBox.critical(self, "Errore generazione codice", str(e))
             return
@@ -419,10 +401,52 @@ class DocumentDialog(QDialog):
         self.document_id = doc_id
         self.is_new = False
 
-        QMessageBox.information(
-            self, "Documento Creato",
-            f"Documento creato:\n{code}  rev.{revision}  [{doc_type}]"
-        )
+        # Offri creazione file da template nella workspace
+        from config import load_local_config
+        from core.file_manager import EXT_FOR_TYPE
+        import shutil
+        cfg = load_local_config()
+        ws_root = cfg.get("sw_workspace", "")
+        key_map = {"Parte": "sw_template_prt", "Assieme": "sw_template_asm", "Disegno": "sw_template_drw"}
+        tpl_path = cfg.get(key_map.get(doc_type, ""), "")
+        if ws_root and tpl_path and Path(ws_root).is_dir() and Path(tpl_path).exists():
+            r = QMessageBox.question(
+                self, "Crea file in workspace?",
+                f"Documento creato: <b>{code}  rev.{revision}</b><br><br>"
+                "Creare subito il file nella workspace da template?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.Yes,
+            )
+            if r == QMessageBox.StandardButton.Yes:
+                try:
+                    ext = EXT_FOR_TYPE.get(doc_type, ".SLDPRT")
+                    dest_ws = Path(ws_root) / f"{code}{ext}"
+                    shutil.copy2(tpl_path, dest_ws)
+                    # Archivia subito
+                    arch_dir = session.sp.archive_path(code, revision)
+                    arch_dir.mkdir(parents=True, exist_ok=True)
+                    arch_file = arch_dir / f"{code}{ext}"
+                    shutil.copy2(str(dest_ws), str(arch_file))
+                    rel_path = str(arch_file.relative_to(session.sp.root))
+                    session.db.execute(
+                        "UPDATE documents SET file_name=?, file_ext=?, archive_path=?, modified_at=datetime('now') WHERE id=?",
+                        (arch_file.name, ext, rel_path, doc_id),
+                    )
+                    QMessageBox.information(
+                        self, "Documento Creato",
+                        f"Documento creato:\n{code}  rev.{revision}  [{doc_type}]\n\n"
+                        f"Workspace: {dest_ws}\nArchivio: {arch_file}"
+                    )
+                except Exception as fe:
+                    QMessageBox.warning(self, "File non creato", f"Documento registrato ma file non creato:\n{fe}")
+                    QMessageBox.information(self, "Documento Creato", f"Documento creato:\n{code}  rev.{revision}  [{doc_type}]")
+            else:
+                QMessageBox.information(self, "Documento Creato", f"Documento creato:\n{code}  rev.{revision}  [{doc_type}]")
+        else:
+            QMessageBox.information(
+                self, "Documento Creato",
+                f"Documento creato:\n{code}  rev.{revision}  [{doc_type}]"
+            )
         self.accept()
 
     def _save(self):
@@ -482,6 +506,144 @@ class DocumentDialog(QDialog):
         self._refresh_bom()
         # Storico
         self._refresh_history()
+        # Companion DRW ↔ PRT/ASM
+        self._refresh_companion(doc)
+
+    # ------------------------------------------------------------------
+    def _refresh_companion(self, doc: dict):
+        """Aggiorna la sezione documento collegato (DRW ↔ PRT/ASM)."""
+        if not hasattr(self, "lbl_companion"):
+            return
+        doc_type = doc["doc_type"]
+        code     = doc["code"]
+        revision = doc["revision"]
+
+        if doc_type in ("Parte", "Assieme"):
+            # Cerca DRW con stessa revisione
+            drw = session.db.fetchone(
+                "SELECT * FROM documents WHERE code=? AND doc_type='Disegno' AND revision=?",
+                (code, revision),
+            )
+            if drw:
+                state_icon = {"In Lavorazione": "🔵", "In Revisione": "🟡",
+                              "Rilasciato": "🟢", "Obsoleto": "⚫"}.get(
+                    drw["state"], "⚪")
+                self.lbl_companion.setText(
+                    f"✅  DRW {code}  rev.{revision}  —  {state_icon} {drw['state']}"
+                )
+                self.btn_companion.setVisible(False)
+            else:
+                self.lbl_companion.setText("⚠️  Nessun DRW associato a questa revisione")
+                self.lbl_companion.setStyleSheet("color:#f9e2af;")
+                self.btn_companion.setText("＋ Crea DRW")
+                self.btn_companion.setVisible(True)
+                try:
+                    self.btn_companion.clicked.disconnect()
+                except Exception:
+                    pass
+                self.btn_companion.clicked.connect(
+                    lambda: self._create_companion("Disegno", doc)
+                )
+
+        elif doc_type == "Disegno":
+            # Cerca PRT o ASM con stessa revisione
+            companion = session.db.fetchone(
+                "SELECT * FROM documents WHERE code=? AND doc_type IN ('Parte','Assieme') "
+                "AND revision=?",
+                (code, revision),
+            )
+            if companion:
+                icon = TYPE_ICON.get(companion["doc_type"], "")
+                state_icon = {"In Lavorazione": "🔵", "In Revisione": "🟡",
+                              "Rilasciato": "🟢", "Obsoleto": "⚫"}.get(
+                    companion["state"], "⚪")
+                self.lbl_companion.setText(
+                    f"✅  {icon} {companion['doc_type']} {code}  rev.{revision}"
+                    f"  —  {state_icon} {companion['state']}"
+                )
+                self.btn_companion.setVisible(False)
+            else:
+                self.lbl_companion.setText("⚠️  Nessun PRT/ASM associato a questa revisione")
+                self.lbl_companion.setStyleSheet("color:#f9e2af;")
+                self.btn_companion.setText("＋ Crea PRT/ASM")
+                self.btn_companion.setVisible(True)
+                try:
+                    self.btn_companion.clicked.disconnect()
+                except Exception:
+                    pass
+                self.btn_companion.clicked.connect(
+                    lambda: self._create_companion("PRT_ASM", doc)
+                )
+        else:
+            self.lbl_companion.setText("—")
+            self.btn_companion.setVisible(False)
+
+    def _create_companion(self, target_type: str, source_doc: dict):
+        """Crea il documento companion (DRW per PRT/ASM o viceversa)."""
+        from PyQt6.QtWidgets import QInputDialog
+        code     = source_doc["code"]
+        revision = source_doc["revision"]
+        title    = source_doc.get("title", "")
+
+        if target_type == "Disegno":
+            new_type  = "Disegno"
+            type_label = "DRW (Disegno)"
+        else:
+            # Chiedi Parte o Assieme
+            choice, ok = QInputDialog.getItem(
+                self, "Tipo documento",
+                f"Scegli il tipo da creare per {code} rev.{revision}:",
+                ["Parte", "Assieme"], 0, False
+            )
+            if not ok:
+                return
+            new_type  = choice
+            type_label = new_type
+
+        # Titolo pre-compilato, modificabile
+        new_title, ok = QInputDialog.getText(
+            self, f"Crea {type_label}",
+            f"Titolo per {new_type} {code} rev.{revision}:",
+            text=title
+        )
+        if not ok or not new_title.strip():
+            return
+
+        # Verifica che non esista già
+        if not session.coding.is_code_available(code, revision, new_type):
+            QMessageBox.warning(
+                self, "Già esistente",
+                f"{new_type} {code} rev.{revision} è già presente nel database."
+            )
+            return
+
+        try:
+            parent_doc_id = self.document_id if new_type == "Disegno" else None
+            new_id = session.files.create_document(
+                code, revision, new_type, new_title.strip(),
+                source_doc.get("description", "") or "",
+                machine_id=source_doc.get("machine_id"),
+                group_id=source_doc.get("group_id"),
+                doc_level=source_doc.get("doc_level", 2),
+                parent_doc_id=parent_doc_id,
+            )
+            # R1: allinea lo stato del companion a quello del PRT/ASM
+            source_state = source_doc.get("state", "In Lavorazione")
+            if source_state != "In Lavorazione":
+                session.workflow.sync_companion_state(
+                    new_id, source_state, session.user["id"]
+                )
+            QMessageBox.information(
+                self, "OK",
+                f"{new_type} creato: {code}  rev.{revision}\n\n"
+                f"(id={new_id})"
+            )
+            # Aggiorna la riga companion
+            doc = session.files.get_document(self.document_id)
+            if doc:
+                self._refresh_companion(doc)
+        except Exception as e:
+            QMessageBox.critical(self, "Errore", str(e))
 
     # ------------------------------------------------------------------
     def _refresh_bom(self):
@@ -779,6 +941,29 @@ class DocumentDialog(QDialog):
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 )
                 include_drw = (r == QMessageBox.StandardButton.Yes)
+        # Pre-check: file già in workspace con contenuto diverso?
+        if doc and doc.get("archive_path") and session.sp:
+            from pathlib import Path
+            from core.file_manager import EXT_FOR_TYPE
+            from core.checkout_manager import CheckoutManager
+            arch_file = session.sp.root / doc["archive_path"]
+            ext = EXT_FOR_TYPE.get(doc.get("doc_type", ""), ".SLDPRT")
+            ws_file = Path(ws) / (doc["code"] + ext)
+            if ws_file.exists() and arch_file.exists():
+                ws_md5   = CheckoutManager._md5(ws_file)
+                arch_md5 = CheckoutManager._md5(arch_file)
+                if ws_md5 != arch_md5:
+                    r = QMessageBox.question(
+                        self, "File già in workspace",
+                        f"{ws_file.name} è già presente nella workspace\n"
+                        f"e differisce dalla versione archiviata.\n\n"
+                        f"Sovrascrivere il file locale con la versione dell'archivio?",
+                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                        QMessageBox.StandardButton.No,
+                    )
+                    if r != QMessageBox.StandardButton.Yes:
+                        return
+
         try:
             exported = session.files.export_to_workspace(
                 self.document_id, ws, include_drw=include_drw
@@ -811,15 +996,17 @@ class DocumentDialog(QDialog):
             QMessageBox.critical(self, "Errore", str(e))
 
     def _create_from_template(self):
-        """Crea il file SW da template nella workspace e lo apre."""
+        """
+        Crea il file SW da template tramite SolidWorks COM API.
+        Riutilizza la sessione SW attiva se disponibile, altrimenti ne apre una.
+        Fallback a copia file se COM non disponibile.
+        """
         if not self.document_id:
             return
-        import os
         ws = self._get_workspace_or_warn()
         if not ws:
             return
 
-        # Per PRT/ASM: chiedi se creare anche il DRW
         doc = session.files.get_document(self.document_id)
         also_drw = False
         if doc and doc["doc_type"] in ("Parte", "Assieme"):
@@ -827,32 +1014,97 @@ class DocumentDialog(QDialog):
             drw_tpl = SWConfigDialog.get_template("Disegno")
             if drw_tpl and drw_tpl.exists():
                 r = QMessageBox.question(
-                    self,
-                    "Crea DRW?",
+                    self, "Crea DRW?",
                     "Creare anche il file disegno (.SLDDRW) nella workspace?\n"
                     "(verrà creato anche il documento Disegno nel PDM)",
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 )
                 also_drw = (r == QMessageBox.StandardButton.Yes)
 
+        from config import load_local_config
+        from pathlib import Path
+        import shutil
+        cfg      = load_local_config()
+        _EXT     = {"Parte": ".SLDPRT", "Assieme": ".SLDASM", "Disegno": ".SLDDRW"}
+        _TPL_KEY = {"Parte": "sw_template_prt", "Assieme": "sw_template_asm",
+                    "Disegno": "sw_template_drw"}
+        tpl_path = Path(cfg.get(_TPL_KEY.get(doc["doc_type"], ""), "") or "")
+        if not tpl_path.exists():
+            QMessageBox.warning(
+                self, "Template mancante",
+                f"Template non configurato per '{doc['doc_type']}'.\n"
+                "Configurarlo in Strumenti \u2192 Configurazione SolidWorks."
+            )
+            return
+
+        dest = Path(ws) / (doc["code"] + _EXT.get(doc["doc_type"], ".SLDPRT"))
+
+        # Connetti a SolidWorks (sessione attiva o nuova)
+        sw = None
         try:
-            dest, drw_dest = session.files.create_from_template(
-                self.document_id, ws, also_drw=also_drw
-            )
-            msg = f"File creato:\n{dest}"
-            if drw_dest:
-                msg += f"\n\nDRW creato:\n{drw_dest}"
-            msg += "\n\nAprire il file principale in SolidWorks?"
-            r = QMessageBox.question(
-                self, "File creato", msg,
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            )
-            if r == QMessageBox.StandardButton.Yes:
-                os.startfile(str(dest))
-        except FileNotFoundError as e:
-            QMessageBox.warning(self, "Template mancante", str(e))
+            import win32com.client
+            try:
+                sw = win32com.client.GetActiveObject("SldWorks.Application")
+            except Exception:
+                sw = win32com.client.Dispatch("SldWorks.Application")
+            sw.Visible = True
+        except Exception:
+            sw = None
+
+        # Crea file principale
+        try:
+            if sw is not None:
+                new_doc = sw.NewDocument(
+                    str(tpl_path).replace("/", "\\"), 0, 0, 0
+                )
+                if new_doc is None:
+                    raise RuntimeError(
+                        "SolidWorks NewDocument ha restituito None.\n"
+                        "Verificare che il file template sia valido e non sia già aperto."
+                    )
+                new_doc.SaveAs(str(dest).replace("/", "\\"))
+            else:
+                shutil.copy2(str(tpl_path), str(dest))
         except Exception as e:
-            QMessageBox.critical(self, "Errore", str(e))
+            QMessageBox.critical(self, "Errore creazione file", str(e))
+            return
+
+        # Crea DRW companion se richiesto
+        drw_dest = None
+        if also_drw:
+            drw_tpl_path = Path(cfg.get("sw_template_drw", "") or "")
+            if drw_tpl_path.exists():
+                drw_dest = Path(ws) / (doc["code"] + ".SLDDRW")
+                try:
+                    if sw is not None:
+                        drw_doc = sw.NewDocument(
+                            str(drw_tpl_path).replace("/", "\\"), 0, 0, 0
+                        )
+                        if drw_doc:
+                            drw_doc.SaveAs(str(drw_dest).replace("/", "\\"))
+                        else:
+                            shutil.copy2(str(drw_tpl_path), str(drw_dest))
+                    else:
+                        shutil.copy2(str(drw_tpl_path), str(drw_dest))
+                except Exception as e:
+                    QMessageBox.warning(self, "Errore DRW", str(e))
+                    drw_dest = None
+                try:
+                    session.files.get_or_create_drw_document(self.document_id)
+                except Exception:
+                    pass
+
+        msg = f"File creato:\n{dest}"
+        if drw_dest:
+            msg += f"\n\nDRW creato:\n{drw_dest}"
+        if sw is None:
+            msg += (
+                "\n\n\u26a0\ufe0f SolidWorks non raggiungibile via COM: file copiato dal template.\n"
+                "Aprirlo manualmente in SolidWorks."
+            )
+        QMessageBox.information(self, "File creato", msg)
+        if also_drw:
+            self._refresh_companion(doc)
 
     # ------------------------------------------------------------------
     # BOM

@@ -10,6 +10,7 @@ from PyQt6.QtCore import Qt
 
 from ui.session import session
 from ui.styles import TYPE_ICON
+from config import WORKFLOW_STATES
 
 
 class CheckoutDialog(QDialog):
@@ -48,7 +49,10 @@ class CheckoutDialog(QDialog):
         ))
         grp_layout.addWidget(QLabel(f"Tipo: {self.doc['doc_type']}"))
         grp_layout.addWidget(QLabel(f"Titolo: {self.doc['title'] or ''}"))
-        grp_layout.addWidget(QLabel(f"Stato: {self.doc['state']}"))
+        state = self.doc['state']
+        state_color = WORKFLOW_STATES.get(state, {}).get('color', '#cdd6f4')
+        lbl_state = QLabel(f"Stato: <b style='color:{state_color}'>{state}</b>")
+        grp_layout.addWidget(lbl_state)
         layout.addWidget(grp)
 
         # Opzioni
@@ -63,10 +67,13 @@ class CheckoutDialog(QDialog):
             drw = session.files.get_drw_document(self.document_id)
             if drw:
                 from core.checkout_manager import READONLY_STATES
-                if drw["state"] in READONLY_STATES:
+                drw_state = drw['state']
+                drw_color = WORKFLOW_STATES.get(drw_state, {}).get('color', '#cdd6f4')
+                if drw_state in READONLY_STATES:
                     self.chk_drw.setText(
-                        f"DRW associato ({drw['state']}) \u2014 non disponibile per checkout"
+                        f"DRW associato ({drw_state}) \u2014 non disponibile per checkout"
                     )
+                    self.chk_drw.setStyleSheet(f"color: {drw_color};")
                     self.chk_drw.setEnabled(False)
                 elif drw["is_locked"]:
                     locker = drw.get("locked_by_name", "altro utente")
@@ -139,6 +146,33 @@ class CheckoutDialog(QDialog):
         layout.addLayout(btn_row)
 
     def _do_checkout(self):
+        # Pre-check: file già in workspace con contenuto diverso?
+        from pathlib import Path
+        from config import load_local_config
+        from core.file_manager import EXT_FOR_TYPE
+        from core.checkout_manager import CheckoutManager
+        cfg = load_local_config()
+        ws = Path(cfg.get("sw_workspace", ""))
+        if ws:
+            ext = EXT_FOR_TYPE.get(self.doc.get("doc_type", ""), ".SLDPRT")
+            ws_file = ws / (self.doc["code"] + ext)
+            if ws_file.exists() and self.doc.get("archive_path") and session.sp:
+                arch_file = session.sp.root / self.doc["archive_path"]
+                if arch_file.exists():
+                    ws_md5   = CheckoutManager._md5(ws_file)
+                    arch_md5 = CheckoutManager._md5(arch_file)
+                    if ws_md5 != arch_md5:
+                        r = QMessageBox.question(
+                            self, "File già in workspace",
+                            f"{ws_file.name} è già presente nella workspace\n"
+                            f"e differisce dalla versione archiviata.\n\n"
+                            f"Sovrascrivere il file locale con la versione dell'archivio?",
+                            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                            QMessageBox.StandardButton.No,
+                        )
+                        if r != QMessageBox.StandardButton.Yes:
+                            return
+
         try:
             include_drw = self.chk_drw.isChecked() if self.chk_drw.isEnabled() else False
 

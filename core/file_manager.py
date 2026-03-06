@@ -13,6 +13,30 @@ if TYPE_CHECKING:
 from config import SW_EXTENSIONS
 
 # Mappa tipo documento → estensione file SW attesa
+
+
+_SW_DOC_TYPE_ID = {"Parte": 1, "Assieme": 2, "Disegno": 3}
+
+
+def _launch_in_sw(file_path: Path, doc_type_str: str) -> None:
+    """
+    Apre il file in SolidWorks riutilizzando la sessione attiva se disponibile.
+    Fallback a os.startfile se COM non disponibile.
+    """
+    type_id = _SW_DOC_TYPE_ID.get(doc_type_str, 1)
+    try:
+        import win32com.client
+        try:
+            sw = win32com.client.GetActiveObject("SldWorks.Application")
+        except Exception:
+            sw = win32com.client.Dispatch("SldWorks.Application")
+        sw.Visible = True
+        sw.OpenDoc(str(file_path).replace("/", "\\"), type_id)
+        return
+    except Exception:
+        pass
+    import os
+    os.startfile(str(file_path))
 EXT_FOR_TYPE: dict[str, str] = {
     "Parte":   ".SLDPRT",
     "Assieme": ".SLDASM",
@@ -148,12 +172,22 @@ class FileManager:
         return None
 
     def get_drw_document(self, prt_asm_doc_id: int) -> Optional[dict]:
-        """Trova il documento Disegno che ha stesso codice del PRT/ASM dato."""
+        """Trova il documento Disegno che ha stesso codice e revisione del PRT/ASM dato."""
         parent = self.get_document(prt_asm_doc_id)
         if not parent:
             return None
+        # Prima cerca DRW con stessa revisione
+        drw = self.db.fetchone(
+            "SELECT * FROM documents WHERE code=? AND doc_type='Disegno' "
+            "AND revision=?",
+            (parent["code"], parent["revision"]),
+        )
+        if drw:
+            return drw
+        # Fallback: revisione più recente non obsoleta
         return self.db.fetchone(
-            "SELECT * FROM documents WHERE code=? AND doc_type='Disegno'",
+            "SELECT * FROM documents WHERE code=? AND doc_type='Disegno' "
+            "AND state != 'Obsoleto' ORDER BY revision DESC",
             (parent["code"],),
         )
 
@@ -276,7 +310,7 @@ class FileManager:
                     raise FileNotFoundError(f"File archivio non trovato:\n{src}")
                 shutil.copy2(src, ws_file)
 
-        os.startfile(str(ws_file))
+        _launch_in_sw(ws_file, doc.get("doc_type", "Parte"))
         return ws_file
 
     def export_to_workspace(self, document_id: int,

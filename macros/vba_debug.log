@@ -57,3 +57,18 @@
 04/03/2026 23:09:18  Props scritte in C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\sw_props_temp.json
 04/03/2026 23:09:18  CMD: "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\python.exe" "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\sw_bridge.py" --action import_props_json --file "C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\archive\AAA_0100-0003\00\AAA_0100-0003.SLDPRT"
 04/03/2026 23:09:18  RC: 0
+05/03/2026 23:40:30  CMD: "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\python.exe" "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\sw_bridge.py" --action open
+05/03/2026 23:40:30  RC: 0
+06/03/2026 00:29:17  RunPanel CMD: "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\pythonw.exe" "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\pdm_panel.py" "C:\Users\prog3\Desktop\APP MECCANICA\_ws2\AAA_0100-0006.SLDPRT"
+06/03/2026 00:30:43  RunPanel CMD: "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\pythonw.exe" "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\pdm_panel.py" "C:\Users\prog3\Desktop\APP MECCANICA\_ws2\AAA_0100-V001.SLDASM"
+06/03/2026 00:41:48  RunPanel CMD: "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\pythonw.exe" "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\pdm_panel.py"
+06/03/2026 01:24:28  RunPanel CMD: "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\pythonw.exe" "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\pdm_panel.py"
+06/03/2026 01:27:45  RunPanel CMD: "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\pythonw.exe" "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\pdm_panel.py"
+06/03/2026 01:29:36  RunPanel CMD: "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\pythonw.exe" "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\pdm_panel.py" "C:\Users\prog3\Desktop\Parte1.SLDPRT"
+06/03/2026 01:31:02  RunPanel CMD: "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\pythonw.exe" "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\pdm_panel.py" "C:\Users\prog3\Desktop\Parte1.SLDPRT"
+06/03/2026 01:31:49  RunPanel CMD: "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\pythonw.exe" "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\pdm_panel.py" "C:\Users\prog3\Desktop\Parte1.SLDPRT"
+06/03/2026 01:32:07  RunPanel CMD: "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\pythonw.exe" "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\pdm_panel.py" "C:\Users\prog3\Desktop\Parte1.SLDPRT"
+06/03/2026 01:35:13  RunPanel CMD: "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\pythonw.exe" "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\pdm_panel.py" "C:\Users\prog3\Desktop\APP MECCANICA\_ws2\Parte1.SLDPRT"
+06/03/2026 01:38:07  RunPanel CMD: "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\pythonw.exe" "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\pdm_panel.py" "C:\Users\prog3\Desktop\APP MECCANICA\_ws2\Parte1.SLDPRT"
+06/03/2026 01:38:58  RunPanel CMD: "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\pythonw.exe" "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\pdm_panel.py" "C:\Users\prog3\Desktop\Assieme1.SLDASM"
+06/03/2026 01:41:07  RunPanel CMD: "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\pythonw.exe" "C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\macros\pdm_panel.py" "C:\Users\prog3\Desktop\Assieme1.SLDASM"

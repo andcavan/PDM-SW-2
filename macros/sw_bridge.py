@@ -239,11 +239,56 @@ def action_checkin(file_path: str):
         if doc["doc_type"] == "Assieme":
             msg += f"\nComponenti BOM aggiornati: {n}"
 
+        # POST-CHECKIN: genera thumbnail via eDrawings (non bloccante)
+        _generate_thumbnail(doc, sp)
+
         write_result(msg)
     except PermissionError as e:
         write_result(str(e), error=True)
     except Exception as e:
         write_result(f"Errore check-in:\n{e}", error=True)
+
+
+def _generate_thumbnail(doc: dict, sp):
+    """
+    Genera thumbnail PNG del file archiviato tramite eDrawings.
+    Non bloccante: errori vengono solo loggati senza impatto sul checkin.
+    """
+    try:
+        archive_path = sp.archive_path(doc["code"], doc["revision"])
+        file_name = doc.get("file_name")
+        if not file_name:
+            return
+        src_file = archive_path / file_name
+        if not src_file.exists():
+            logging.info("Thumbnail: file archivio non trovato: %s", src_file)
+            return
+
+        sp.thumbnails.mkdir(parents=True, exist_ok=True)
+        dest = sp.thumbnails / f"{doc['code']}_{doc['revision']}.png"
+
+        import win32com.client
+        import time
+
+        logging.info("Thumbnail: avvio eDrawings per %s", src_file)
+        eApp = win32com.client.Dispatch("EModelView.EModelViewControl")
+        eApp.OpenDoc(str(src_file), False, False, True, "")
+
+        # Attendi che il documento sia caricato
+        for _ in range(30):
+            time.sleep(0.5)
+            try:
+                if eApp.FileName:
+                    break
+            except Exception:
+                pass
+
+        eApp.SaveAs(str(dest))
+        eApp.CloseActiveDoc("")
+        logging.info("Thumbnail generata: %s", dest)
+
+    except Exception as e:
+        logging.warning("Thumbnail generation fallita (non bloccante): %s", e)
 
 
 def action_undo_checkout(file_path: str):
@@ -346,6 +391,94 @@ def action_open():
     write_result("Applicazione PDM-SW avviata.")
 
 
+def action_panel(file_path: str = ""):
+    """
+    Apre il pannello Qt PDM (pdm_panel.py) in background.
+    La VBA NON aspetta la chiusura del pannello.
+    """
+    import subprocess
+    panel_script = ROOT / "macros" / "pdm_panel.py"
+    venv_python  = ROOT / ".venv" / "Scripts" / "pythonw.exe"
+    python       = str(venv_python) if venv_python.exists() else sys.executable
+
+    args = [python, str(panel_script)]
+    if file_path:
+        args.append(file_path)
+
+    logging.info("action_panel: lancio %s", args)
+    subprocess.Popen(args, cwd=str(ROOT))
+    write_result("Pannello PDM avviato.")
+
+
+def action_create_code(file_path: str):
+    """
+    Legge i parametri da macros/create_code_params.json scritto dalla VBA,
+    assegna il codice via CodingManager, crea il documento nel DB.
+    Ritorna il codice assegnato nel result file.
+    """
+    import json
+    db, sp, user = load_session()
+    from core.coding_manager import CodingManager
+    from core.file_manager import FileManager
+
+    params_file = ROOT / "macros" / "create_code_params.json"
+    if not params_file.exists():
+        write_result("File parametri 'create_code_params.json' non trovato.", error=True)
+        return
+
+    try:
+        params = json.loads(params_file.read_text(encoding="utf-8-sig"))
+    except Exception as e:
+        write_result(f"Errore lettura parametri JSON:\n{e}", error=True)
+        return
+    finally:
+        try:
+            params_file.unlink(missing_ok=True)
+        except Exception:
+            pass
+
+    title      = params.get("title", "")
+    machine_id = params.get("machine_id")
+    group_id   = params.get("group_id")
+    subtype    = params.get("subtype", "PRT")    # PRT / ASM_MACH / ASM_GRP / ASM_SUB
+    doc_level  = params.get("doc_level", 2)
+
+    if not title:
+        write_result("Campo 'title' obbligatorio nei parametri.", error=True)
+        return
+    if machine_id is None:
+        write_result("Campo 'machine_id' obbligatorio nei parametri.", error=True)
+        return
+
+    coding = CodingManager(db)
+    files  = FileManager(db, sp, user)
+
+    try:
+        if subtype == "ASM_MACH":
+            code = coding.next_code_liv0(machine_id)
+        elif subtype == "ASM_GRP":
+            code = coding.next_code_liv1(machine_id, group_id)
+        elif subtype == "ASM_SUB":
+            code = coding.next_code_liv2_subgroup(machine_id, group_id)
+        else:  # PRT
+            code = coding.next_code_liv2_part(machine_id, group_id)
+
+        fp = Path(file_path)
+        from config import SW_EXTENSIONS
+        doc_type = SW_EXTENSIONS.get(fp.suffix.upper(), "Parte")
+
+        doc_id = files.create_document(
+            code=code, revision="00", doc_type=doc_type, title=title,
+            machine_id=machine_id, group_id=group_id, doc_level=doc_level,
+        )
+        logging.info("create_code: codice=%s id=%d", code, doc_id)
+        write_result(f"Documento creato:\nCodice: {code}  rev.00  [{doc_type}]\n{title}")
+
+    except Exception as e:
+        logging.error("Errore create_code: %s", e, exc_info=True)
+        write_result(f"Errore generazione codice:\n{e}", error=True)
+
+
 def action_import_props_json(file_path: str):
     """
     Importa proprieta' dal file JSON scritto dalla macro VBA.
@@ -435,7 +568,8 @@ def _main_inner():
         "--action",
         choices=["checkout", "checkin", "undo_checkout",
                  "import_props", "import_props_json",
-                 "export_props", "open"],
+                 "export_props", "open",
+                 "panel", "create_code"],
         required=True,
     )
     parser.add_argument("--file", default="",
@@ -483,6 +617,15 @@ def _main_inner():
 
         elif args.action == "open":
             action_open()
+
+        elif args.action == "panel":
+            action_panel(args.file)
+
+        elif args.action == "create_code":
+            if not args.file:
+                write_result("--file richiesto per create_code", error=True)
+                sys.exit(1)
+            action_create_code(args.file)
 
     except Exception as e:
         logging.error("Errore azione %s: %s", args.action, e, exc_info=True)

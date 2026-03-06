@@ -58,8 +58,10 @@ class MainWindow(QMainWindow):
         # Status bar
         self.status = QStatusBar()
         self.setStatusBar(self.status)
-        self.lbl_user_status = QLabel()
-        self.lbl_db_status   = QLabel()
+        self.lbl_profile_status = QLabel()
+        self.lbl_user_status    = QLabel()
+        self.lbl_db_status      = QLabel()
+        self.status.addPermanentWidget(self.lbl_profile_status)
         self.status.addPermanentWidget(self.lbl_db_status)
         self.status.addPermanentWidget(self.lbl_user_status)
 
@@ -111,6 +113,10 @@ class MainWindow(QMainWindow):
         m_tools.addAction(act_sw_cfg)
 
         m_tools.addSeparator()
+
+        act_profiles = QAction("📋 PDM Profile…", self)
+        act_profiles.triggered.connect(self._open_profiles)
+        m_tools.addAction(act_profiles)
 
         act_setup = QAction("Configurazione percorso rete…", self)
         act_setup.triggered.connect(self._open_setup)
@@ -191,6 +197,14 @@ class MainWindow(QMainWindow):
         else:
             self.lbl_db_status.setText("  ⚠️  Nessun DB  ")
             self.lbl_db_status.setStyleSheet("color:#f38ba8;")
+
+        # Profilo attivo
+        profile = session.profile_name or ""
+        if profile:
+            self.lbl_profile_status.setText(f"  📋 {profile}  ")
+            self.lbl_profile_status.setStyleSheet("color:#89b4fa;")
+        else:
+            self.lbl_profile_status.setText("")
 
     # ------------------------------------------------------------------
     def _new_document(self):
@@ -294,6 +308,29 @@ class MainWindow(QMainWindow):
         from ui.sw_config_dialog import SWConfigDialog
         dlg = SWConfigDialog(parent=self)
         dlg.exec()
+
+    def _open_profiles(self):
+        from ui.profile_dialog import ProfileDialog
+        dlg = ProfileDialog(parent=self)
+        dlg.profile_switched.connect(self._on_profile_switched)
+        dlg.exec()
+
+    def _on_profile_switched(self, profile_name: str):
+        try:
+            session.switch_profile(profile_name)
+            self._update_status()
+            self._refresh_all()
+            if not session.is_logged_in:
+                from ui.login_dialog import LoginDialog
+                login = LoginDialog(parent=self)
+                if login.exec():
+                    self._update_status()
+                    self._refresh_all()
+        except Exception as e:
+            QMessageBox.critical(
+                self, "Errore",
+                f"Cambio profilo fallito:\n{e}"
+            )
 
     # ------------------------------------------------------------------
     def _sw_checkout(self):

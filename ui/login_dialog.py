@@ -18,6 +18,7 @@ class LoginDialog(QDialog):
         self.setWindowTitle(f"{APP_NAME} – Accesso")
         self.setFixedWidth(360)
         self.setModal(True)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
         self._build_ui()
         self._load_users()
 

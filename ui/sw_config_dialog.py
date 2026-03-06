@@ -1,5 +1,5 @@
 # =============================================================================
-#  ui/sw_config_dialog.py  –  Configurazione SolidWorks (template e .reg)
+#  ui/sw_config_dialog.py  –  Configurazione SolidWorks (template, exe, .reg)
 # =============================================================================
 from __future__ import annotations
 import subprocess
@@ -8,11 +8,15 @@ from pathlib import Path
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QGroupBox, QFormLayout, QFileDialog,
-    QMessageBox, QTabWidget, QWidget, QTextEdit
+    QMessageBox, QTabWidget, QWidget, QTextEdit, QCheckBox,
+    QRadioButton, QButtonGroup
 )
 from PyQt6.QtCore import Qt
 
 from config import load_local_config, save_local_config
+from core.reg_manager import (
+    RestoreOptions, import_reg, detect_solidworks_exe, detect_edrawings_exe,
+)
 
 
 # Chiavi usate in local_config.json
@@ -21,6 +25,8 @@ CFG_TPL_ASM    = "sw_template_asm"
 CFG_TPL_DRW    = "sw_template_drw"
 CFG_REG_FILE   = "sw_reg_file"
 CFG_WORKSPACE  = "sw_workspace"
+CFG_SW_EXE     = "sw_exe_path"
+CFG_EDRAW_EXE  = "edrawings_exe_path"
 
 
 class SWConfigDialog(QDialog):
@@ -97,7 +103,46 @@ class SWConfigDialog(QDialog):
         w = QWidget()
         layout = QVBoxLayout(w)
 
-        grp_reg = QGroupBox("File di registro SolidWorks (.reg)")
+        # ---- Eseguibili ----
+        grp_exe = QGroupBox("Eseguibili")
+        form_exe = QFormLayout(grp_exe)
+
+        # SolidWorks exe
+        sw_row = QHBoxLayout()
+        self.txt_sw_exe = QLineEdit()
+        self.txt_sw_exe.setPlaceholderText("C:\\...\\SLDWORKS.exe")
+        self.txt_sw_exe.setReadOnly(True)
+        btn_sw_browse = QPushButton("Sfoglia…")
+        btn_sw_browse.clicked.connect(lambda: self._browse_path(
+            self.txt_sw_exe, "SolidWorks (SLDWORKS.exe)"
+        ))
+        btn_sw_detect = QPushButton("Rileva")
+        btn_sw_detect.clicked.connect(self._detect_sw)
+        sw_row.addWidget(self.txt_sw_exe, stretch=1)
+        sw_row.addWidget(btn_sw_browse)
+        sw_row.addWidget(btn_sw_detect)
+        form_exe.addRow("SolidWorks:", sw_row)
+
+        # eDrawings exe
+        ed_row = QHBoxLayout()
+        self.txt_edraw_exe = QLineEdit()
+        self.txt_edraw_exe.setPlaceholderText("C:\\...\\EModelView.exe")
+        self.txt_edraw_exe.setReadOnly(True)
+        btn_ed_browse = QPushButton("Sfoglia…")
+        btn_ed_browse.clicked.connect(lambda: self._browse_path(
+            self.txt_edraw_exe, "eDrawings (EModelView.exe *.exe)"
+        ))
+        btn_ed_detect = QPushButton("Rileva")
+        btn_ed_detect.clicked.connect(self._detect_edraw)
+        ed_row.addWidget(self.txt_edraw_exe, stretch=1)
+        ed_row.addWidget(btn_ed_browse)
+        ed_row.addWidget(btn_ed_detect)
+        form_exe.addRow("eDrawings:", ed_row)
+
+        layout.addWidget(grp_exe)
+
+        # ---- File di registro ----
+        grp_reg = QGroupBox("File di registro SolidWorks (.reg / .sldreg)")
         form_reg = QFormLayout(grp_reg)
 
         reg_row = QHBoxLayout()
@@ -106,28 +151,84 @@ class SWConfigDialog(QDialog):
         self.txt_reg.setReadOnly(True)
         btn_browse = QPushButton("Sfoglia…")
         btn_browse.clicked.connect(lambda: self._browse_path(
-            self.txt_reg, "File registro (*.reg)"
+            self.txt_reg, "File registro (*.reg *.sldreg)"
         ))
-        btn_apply_reg = QPushButton("Applica .reg")
-        btn_apply_reg.setObjectName("btn_warning")
-        btn_apply_reg.setToolTip(
-            "Importa il file .reg nel registro di Windows (richiede privilegi amministrativi)"
-        )
-        btn_apply_reg.clicked.connect(self._apply_reg)
         reg_row.addWidget(self.txt_reg, stretch=1)
         reg_row.addWidget(btn_browse)
-        reg_row.addWidget(btn_apply_reg)
-        form_reg.addRow(reg_row)
-
-        note_reg = QLabel(
-            "⚠  L'applicazione del file .reg modifica il registro di sistema e "
-            "potrebbe richiedere il riavvio di SolidWorks."
-        )
-        note_reg.setWordWrap(True)
-        note_reg.setObjectName("subtitle_label")
+        form_reg.addRow("File:", reg_row)
 
         layout.addWidget(grp_reg)
-        layout.addWidget(note_reg)
+
+        # ---- Cosa ripristinare ----
+        grp_opts = QGroupBox("Cosa ripristinare")
+        opts_layout = QVBoxLayout(grp_opts)
+
+        self.chk_system = QCheckBox("Opzioni del sistema")
+        self.chk_system.setChecked(True)
+        opts_layout.addWidget(self.chk_system)
+
+        self.chk_toolbar = QCheckBox("Layout barre strumenti")
+        self.chk_toolbar.setChecked(True)
+        self.chk_toolbar.toggled.connect(self._sync_toolbar_radios)
+        opts_layout.addWidget(self.chk_toolbar)
+
+        # Radio toolbar mode (indentate)
+        tb_group = QHBoxLayout()
+        tb_group.setContentsMargins(24, 0, 0, 0)
+        self.rad_tb_all = QRadioButton("Tutte le barre + CommandManager")
+        self.rad_tb_all.setChecked(True)
+        self.rad_tb_macro = QRadioButton("Solo barra macro")
+        self._tb_group = QButtonGroup(self)
+        self._tb_group.addButton(self.rad_tb_all)
+        self._tb_group.addButton(self.rad_tb_macro)
+        tb_group.addWidget(self.rad_tb_all)
+        tb_group.addWidget(self.rad_tb_macro)
+        tb_group.addStretch()
+        opts_layout.addLayout(tb_group)
+
+        self.chk_keys = QCheckBox("Tasti rapidi da tastiera")
+        self.chk_keys.setChecked(True)
+        opts_layout.addWidget(self.chk_keys)
+
+        self.chk_mouse = QCheckBox("Gesti del mouse")
+        self.chk_mouse.setChecked(True)
+        opts_layout.addWidget(self.chk_mouse)
+
+        self.chk_menu = QCheckBox("Personalizzazioni menu")
+        self.chk_menu.setChecked(True)
+        opts_layout.addWidget(self.chk_menu)
+
+        self.chk_views = QCheckBox("Viste salvate")
+        self.chk_views.setChecked(True)
+        opts_layout.addWidget(self.chk_views)
+
+        self.chk_cleanup = QCheckBox("Pulisci chiavi selezionate prima dell'import")
+        self.chk_cleanup.setChecked(True)
+        self.chk_cleanup.setToolTip(
+            "Cancella le chiavi di registro corrispondenti prima di importare "
+            "(evita residui da configurazioni precedenti)"
+        )
+        opts_layout.addWidget(self.chk_cleanup)
+
+        layout.addWidget(grp_opts)
+
+        # ---- Bottone applica ----
+        btn_apply = QPushButton("Applica configurazione registro")
+        btn_apply.setObjectName("btn_warning")
+        btn_apply.setToolTip(
+            "Importa le sezioni selezionate nel registro di Windows"
+        )
+        btn_apply.clicked.connect(self._apply_reg)
+        layout.addWidget(btn_apply)
+
+        note = QLabel(
+            "⚠  L'applicazione modifica il registro di sistema.\n"
+            "Chiudere SolidWorks prima di applicare e riavviarlo dopo."
+        )
+        note.setWordWrap(True)
+        note.setObjectName("subtitle_label")
+        layout.addWidget(note)
+
         layout.addStretch()
         return w
 
@@ -199,13 +300,17 @@ class SWConfigDialog(QDialog):
         self.txt_tpl_drw.setText(self._cfg.get(CFG_TPL_DRW, ""))
         self.txt_reg.setText(self._cfg.get(CFG_REG_FILE, ""))
         self.txt_workspace.setText(self._cfg.get(CFG_WORKSPACE, ""))
+        self.txt_sw_exe.setText(self._cfg.get(CFG_SW_EXE, ""))
+        self.txt_edraw_exe.setText(self._cfg.get(CFG_EDRAW_EXE, ""))
 
     def _save(self):
-        self._cfg[CFG_TPL_PRT]   = self.txt_tpl_prt.text().strip()
-        self._cfg[CFG_TPL_ASM]   = self.txt_tpl_asm.text().strip()
-        self._cfg[CFG_TPL_DRW]   = self.txt_tpl_drw.text().strip()
+        self._cfg[CFG_TPL_PRT]    = self.txt_tpl_prt.text().strip()
+        self._cfg[CFG_TPL_ASM]    = self.txt_tpl_asm.text().strip()
+        self._cfg[CFG_TPL_DRW]    = self.txt_tpl_drw.text().strip()
         self._cfg[CFG_REG_FILE]   = self.txt_reg.text().strip()
         self._cfg[CFG_WORKSPACE]  = self.txt_workspace.text().strip()
+        self._cfg[CFG_SW_EXE]     = self.txt_sw_exe.text().strip()
+        self._cfg[CFG_EDRAW_EXE]  = self.txt_edraw_exe.text().strip()
         save_local_config(self._cfg)
         QMessageBox.information(self, "OK", "Configurazione SolidWorks salvata")
 
@@ -214,32 +319,76 @@ class SWConfigDialog(QDialog):
         if not reg_path or not Path(reg_path).exists():
             QMessageBox.warning(self, "Errore", "File .reg non trovato")
             return
+
+        options = self._collect_restore_options()
+        if not options.has_any_selection():
+            QMessageBox.warning(
+                self, "Nessuna selezione",
+                "Seleziona almeno una voce da ripristinare."
+            )
+            return
+
         r = QMessageBox.question(
-            self, "Applica file .reg",
+            self, "Applica configurazione registro",
             f"Importare nel registro di sistema:\n{reg_path}\n\n"
+            f"Voci selezionate: {options.describe()}\n\n"
             "Continuare?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if r != QMessageBox.StandardButton.Yes:
             return
+
         try:
-            result = subprocess.run(
-                ["reg", "import", reg_path],
-                capture_output=True, text=True, timeout=30
-            )
-            if result.returncode == 0:
+            ok, msg = import_reg(Path(reg_path), options)
+            if ok:
                 QMessageBox.information(
                     self, "OK",
-                    "File .reg importato con successo.\n"
-                    "Riavviare SolidWorks per applicare le impostazioni."
+                    f"{msg}\n\nRiavviare SolidWorks per applicare."
                 )
             else:
-                QMessageBox.critical(
-                    self, "Errore",
-                    f"Importazione fallita:\n{result.stderr or result.stdout}"
-                )
+                QMessageBox.critical(self, "Errore", f"Importazione fallita:\n{msg}")
         except Exception as e:
             QMessageBox.critical(self, "Errore", str(e))
+
+    def _collect_restore_options(self) -> RestoreOptions:
+        return RestoreOptions(
+            system_options=self.chk_system.isChecked(),
+            toolbar_layout=self.chk_toolbar.isChecked(),
+            toolbar_mode="macro_only" if self.rad_tb_macro.isChecked() else "all",
+            keyboard_shortcuts=self.chk_keys.isChecked(),
+            mouse_gestures=self.chk_mouse.isChecked(),
+            menu_customizations=self.chk_menu.isChecked(),
+            saved_views=self.chk_views.isChecked(),
+            cleanup_before_import=self.chk_cleanup.isChecked(),
+        )
+
+    def _sync_toolbar_radios(self, checked: bool):
+        self.rad_tb_all.setEnabled(checked)
+        self.rad_tb_macro.setEnabled(checked)
+
+    def _detect_sw(self):
+        found = detect_solidworks_exe()
+        if found:
+            self.txt_sw_exe.setText(str(found))
+            QMessageBox.information(self, "Rilevato", f"SolidWorks trovato:\n{found}")
+        else:
+            QMessageBox.warning(
+                self, "Non trovato",
+                "SLDWORKS.exe non trovato automaticamente.\n"
+                "Usa 'Sfoglia' per selezionarlo manualmente."
+            )
+
+    def _detect_edraw(self):
+        found = detect_edrawings_exe()
+        if found:
+            self.txt_edraw_exe.setText(str(found))
+            QMessageBox.information(self, "Rilevato", f"eDrawings trovato:\n{found}")
+        else:
+            QMessageBox.warning(
+                self, "Non trovato",
+                "EModelView.exe non trovato automaticamente.\n"
+                "Usa 'Sfoglia' per selezionarlo manualmente."
+            )
 
     # ==================================================================
     # Metodi statici di utilità (usati da document_dialog)
@@ -262,3 +411,17 @@ class SWConfigDialog(QDialog):
         cfg = load_local_config()
         p = cfg.get(CFG_WORKSPACE, "")
         return Path(p) if p else None
+
+    @staticmethod
+    def get_solidworks_exe() -> Path | None:
+        """Ritorna il path dell'eseguibile SolidWorks configurato, o None."""
+        cfg = load_local_config()
+        p = cfg.get(CFG_SW_EXE, "")
+        return Path(p) if p and Path(p).is_file() else None
+
+    @staticmethod
+    def get_edrawings_exe() -> Path | None:
+        """Ritorna il path dell'eseguibile eDrawings configurato, o None."""
+        cfg = load_local_config()
+        p = cfg.get(CFG_EDRAW_EXE, "")
+        return Path(p) if p and Path(p).is_file() else None

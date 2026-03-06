@@ -1,2 +1,2 @@
 OK
-47 proprieta' importate da SolidWorks nel PDM.
+Applicazione PDM-SW avviata.

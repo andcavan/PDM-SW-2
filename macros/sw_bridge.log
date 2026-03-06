@@ -318,3 +318,26 @@ Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)
 2026-03-04 23:47:05 [INFO] sw_bridge avviato  |  argv=['-c']
 2026-03-04 23:47:05 [INFO] ROOT=C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2  |  cwd=C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2
 2026-03-04 23:47:05 [INFO] Python=C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\python.exe
+2026-03-05 23:40:30 [INFO] ============================================================
+2026-03-05 23:40:30 [INFO] sw_bridge avviato  |  argv=['C:\\Users\\prog3\\Desktop\\APP MECCANICA\\PDM-SW-2\\macros\\sw_bridge.py', '--action', 'open']
+2026-03-05 23:40:30 [INFO] ROOT=C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2  |  cwd=C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2
+2026-03-05 23:40:30 [INFO] Python=C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\python.exe
+2026-03-05 23:40:30 [INFO] Azione: open  |  File: 
+2026-03-05 23:40:30 [INFO] action_open: lancio C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\.venv\Scripts\pythonw.exe C:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\main.py
+2026-03-05 23:40:30 [INFO] write_result [INFO]: Applicazione PDM-SW avviata.
+2026-03-05 23:40:30 [INFO] Azione open completata con successo
+2026-03-05 23:57:26 [INFO] pdm_panel avviato  |  file=
+2026-03-05 23:59:22 [INFO] pdm_panel avviato  |  file=
+2026-03-06 00:29:18 [INFO] pdm_panel avviato  |  file=C:\Users\prog3\Desktop\APP MECCANICA\_ws2\AAA_0100-0006.SLDPRT
+2026-03-06 00:30:43 [INFO] pdm_panel avviato  |  file=C:\Users\prog3\Desktop\APP MECCANICA\_ws2\AAA_0100-V001.SLDASM
+2026-03-06 00:41:49 [INFO] pdm_panel avviato  |  file=
+2026-03-06 01:24:28 [INFO] pdm_panel avviato  |  file=
+2026-03-06 01:27:45 [INFO] pdm_panel avviato  |  file=
+2026-03-06 01:29:37 [INFO] pdm_panel avviato  |  file=C:\Users\prog3\Desktop\Parte1.SLDPRT
+2026-03-06 01:31:02 [INFO] pdm_panel avviato  |  file=C:\Users\prog3\Desktop\Parte1.SLDPRT
+2026-03-06 01:31:50 [INFO] pdm_panel avviato  |  file=C:\Users\prog3\Desktop\Parte1.SLDPRT
+2026-03-06 01:32:07 [INFO] pdm_panel avviato  |  file=C:\Users\prog3\Desktop\Parte1.SLDPRT
+2026-03-06 01:35:13 [INFO] pdm_panel avviato  |  file=C:\Users\prog3\Desktop\APP MECCANICA\_ws2\Parte1.SLDPRT
+2026-03-06 01:38:07 [INFO] pdm_panel avviato  |  file=C:\Users\prog3\Desktop\APP MECCANICA\_ws2\Parte1.SLDPRT
+2026-03-06 01:38:58 [INFO] pdm_panel avviato  |  file=C:\Users\prog3\Desktop\Assieme1.SLDASM
+2026-03-06 01:41:07 [INFO] pdm_panel avviato  |  file=C:\Users\prog3\Desktop\Assieme1.SLDASM

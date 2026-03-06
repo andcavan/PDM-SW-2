@@ -4,7 +4,7 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QComboBox, QTreeWidget, QTreeWidgetItem,
-    QHeaderView, QMenu, QMessageBox, QFileDialog
+    QHeaderView, QMenu, QMessageBox, QFileDialog, QSplitter
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QAction
@@ -43,6 +43,8 @@ class ArchiveView(QWidget):
     #  UI
     # ------------------------------------------------------------------
     def _build_ui(self):
+        from ui.detail_panel import DetailPanel
+
         layout = QVBoxLayout(self)
         layout.setSpacing(6)
         layout.setContentsMargins(8, 8, 8, 8)
@@ -75,6 +77,15 @@ class ArchiveView(QWidget):
 
         layout.addLayout(flt)
 
+        # ---- Splitter: albero | pannello dettaglio ----
+        self.splitter = QSplitter(Qt.Orientation.Horizontal)
+
+        # Lato sinistro: tree + conteggio
+        left_widget = QWidget()
+        left_layout = QVBoxLayout(left_widget)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setSpacing(4)
+
         # Tree widget
         self.tree = QTreeWidget()
         self.tree.setHeaderLabels([
@@ -97,13 +108,28 @@ class ArchiveView(QWidget):
         self.tree.setAnimated(True)
         self.tree.setAlternatingRowColors(True)
         self.tree.itemDoubleClicked.connect(self._on_double_click)
+        self.tree.itemSelectionChanged.connect(self._on_selection_changed)
 
-        layout.addWidget(self.tree)
+        left_layout.addWidget(self.tree)
 
         # Conteggio
         self.lbl_count = QLabel("")
         self.lbl_count.setObjectName("subtitle_label")
-        layout.addWidget(self.lbl_count)
+        left_layout.addWidget(self.lbl_count)
+
+        self.splitter.addWidget(left_widget)
+
+        # Lato destro: pannello dettaglio
+        self.detail_panel = DetailPanel()
+        self.splitter.addWidget(self.detail_panel)
+
+        # Proporzioni iniziali 65/35
+        self.splitter.setStretchFactor(0, 65)
+        self.splitter.setStretchFactor(1, 35)
+        self.splitter.setCollapsible(0, False)
+        self.splitter.setCollapsible(1, True)
+
+        layout.addWidget(self.splitter)
 
     # ------------------------------------------------------------------
     #  Refresh dati
@@ -139,35 +165,22 @@ class ArchiveView(QWidget):
             parent_item.setText(COL_TITLE, best.get("title") or "")
             parent_item.setData(COL_CODE, Qt.ItemDataRole.UserRole, None)
 
-            # Figli: un nodo per ogni documento (tipo + revisione)
-            for doc in sorted(children, key=lambda d: (d["doc_type"], d["revision"])):
-                child = QTreeWidgetItem(parent_item)
-                icon = TYPE_ICON.get(doc["doc_type"], "")
-                child.setText(COL_CODE, f"  {icon}  {doc['doc_type']}")
-                child.setText(COL_REV, doc["revision"])
-                child.setText(COL_TITLE, doc.get("title") or "")
+            # Separa doc attivi e obsoleti
+            active_docs = [d for d in children if d["state"] != "Obsoleto"]
+            obsolete_docs = [d for d in children if d["state"] == "Obsoleto"]
 
-                # Stato con colore
-                st = doc["state"]
-                child.setText(COL_STATE, st)
-                color = WORKFLOW_STATES.get(st, {}).get("color", "#9E9E9E")
-                child.setForeground(COL_STATE, QColor(color))
+            # Crea nodi per documenti attivi, tracciando l'ultimo per tipo
+            type_items: dict[str, QTreeWidgetItem] = {}
+            for doc in sorted(active_docs, key=lambda d: (d["doc_type"], d["revision"])):
+                item = self._make_tree_item(parent_item, doc)
+                type_items[doc["doc_type"]] = item
 
-                # Checkout
-                if doc["is_locked"]:
-                    locker = doc.get("locked_by_name") or "?"
-                    child.setText(COL_LOCK, f"\U0001f512 {locker}")
-                    child.setForeground(COL_LOCK, QColor("#fab387"))
-                else:
-                    child.setText(COL_LOCK, "")
-
-                child.setText(COL_AUTHOR, doc.get("created_by_name") or "")
-
-                mod_at = doc.get("modified_at") or doc.get("created_at") or ""
-                child.setText(COL_DATE, str(mod_at)[:19] if mod_at else "")
-
-                # Store doc id
-                child.setData(COL_CODE, Qt.ItemDataRole.UserRole, doc["id"])
+            # Annida obsoleti sotto l'ultimo doc attivo dello stesso tipo
+            for doc in sorted(obsolete_docs,
+                              key=lambda d: (d["doc_type"], d["revision"]),
+                              reverse=True):
+                nest_parent = type_items.get(doc["doc_type"], parent_item)
+                self._make_tree_item(nest_parent, doc)
 
             parent_item.setExpanded(True)
 
@@ -205,6 +218,14 @@ class ArchiveView(QWidget):
     # ------------------------------------------------------------------
     #  Double-click
     # ------------------------------------------------------------------
+    def _on_selection_changed(self):
+        """Aggiorna il pannello dettaglio al cambio selezione."""
+        doc_id = self._selected_doc_id()
+        if doc_id:
+            self.detail_panel.load_document(doc_id)
+        else:
+            self.detail_panel.clear()
+
     def _on_double_click(self, item: QTreeWidgetItem, column: int):
         doc_id = item.data(COL_CODE, Qt.ItemDataRole.UserRole)
         if doc_id:
@@ -219,6 +240,32 @@ class ArchiveView(QWidget):
         active = [d for d in docs if d["state"] != "Obsoleto"]
         pool = active if active else docs
         return max(pool, key=lambda d: d["revision"])
+
+    def _make_tree_item(self, parent: QTreeWidgetItem, doc: dict) -> QTreeWidgetItem:
+        """Crea un nodo albero per un documento."""
+        child = QTreeWidgetItem(parent)
+        icon = TYPE_ICON.get(doc["doc_type"], "")
+        child.setText(COL_CODE, f"  {icon}  {doc['doc_type']}")
+        child.setText(COL_REV, doc["revision"])
+        child.setText(COL_TITLE, doc.get("title") or "")
+
+        st = doc["state"]
+        child.setText(COL_STATE, st)
+        color = WORKFLOW_STATES.get(st, {}).get("color", "#9E9E9E")
+        child.setForeground(COL_STATE, QColor(color))
+
+        if doc["is_locked"]:
+            locker = doc.get("locked_by_name") or "?"
+            child.setText(COL_LOCK, f"\U0001f512 {locker}")
+            child.setForeground(COL_LOCK, QColor("#fab387"))
+        else:
+            child.setText(COL_LOCK, "")
+
+        child.setText(COL_AUTHOR, doc.get("created_by_name") or "")
+        mod_at = doc.get("modified_at") or doc.get("created_at") or ""
+        child.setText(COL_DATE, str(mod_at)[:19] if mod_at else "")
+        child.setData(COL_CODE, Qt.ItemDataRole.UserRole, doc["id"])
+        return child
 
     def _selected_doc_id(self) -> int | None:
         """Ritorna il document_id del nodo figlio selezionato, o None."""
@@ -252,9 +299,18 @@ class ArchiveView(QWidget):
         uid         = session.user["id"] if session.user else -1
         is_my_lock  = is_locked and doc.get("locked_by") == uid
         is_admin    = session.can("admin")
+        is_latest   = session.workflow.is_latest_revision(doc)
+
+        # ---- Consultazione (copia senza lock) ----
+        act_consult = QAction("👁  Consultazione", self)
+        act_consult.setEnabled(bool(doc.get("archive_path")))
+        act_consult.triggered.connect(lambda: self._action_consultation(doc_id))
+        menu.addAction(act_consult)
+
+        menu.addSeparator()
 
         # ---- Checkout ----
-        act_checkout = QAction("\U0001f4e4  Checkout", self)
+        act_checkout = QAction("📤  Checkout", self)
         act_checkout.setEnabled(
             not is_readonly and not is_locked and session.can("checkout")
         )
@@ -262,51 +318,57 @@ class ArchiveView(QWidget):
         menu.addAction(act_checkout)
 
         # ---- Checkin ----
-        act_checkin = QAction("\U0001f4e5  Check-in", self)
+        act_checkin = QAction("📥  Check-in", self)
         act_checkin.setEnabled(is_my_lock and not is_readonly)
         act_checkin.triggered.connect(lambda: self._action_checkin(doc_id))
         menu.addAction(act_checkin)
 
         # ---- Annulla checkout ----
-        act_undo = QAction("\u21a9\ufe0f  Annulla checkout", self)
+        act_undo = QAction("↩️  Annulla checkout", self)
         act_undo.setEnabled(is_locked and (is_my_lock or is_admin))
         act_undo.triggered.connect(lambda: self._action_undo_checkout(doc_id))
         menu.addAction(act_undo)
 
         menu.addSeparator()
 
-        # ---- Consultazione (copia senza lock) ----
-        act_consult = QAction("\U0001f441  Consultazione", self)
-        act_consult.setEnabled(bool(doc.get("archive_path")))
-        act_consult.triggered.connect(lambda: self._action_consultation(doc_id))
-        menu.addAction(act_consult)
-
-        # ---- Esporta da workspace ----
-        act_export = QAction("\U0001f4c2  Esporta da workspace", self)
-        act_export.triggered.connect(lambda: self._action_export(doc_id))
-        menu.addAction(act_export)
-
-        menu.addSeparator()
-
-        # ---- Workflow ----
-        act_wf = QAction("\U0001f504  Cambia stato", self)
-        act_wf.setEnabled(not is_readonly or is_admin)
-        act_wf.triggered.connect(lambda: self._action_workflow(doc_id))
-        menu.addAction(act_wf)
-
-        # ---- Nuova revisione ----
-        act_newrev = QAction("\U0001f4cb  Nuova revisione", self)
+        # ---- Crea revisione (solo Rilasciato, ultima rev) ----
+        act_newrev = QAction("📋  Crea revisione", self)
         act_newrev.setEnabled(
-            doc["state"] in ("Rilasciato", "Revisionato")
+            doc["state"] == "Rilasciato"
+            and is_latest
             and session.can("create")
         )
         act_newrev.triggered.connect(lambda: self._action_new_revision(doc_id))
         menu.addAction(act_newrev)
 
+        # ---- Annulla revisione (solo In Revisione) ----
+        act_cancel_rev = QAction("🗑  Annulla revisione", self)
+        act_cancel_rev.setEnabled(
+            doc["state"] == "In Revisione"
+            and not is_locked
+            and (is_my_lock or is_admin or not is_locked)
+        )
+        act_cancel_rev.triggered.connect(lambda: self._action_cancel_revision(doc_id))
+        menu.addAction(act_cancel_rev)
+
         menu.addSeparator()
 
-        # ---- Proprieta ----
-        act_props = QAction("\u2139\ufe0f  Proprieta", self)
+        # ---- Workflow ----
+        act_wf = QAction("🔄  Workflow", self)
+        act_wf.setEnabled(is_latest and (not is_readonly or is_admin))
+        act_wf.triggered.connect(lambda: self._action_workflow(doc_id))
+        menu.addAction(act_wf)
+
+        menu.addSeparator()
+
+        # ---- Apri in eDrawings ----
+        act_edraw = QAction("👁️  Apri in eDrawings", self)
+        act_edraw.setEnabled(bool(doc.get("archive_path")))
+        act_edraw.triggered.connect(lambda: self._action_edrawings(doc_id))
+        menu.addAction(act_edraw)
+
+        # ---- Proprietà ----
+        act_props = QAction("ℹ️  Proprietà", self)
         act_props.triggered.connect(lambda: self._action_properties(doc_id))
         menu.addAction(act_props)
 
@@ -353,24 +415,6 @@ class ArchiveView(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "Errore", str(e))
 
-    def _action_export(self, doc_id: int):
-        folder = QFileDialog.getExistingDirectory(
-            self, "Seleziona cartella di destinazione"
-        )
-        if not folder:
-            return
-        try:
-            from pathlib import Path
-            exported = session.files.export_from_workspace(doc_id, Path(folder))
-            names = ", ".join(p.name for p in exported)
-            QMessageBox.information(
-                self, "Esportazione", f"Esportati:\n{names}"
-            )
-        except FileNotFoundError as e:
-            QMessageBox.warning(self, "File non in workspace", str(e))
-        except Exception as e:
-            QMessageBox.critical(self, "Errore", str(e))
-
     def _action_workflow(self, doc_id: int):
         from ui.workflow_dialog import WorkflowDialog
         dlg = WorkflowDialog(doc_id, parent=self)
@@ -381,6 +425,15 @@ class ArchiveView(QWidget):
         """Crea nuova revisione del documento."""
         doc = session.files.get_document(doc_id)
         if not doc:
+            return
+
+        # R3: la nuova revisione di un DRW va fatta dal PRT/ASM associato
+        if doc["doc_type"] == "Disegno":
+            QMessageBox.warning(
+                self, "Operazione non consentita",
+                "La nuova revisione di un Disegno deve essere creata\n"
+                "dal PRT/ASM associato, non direttamente."
+            )
             return
 
         # Determina prossima revisione (incremento numerico semplice)
@@ -431,6 +484,38 @@ class ArchiveView(QWidget):
             self.refresh()
         except Exception as e:
             QMessageBox.critical(self, "Errore", str(e))
+
+    def _action_cancel_revision(self, doc_id: int):
+        """Annulla revisione In Revisione — elimina il documento e torna alla precedente."""
+        doc = session.files.get_document(doc_id)
+        if not doc:
+            return
+        r = QMessageBox.question(
+            self, "Annulla revisione",
+            f"Annullare la revisione {doc['revision']} del codice {doc['code']}?\n\n"
+            "Il documento e il relativo file archiviato verranno eliminati.\n"
+            "La revisione precedente resterà inalterata.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if r != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            session.workflow.cancel_revision(
+                doc_id, session.user["id"],
+                shared_paths=session.sp,
+            )
+            QMessageBox.information(
+                self, "Annulla revisione",
+                f"Revisione {doc['revision']} annullata."
+            )
+            self.refresh()
+        except Exception as e:
+            QMessageBox.critical(self, "Errore", str(e))
+
+    def _action_edrawings(self, doc_id: int):
+        """Apre il file in eDrawings per consultazione rapida."""
+        self.detail_panel.load_document(doc_id)
+        self.detail_panel._open_edrawings()
 
     def _action_properties(self, doc_id: int):
         from ui.document_dialog import DocumentDialog

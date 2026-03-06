@@ -1,5 +1,11 @@
 # =============================================================================
-#  core/workflow_manager.py  –  Gestione workflow documenti  v2.0
+#  core/workflow_manager.py  –  Gestione workflow documenti  v3.0
+# =============================================================================
+#  4 stati: In Lavorazione, Rilasciato, In Revisione, Obsoleto
+#  Transizioni: In Lavorazione → Rilasciato | In Revisione → Rilasciato
+#  «Crea revisione» è un'operazione (non una transizione):
+#       Rilasciato → nuova rev in «In Revisione»
+#  «Annulla revisione» elimina la rev In Revisione e torna alla precedente
 # =============================================================================
 from __future__ import annotations
 import shutil
@@ -23,9 +29,21 @@ class WorkflowManager:
         return to_state in WORKFLOW_TRANSITIONS.get(from_state, [])
 
     # ------------------------------------------------------------------
+    def is_latest_revision(self, doc: dict) -> bool:
+        """Verifica che il documento sia l'ultima revisione del suo codice+tipo."""
+        newer = self.db.fetchone(
+            """SELECT id FROM documents
+               WHERE code=? AND doc_type=? AND revision>?
+               ORDER BY revision DESC LIMIT 1""",
+            (doc["code"], doc["doc_type"], doc["revision"]),
+        )
+        return newer is None
+
+    # ------------------------------------------------------------------
     def change_state(self, document_id: int, new_state: str,
                      user_id: int, notes: str = "",
-                     _propagation: bool = False) -> bool:
+                     _propagation: bool = False,
+                     shared_paths=None) -> bool:
         """
         Cambia stato di un documento con propagazione bidirezionale PRT/ASM ↔ DRW.
         _propagation=True evita loop infinite.
@@ -41,6 +59,83 @@ class WorkflowManager:
             raise ValueError(
                 f"Transizione non consentita: '{current}' → '{new_state}'"
             )
+
+        # Blocca cambio stato se il documento è in checkout
+        if doc.get("is_locked"):
+            locker = self.db.fetchone(
+                "SELECT full_name FROM users WHERE id=?", (doc["locked_by"],)
+            )
+            name = locker["full_name"] if locker else f"utente {doc['locked_by']}"
+            raise PermissionError(
+                f"Impossibile cambiare stato: il documento è in checkout da {name}.\n"
+                "Eseguire prima il check-in."
+            )
+
+        # Guard: cambio stato solo sull'ultima revisione del codice
+        if not _propagation and not self.is_latest_revision(doc):
+            raise PermissionError(
+                f"Cambio stato consentito solo sull'ultima revisione.\n"
+                f"La revisione {doc['revision']} di {doc['code']} non è la più recente."
+            )
+
+        # R2: PRT/ASM che passa a 'Rilasciato' deve avere DRW associato
+        if (not _propagation
+                and doc["doc_type"] in ("Parte", "Assieme")
+                and new_state == "Rilasciato"):
+            drw_check = self.db.fetchone(
+                "SELECT id FROM documents WHERE code=? AND doc_type='Disegno' AND revision=?",
+                (doc["code"], doc["revision"]),
+            )
+            if not drw_check:
+                raise PermissionError(
+                    f"Impossibile rilasciare {doc['code']} rev.{doc['revision']}:\n"
+                    "nessun DRW associato.\n"
+                    "Creare prima il disegno (DRW) nella scheda documento."
+                )
+
+        # R7: rilascio solo se il file è stato archiviato (checkin eseguito)
+        if new_state == "Rilasciato" and not doc.get("archive_path"):
+            raise PermissionError(
+                f"Impossibile rilasciare {doc['code']} rev.{doc['revision']}:\n"
+                "il file non è stato archiviato.\n"
+                "Eseguire prima il check-in."
+            )
+        # R7b: verifica esistenza fisica del file su disco
+        if new_state == "Rilasciato" and doc.get("archive_path") and shared_paths:
+            phys = shared_paths.root / doc["archive_path"]
+            if not phys.exists():
+                raise PermissionError(
+                    f"Impossibile rilasciare {doc['code']} rev.{doc['revision']}:\n"
+                    f"il file archiviato non esiste fisicamente su disco.\n"
+                    f"Percorso atteso: {phys}\n"
+                    "Verificare che la cartella condivisa sia accessibile e ripetere il check-in."
+                )
+
+        # R4: pre-valida che il companion possa seguire la stessa transizione
+        if not _propagation:
+            _code = doc["code"]
+            _rev  = doc["revision"]
+            if doc["doc_type"] in ("Parte", "Assieme"):
+                _companion = self.db.fetchone(
+                    "SELECT * FROM documents WHERE code=? AND doc_type='Disegno' AND revision=?",
+                    (_code, _rev),
+                )
+            elif doc["doc_type"] == "Disegno":
+                _companion = self.db.fetchone(
+                    "SELECT * FROM documents WHERE code=? "
+                    "AND doc_type IN ('Parte','Assieme') AND revision=?",
+                    (_code, _rev),
+                )
+            else:
+                _companion = None
+            if _companion and _companion["state"] != new_state:
+                if not self.can_transition(_companion["state"], new_state):
+                    raise ValueError(
+                        f"Transizione '{current}' \u2192 '{new_state}' bloccata:\n"
+                        f"il companion {_companion['doc_type']} è in stato "
+                        f"'{_companion['state']}' e non può seguire la stessa transizione.\n"
+                        "Allineare prima lo stato del companion."
+                    )
 
         # Aggiorna stato documento
         self.db.execute(
@@ -70,13 +165,15 @@ class WorkflowManager:
 
         # Propagazione stato PRT/ASM ↔ DRW (bidirezionale)
         if not _propagation:
-            self._propagate_state_to_companion(doc, new_state, user_id, notes)
+            self._propagate_state_to_companion(doc, new_state, user_id, notes,
+                                               shared_paths=shared_paths)
 
         return True
 
     # ------------------------------------------------------------------
     def _propagate_state_to_companion(self, doc: dict, new_state: str,
-                                       user_id: int, notes: str):
+                                       user_id: int, notes: str,
+                                       shared_paths=None):
         """Propaga il cambio stato tra PRT/ASM e DRW con stesso codice."""
         code = doc["code"]
         doc_type = doc["doc_type"]
@@ -102,6 +199,7 @@ class WorkflowManager:
                     companion["id"], new_state, user_id,
                     notes=f"[Auto] Propagazione da {doc_type} {code}",
                     _propagation=True,
+                    shared_paths=shared_paths,
                 )
 
     # ------------------------------------------------------------------
@@ -139,26 +237,12 @@ class WorkflowManager:
         )
 
     # ------------------------------------------------------------------
-    def release_document(self, document_id: int, user_id: int,
-                         notes: str = "") -> bool:
-        """Rilascio diretto (salta la transizione In Revisione)."""
-        doc = self.db.fetchone(
-            "SELECT * FROM documents WHERE id=?", (document_id,)
-        )
-        if not doc:
-            return False
-        if doc["state"] == "Rilasciato":
-            return False
-
-        return self.change_state(document_id, "Rilasciato", user_id, notes)
-
-    # ------------------------------------------------------------------
     def new_revision(self, document_id: int, user_id: int,
                      new_revision: str, notes: str = "",
                      shared_paths=None) -> int:
         """
-        Crea una nuova revisione:
-        - Copia il documento in DB con stato 'In Lavorazione'
+        Crea una nuova revisione da un documento Rilasciato:
+        - Copia il documento in DB con stato 'In Revisione'
         - Copia il file archiviato dalla vecchia revisione come base
         - Crea anche la nuova revisione del DRW associato (se esiste)
         Ritorna l'ID del nuovo documento.
@@ -169,7 +253,12 @@ class WorkflowManager:
         if not doc:
             raise ValueError("Documento non trovato")
 
-        # Crea nuovo documento in DB
+        if doc["state"] != "Rilasciato":
+            raise PermissionError(
+                "Nuova revisione consentita solo da stato 'Rilasciato'."
+            )
+
+        # Crea nuovo documento in DB con stato 'In Revisione'
         new_id = self.db.execute(
             """INSERT INTO documents
                (code, revision, doc_type, title, description,
@@ -177,7 +266,7 @@ class WorkflowManager:
                 created_by, created_at, modified_by, modified_at,
                 machine_id, group_id, doc_level)
                VALUES (?,?,?,?,?,
-                       'In Lavorazione',?,?,
+                       'In Revisione',?,?,
                        ?,datetime('now'),?,datetime('now'),
                        ?,?,?)""",
             (
@@ -207,21 +296,26 @@ class WorkflowManager:
         self.db.execute(
             """INSERT INTO workflow_history
                (document_id, from_state, to_state, changed_by, notes)
-               VALUES (?,'','In Lavorazione',?,?)""",
+               VALUES (?,'','In Revisione',?,?)""",
             (new_id, user_id,
              f"Nuova revisione {new_revision} da rev. {doc['revision']}. {notes}"),
         )
 
-        # Crea anche nuova revisione del DRW associato
+        # Crea anche nuova revisione del DRW associato (R6: solo se non esiste già)
         if doc["doc_type"] in ("Parte", "Assieme"):
             drw = self.db.fetchone(
                 "SELECT * FROM documents WHERE code=? AND doc_type='Disegno' AND revision=?",
                 (doc["code"], doc["revision"]),
             )
             if drw:
-                self.new_revision(drw["id"], user_id, new_revision,
-                                  notes=f"[Auto] Segue nuova rev. {doc['doc_type']}",
-                                  shared_paths=shared_paths)
+                existing_drw_rev = self.db.fetchone(
+                    "SELECT id FROM documents WHERE code=? AND doc_type='Disegno' AND revision=?",
+                    (doc["code"], new_revision),
+                )
+                if not existing_drw_rev:
+                    self.new_revision(drw["id"], user_id, new_revision,
+                                      notes=f"[Auto] Segue nuova rev. {doc['doc_type']}",
+                                      shared_paths=shared_paths)
 
         return new_id
 
@@ -239,9 +333,9 @@ class WorkflowManager:
         if not doc:
             raise ValueError("Documento non trovato")
 
-        if doc["state"] in ("Rilasciato", "Obsoleto"):
+        if doc["state"] != "In Revisione":
             raise PermissionError(
-                "Impossibile annullare una revisione già rilasciata o obsoleta."
+                "Annulla revisione consentito solo da stato 'In Revisione'."
             )
 
         if doc["is_locked"]:
@@ -267,12 +361,52 @@ class WorkflowManager:
              f"Revisione {doc['revision']} annullata"),
         )
 
+        # R5: annulla anche il DRW companion della stessa revisione
+        if doc["doc_type"] in ("Parte", "Assieme"):
+            drw_companion = self.db.fetchone(
+                "SELECT * FROM documents WHERE code=? AND doc_type='Disegno' AND revision=?",
+                (doc["code"], doc["revision"]),
+            )
+            if drw_companion and drw_companion["state"] not in ("Rilasciato", "Obsoleto"):
+                try:
+                    self.cancel_revision(drw_companion["id"], user_id,
+                                        shared_paths=shared_paths)
+                except Exception:
+                    pass  # DRW già eliminato o non annullabile
+
         # Elimina documento
         self.db.execute("DELETE FROM workspace_files WHERE document_id=?", (document_id,))
         self.db.execute("DELETE FROM checkout_log WHERE document_id=?", (document_id,))
         self.db.execute("DELETE FROM documents WHERE id=?", (document_id,))
 
         return True
+
+    # ------------------------------------------------------------------
+    def sync_companion_state(self, document_id: int, target_state: str,
+                             user_id: int) -> None:
+        """
+        Forza lo stato di un documento companion appena creato
+        ad allinearsi con il PRT/ASM di riferimento.
+        Bypassa i controlli sulle transizioni: usare SOLO alla creazione
+        di un companion per garantire coerenza immediata.
+        """
+        doc = self.db.fetchone("SELECT * FROM documents WHERE id=?", (document_id,))
+        if not doc or doc["state"] == target_state:
+            return
+        current = doc["state"]
+        self.db.execute(
+            """UPDATE documents
+               SET state=?, modified_by=?, modified_at=datetime('now')
+               WHERE id=?""",
+            (target_state, user_id, document_id),
+        )
+        self.db.execute(
+            """INSERT INTO workflow_history
+               (document_id, from_state, to_state, changed_by, notes)
+               VALUES (?,?,?,?,?)""",
+            (document_id, current, target_state, user_id,
+             "[Auto] Allineamento stato alla creazione companion"),
+        )
 
     # ------------------------------------------------------------------
     @staticmethod

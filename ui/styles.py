@@ -234,7 +234,6 @@ QLabel#subtitle_label {
 STATE_BADGE_STYLE = {
     "In Lavorazione": "background:#2196F3;color:white;border-radius:4px;padding:2px 8px;",
     "In Revisione":   "background:#FF9800;color:white;border-radius:4px;padding:2px 8px;",
-    "Revisionato":    "background:#9C27B0;color:white;border-radius:4px;padding:2px 8px;",
     "Rilasciato":     "background:#4CAF50;color:white;border-radius:4px;padding:2px 8px;",
     "Obsoleto":       "background:#757575;color:white;border-radius:4px;padding:2px 8px;",
 }

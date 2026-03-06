@@ -1,8 +1,15 @@
 {
-  "shared_root": "C:/Users/prog3/Desktop/APP MECCANICA/_pdm2",
-  "sw_template_prt": "K:/Config_Cad/SW2025-cfg/templates/ParteMy.prtdot",
-  "sw_template_asm": "K:/Config_Cad/SW2025-cfg/templates/AssiemeMy.asmdot",
-  "sw_template_drw": "K:/Config_Cad/SW2025-cfg/templates/DisegnoMy.DRWDOT",
-  "sw_reg_file": "",
-  "sw_workspace": "C:/Users/prog3/Desktop/APP MECCANICA/_ws2"
+  "active_profile": "Default",
+  "profiles": {
+    "Default": {
+      "shared_root": "C:/Users/prog3/Desktop/APP MECCANICA/_pdm2",
+      "sw_template_prt": "K:/Config_Cad/SW2025-cfg/templates/ParteMy.prtdot",
+      "sw_template_asm": "K:/Config_Cad/SW2025-cfg/templates/AssiemeMy.asmdot",
+      "sw_template_drw": "K:/Config_Cad/SW2025-cfg/templates/DisegnoMy.DRWDOT",
+      "sw_reg_file": "",
+      "sw_workspace": "C:/Users/prog3/Desktop/APP MECCANICA/_ws2",
+      "sw_exe_path": "C:/Program Files/SOLIDWORKS 2025/SOLIDWORKS/SLDWORKS.exe",
+      "edrawings_exe_path": "C:/Program Files/SOLIDWORKS 2025/eDrawings/eDrawings.exe"
+    }
+  }
 }

@@ -1,12 +1,103 @@
 # PDM-SW – Sistema PDM per SolidWorks
 
-> **Versione 2.1.2** – Fix verifica errori e metodo mancante
+> **Versione 2.8.1** – Fix dialog Genera Codice non si apriva
 
 Sistema PDM (Product Data Management) leggero, senza server, per la gestione di documenti SolidWorks in ambiente di rete con architettura peer‑to‑peer.
 
 ---
 
 ## Changelog
+
+### v2.8.1
+**Bugfix: dialog "Genera Codice" non si apriva premendo il pulsante**
+
+- **`macros/pdm_panel.py`** – `CreateCodeDialog._build_ui()`: rimossa chiamata prematura a `_update_level_options()` durante la costruzione di `cmb_level`, che causava un `AttributeError` silenzioso su `lbl_preview` (non ancora creato) — con `pythonw.exe` l'eccezione era invisibile e il dialog non si apriva mai
+
+---
+
+### v2.8.0
+**Genera Codice → Save As + checkout automatico nella workspace**
+
+- **`macros/pdm_panel.py`** – `CreateCodeDialog._create()` riscritta:
+  - Dopo aver generato il codice PDM, esegue **Save As** del documento aperto in SolidWorks via COM (`SaveAs3`) direttamente nella workspace locale con nome `CODICE.EXT`
+  - Fallback automatico a `shutil.copy2` se SolidWorks COM non è disponibile
+  - Documento bloccato immediatamente come **checkout** (update `is_locked`, insert `checkout_log`, insert `workspace_files`)
+  - Il pannello aggiorna `file_path` al nuovo percorso e si rinfresca
+- **`_do_generate_code()`**: aggiornato per propagare il nuovo `file_path` dal dialogo al pannello
+
+---
+
+### v2.7.0
+**Pannello macro Qt – Genera Codice + UI pulsanti**
+
+- **`macros/pdm_panel.py`** (NUOVO): pannello PyQt6 lanciato dalla macro VBA, con pulsanti colorati per ogni azione PDM
+  - Header con badge stato, lock, tipo documento e revisione
+  - Pulsanti: Checkout, Check-in, Annulla CO, Consultazione, Proprietà↑, Proprietà↓, Apri PDM
+  - Sezione **Genera Codice PDM** (visibile solo se file non nel PDM): form con macchina/gruppo/livello/titolo e preview codice in tempo reale
+  - Salvataggio automatico del file SW via COM prima del Check-in
+  - Rimane "sempre in primo piano" (WindowStaysOnTopHint)
+- **`sw_bridge.py`**: aggiunte azioni `panel` (lancia pdm_panel.py in background) e `create_code` (genera codice da JSON parametri)
+- **`PDM_Integration.swb`** v3.0 — rimpiazza l'InputBox con numeri:
+  - `main()` / `PDM_Panel()` aprono il pannello Qt non-bloccante
+  - `PDM_Checkout`, `PDM_Checkin`, `PDM_UndoCheckout`, `PDM_OpenApp` rimangono come shortcut toolbar
+  - Nuova `RunPanel` (launch asincrono, `bWait=False`) vs `RunBridge` (sincrono)
+  - `GetActiveFilePathSilent()` per open panel senza MsgBox di errore
+
+### v2.6.0
+**Integrità file – Overwrite warning e verifica fisica R7**
+
+- **Checkout – avviso sovrascrittura**: prima del checkout, confronto MD5 tra file in workspace e archivio; se diversi, chiede conferma sovrascrittura (`No` di default)
+- **Esporta in WS – avviso sovrascrittura**: stessa logica MD5 nel dialog "Esporta in WS" della scheda documento
+- **R7b – verifica fisica**: `change_state(shared_paths=sp)` verifica l'esistenza fisica del file su disco prima del rilascio (non solo il campo `archive_path` nel DB)
+- `_propagate_state_to_companion()` e `change_state()` accettano ora `shared_paths` opzionale per propagare il controllo fisico al companion DRW/PRT
+- `workflow_dialog.py` passa `session.sp` a `change_state()`
+
+### v2.5.0
+**Workflow v3 – Semplificazione a 4 stati**
+
+- **Eliminato stato `Revisionato`**: workflow semplificato a 4 stati: In Lavorazione, Rilasciato, In Revisione, Obsoleto
+- **Nuovo flusso**: In Lavorazione → Rilasciato (00) → Crea revisione → In Revisione → Rilasciato (01) → ...
+- **Crea revisione**: operazione (non transizione) da stato Rilasciato — crea nuovo documento in stato In Revisione
+- **Annulla revisione**: nuovo comando nel menu contestuale — elimina revisione In Revisione e torna alla precedente
+- **Guard ultima revisione**: cambio stato consentito solo sull'ultima revisione di un codice
+- **Workflow dialog semplificato**: rimosso bottone "⚡ Rilascia documento", mostra solo transizioni consentite
+- **Menu contestuale riordinato**: Consultazione, Checkout, Checkin, Annulla checkout, Crea revisione, Annulla revisione, Workflow, Apri in eDrawings, Proprietà
+- **READONLY_STATES** aggiornato: solo `Rilasciato` e `Obsoleto` (In Revisione è modificabile)
+- Rimosso `release_document()` da workflow_manager (ridondante con `change_state`)
+
+### v2.4.0
+**PDM Profile – Gestione multi-ambiente**
+
+- **Profili multi-ambiente**: supporto per N profili di lavoro con database, archivio e configurazione SW indipendenti (es. clienti diversi, versioni software diverse)
+- **Selettore profilo all'avvio**: se esiste più di un profilo, dialog di selezione all'avvio con combo + pulsante "Gestisci profili"
+- **Dialog gestione profili** (`PDM Profile`): crea, rinomina, elimina, copia profili con visualizzazione dettagli (exe, template, workspace)
+- **Copia profilo**: due modalità — "Solo configurazione" (copia impostazioni SW) o "Configurazione + dati" (copia anche archivio/thumbnail, escluso database)
+- **Cambio profilo a runtime**: menu Strumenti → PDM Profile, riconnessione al DB del nuovo profilo con ri-autenticazione automatica dell'utente
+- **Profilo nella status bar**: indicatore del profilo attivo visibile in basso a sinistra
+- **Migrazione automatica**: config flat esistente migrata automaticamente in un profilo "Default" al primo avvio
+- **Backward-compatible**: `load_local_config()` / `save_local_config()` restano identiche nell'API, ora profile-aware internamente
+- Nuovo file `ui/profile_dialog.py`
+
+### v2.3.0
+**Configurazione eseguibili SolidWorks/eDrawings + gestione registro selettiva**
+
+- **Percorsi eseguibili configurabili**: campi dedicati per SolidWorks e eDrawings nella configurazione, con pulsanti "Sfoglia" e "Rileva" (auto-detect da registro Windows)
+- **Apri in eDrawings migliorato**: usa l'eseguibile configurato invece di cercare percorsi hardcoded; se non configurato, mostra avviso con istruzioni
+- **Apri in SolidWorks migliorato**: apertura file tramite eseguibile configurato con `subprocess.Popen` anziché `os.startfile`
+- **Gestione registro selettiva**: import `.reg`/`.sldreg` con scelta categorie (opzioni sistema, toolbar, scorciatoie tastiera, gesture mouse, personalizzazioni menu, viste salvate)
+- **Parser registro**: nuovo modulo `core/reg_manager.py` con parsing blocchi, categorizzazione chiavi e scrittura filtrata
+- Nuovo file `core/reg_manager.py`
+
+### v2.2.0
+**Pannello dettaglio documento + integrazione eDrawings**
+
+- **DetailPanel**: pannello laterale nell'archivio CAD con anteprima readonly del documento selezionato (info, proprietà SW, BOM, storico)
+- **QSplitter ridimensionabile**: albero documenti e pannello dettaglio separati da splitter trascinabile (65/35 default, collapsabile)
+- **Thumbnail**: visualizzazione anteprima immagine da `{shared_root}/thumbnails/` con fallback a icona tipo documento
+- **Generazione thumbnail al checkin**: export automatico PNG via eDrawings dopo ogni check-in (non bloccante, fallback silenzioso)
+- **Apri in eDrawings**: bottone nel pannello dettaglio + voce nel menu contestuale per consultazione rapida senza aprire SolidWorks
+- **Selezione → anteprima**: singolo clic aggiorna il pannello dettaglio; doppio clic continua ad aprire il dialog completo
+- Nuovo file `ui/detail_panel.py`
 
 ### v2.1.2
 **Fix verifica errori**
@@ -92,7 +183,7 @@ Sistema PDM (Product Data Management) leggero, senza server, per la gestione di 
 **Revisione completa checkout/checkin e gestione archivio/workspace**
 
 #### Checkout / Checkin
-- **Blocco checkout/checkin** su stati `Revisionato`, `Rilasciato`, `Obsoleto` (costante `READONLY_STATES`)
+- **Blocco checkout/checkin** su stati `Rilasciato`, `Obsoleto` (costante `READONLY_STATES`)
 - **Snapshot MD5** al checkout: al checkin confronta hash per rilevare modifiche reali e conflitti
 - **Checkout ASM ricorsivo**: copia tutti i componenti BOM in workspace senza lock (role `component`)
 - **Checkbox DRW**: opzione per includere il Disegno associato nel checkout
@@ -190,7 +281,7 @@ Sistema PDM (Product Data Management) leggero, senza server, per la gestione di 
 | **Architettura** | SQLite su cartella condivisa di rete – nessun server |
 | **Utenti simultanei** | Max 5 (locking ottimistico su file) |
 | **File supportati** | `.SLDPRT`, `.SLDASM`, `.SLDDRW` |
-| **Workflow** | In Lavorazione → In Revisione → Revisionato → Rilasciato → Obsoleto |
+| **Workflow** | In Lavorazione → Rilasciato → In Revisione → Rilasciato (nuova rev) → Obsoleto |
 | **Check-in / Checkout** | Con lock per file e storico completo |
 | **Codifica gerarchica** | LIV0 Macchina → LIV1 Gruppo → LIV2 Parte/Sottogruppo |
 | **Proprietà SW** | Import/Export da/verso SolidWorks via COM API |
@@ -226,6 +317,8 @@ PDM-SW-2/
 │   ├── workspace_view.py     # Vista workspace utente
 │   ├── document_dialog.py    # Dettaglio documento
 │   ├── document_selector.py  # Selezione documento
+│   ├── detail_panel.py       # Pannello dettaglio laterale
+│   ├── profile_dialog.py     # PDM Profile: gestione profili
 │   ├── coding_dialog.py      # Config codifica
 │   ├── workflow_dialog.py    # Cambio stato workflow
 │   └── users_dialog.py       # Gestione utenti
@@ -311,20 +404,30 @@ La cartella di rete condivisa avrà questa struttura:
 ## Workflow documenti
 
 ```
-[Nuovo] → In Lavorazione
-              │
-              ├──→ In Revisione → Revisionato ─┐
-              │                                 │
-              └─────────────────────────────────┴──→ Rilasciato → Obsoleto
+[Nuovo] → In Lavorazione → Rilasciato (rev.00)
+                                │
+                          Crea revisione
+                                │
+                          In Revisione → Rilasciato (rev.01)
+                                              │
+                                        Crea revisione → ...
+                                        
+Rilasciato (vecchia rev) → Obsoleto (automatico)
 ```
 
 ### Transizioni consentite:
 | Da | A |
 |---|---|
-| In Lavorazione | In Revisione, Rilasciato |
-| In Revisione | Revisionato, In Lavorazione |
-| Revisionato | Rilasciato, In Lavorazione |
-| Rilasciato | In Revisione, Obsoleto |
+| In Lavorazione | Rilasciato |
+| In Revisione | Rilasciato |
+| Rilasciato | — (usare «Crea revisione» per nuova rev) |
+| Obsoleto | — |
+
+### Operazioni:
+| Operazione | Da stato | Effetto |
+|---|---|---|
+| Crea revisione | Rilasciato | Crea nuova rev in «In Revisione» |
+| Annulla revisione | In Revisione | Elimina la revisione, torna alla precedente |
 
 ---
 

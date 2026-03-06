@@ -1,12 +1,13 @@
 # =============================================================================
 #  PDM-SW  –  Configurazione globale
 # =============================================================================
+import copy
 import json
 import os
 from pathlib import Path
 
 APP_NAME    = "PDM-SW"
-APP_VERSION = "2.1.2"
+APP_VERSION = "2.8.1"
 
 # Cartella locale dell'applicazione (stessa posizione di questo file)
 APP_DIR = Path(__file__).parent.resolve()
@@ -14,19 +15,154 @@ APP_DIR = Path(__file__).parent.resolve()
 # File di configurazione locale (percorso cartella condivisa)
 LOCAL_CFG_FILE = APP_DIR / "local_config.json"
 
+# Chiavi che appartengono ai profili (non globali)
+PROFILE_KEYS = frozenset({
+    "shared_root",
+    "sw_exe_path", "edrawings_exe_path",
+    "sw_template_prt", "sw_template_asm", "sw_template_drw",
+    "sw_reg_file", "sw_workspace",
+})
 
-def load_local_config() -> dict:
-    """Carica la configurazione locale (percorso rete, utente, ecc.)."""
+
+# ---- Raw I/O (formato interno) ------------------------------------------
+
+def _load_raw_config() -> dict:
     if LOCAL_CFG_FILE.exists():
         with open(LOCAL_CFG_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     return {}
 
 
-def save_local_config(cfg: dict):
-    """Salva la configurazione locale."""
+def _save_raw_config(raw: dict):
     with open(LOCAL_CFG_FILE, "w", encoding="utf-8") as f:
-        json.dump(cfg, f, indent=2, ensure_ascii=False)
+        json.dump(raw, f, indent=2, ensure_ascii=False)
+
+
+def _ensure_profile_format(raw: dict) -> dict:
+    """Migra dalla config flat al formato profili (una tantum)."""
+    if "profiles" in raw:
+        return raw
+    profile_data = {}
+    global_data = {}
+    for k, v in raw.items():
+        if k in PROFILE_KEYS:
+            profile_data[k] = v
+        else:
+            global_data[k] = v
+    if profile_data.get("shared_root"):
+        global_data["active_profile"] = "Default"
+        global_data["profiles"] = {"Default": profile_data}
+    else:
+        global_data["active_profile"] = ""
+        global_data["profiles"] = {}
+    _save_raw_config(global_data)
+    return global_data
+
+
+# ---- API pubblica (backward-compatible) ----------------------------------
+
+def load_local_config() -> dict:
+    """Carica configurazione effettiva (globale + profilo attivo, flat)."""
+    raw = _ensure_profile_format(_load_raw_config())
+    profile_name = raw.get("active_profile", "")
+    profile = raw.get("profiles", {}).get(profile_name, {})
+    result = {k: v for k, v in raw.items() if k != "profiles"}
+    result.update(profile)
+    return result
+
+
+def save_local_config(cfg: dict):
+    """Salva la configurazione. Chiavi profilo → profilo attivo, resto → globale."""
+    raw = _ensure_profile_format(_load_raw_config())
+    profile_name = cfg.get("active_profile", raw.get("active_profile", ""))
+
+    if not profile_name and cfg.get("shared_root"):
+        profile_name = "Default"
+
+    raw["active_profile"] = profile_name
+    profiles = raw.setdefault("profiles", {})
+    profile_data = profiles.get(profile_name, {}) if profile_name else {}
+
+    for k, v in cfg.items():
+        if k in ("profiles", "active_profile"):
+            continue
+        elif k in PROFILE_KEYS:
+            profile_data[k] = v
+        else:
+            raw[k] = v
+
+    if profile_name:
+        profiles[profile_name] = profile_data
+    _save_raw_config(raw)
+
+
+# ---- Gestione profili ----------------------------------------------------
+
+def get_profile_names() -> list:
+    raw = _ensure_profile_format(_load_raw_config())
+    return list(raw.get("profiles", {}).keys())
+
+
+def get_active_profile_name() -> str:
+    raw = _ensure_profile_format(_load_raw_config())
+    return raw.get("active_profile", "")
+
+
+def set_active_profile(name: str):
+    raw = _ensure_profile_format(_load_raw_config())
+    if name not in raw.get("profiles", {}):
+        raise ValueError(f"Profilo '{name}' non trovato")
+    raw["active_profile"] = name
+    _save_raw_config(raw)
+
+
+def load_profile(name: str) -> dict:
+    raw = _ensure_profile_format(_load_raw_config())
+    return dict(raw.get("profiles", {}).get(name, {}))
+
+
+def save_profile(name: str, data: dict):
+    raw = _ensure_profile_format(_load_raw_config())
+    raw.setdefault("profiles", {})[name] = data
+    _save_raw_config(raw)
+
+
+def delete_profile(name: str):
+    raw = _ensure_profile_format(_load_raw_config())
+    profiles = raw.get("profiles", {})
+    if name not in profiles:
+        return
+    del profiles[name]
+    if raw.get("active_profile") == name:
+        raw["active_profile"] = next(iter(profiles), "")
+    _save_raw_config(raw)
+
+
+def rename_profile(old_name: str, new_name: str):
+    raw = _ensure_profile_format(_load_raw_config())
+    profiles = raw.get("profiles", {})
+    if old_name not in profiles:
+        raise ValueError(f"Profilo '{old_name}' non trovato")
+    if new_name in profiles:
+        raise ValueError(f"Profilo '{new_name}' già esistente")
+    profiles[new_name] = profiles.pop(old_name)
+    if raw.get("active_profile") == old_name:
+        raw["active_profile"] = new_name
+    _save_raw_config(raw)
+
+
+def copy_profile(src_name: str, dst_name: str) -> dict:
+    """Copia configurazione di un profilo in un nuovo profilo. Ritorna i dati copiati."""
+    raw = _ensure_profile_format(_load_raw_config())
+    profiles = raw.get("profiles", {})
+    if src_name not in profiles:
+        raise ValueError(f"Profilo '{src_name}' non trovato")
+    if dst_name in profiles:
+        raise ValueError(f"Profilo '{dst_name}' già esistente")
+    new_data = copy.deepcopy(profiles[src_name])
+    profiles[dst_name] = new_data
+    _save_raw_config(raw)
+    return new_data
 
 
 class SharedPaths:
@@ -68,18 +204,21 @@ class SharedPaths:
 # Colori workflow (stato documento)
 WORKFLOW_STATES = {
     "In Lavorazione": {"color": "#2196F3", "icon": "work"},
-    "In Revisione":   {"color": "#FF9800", "icon": "review"},
-    "Revisionato":    {"color": "#9C27B0", "icon": "revised"},
     "Rilasciato":     {"color": "#4CAF50", "icon": "released"},
+    "In Revisione":   {"color": "#FF9800", "icon": "review"},
     "Obsoleto":       {"color": "#9E9E9E", "icon": "obsolete"},
 }
 
-# Transizioni workflow consentite
+# Transizioni workflow consentite (4 stati)
+# In Lavorazione → Rilasciato   (prima emissione)
+# In Revisione   → Rilasciato   (chiude revisione, incrementa rev)
+# Rilasciato     → Obsoleto     (fuori produzione manuale)
+# Obsoleto       → (nessuna)    stato finale
+# Nota: «Crea revisione» da Rilasciato è un'operazione separata
 WORKFLOW_TRANSITIONS = {
-    "In Lavorazione": ["In Revisione", "Rilasciato"],
-    "In Revisione":   ["Revisionato", "In Lavorazione"],
-    "Revisionato":    ["Rilasciato", "In Lavorazione"],
-    "Rilasciato":     ["In Revisione", "Obsoleto"],
+    "In Lavorazione": ["Rilasciato"],
+    "In Revisione":   ["Rilasciato"],
+    "Rilasciato":     ["Obsoleto"],
     "Obsoleto":       [],
 }
 

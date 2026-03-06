@@ -14,7 +14,9 @@ if TYPE_CHECKING:
     from config import SharedPaths
 
 # Stati che impediscono checkout / checkin (sola consultazione)
-READONLY_STATES = ("Revisionato", "Rilasciato", "Obsoleto")
+# Rilasciato e Obsoleto sono documenti ufficiali: non possono essere
+# modificati né archiviati.
+READONLY_STATES = ("Rilasciato", "Obsoleto")
 
 
 class CheckoutManager:
@@ -238,6 +240,12 @@ class CheckoutManager:
                     ws_file.unlink()
                 except OSError:
                     pass
+        elif archive_file:
+            # File non trovato in workspace ma si voleva archiviare → errore esplicito
+            raise FileNotFoundError(
+                f"File non trovato in workspace: {ws_file}\n"
+                f"Impossibile archiviare {doc['code']} rev.{doc['revision']}."
+            )
 
         # Rilascio lock
         self.db.execute(
@@ -465,9 +473,20 @@ class CheckoutManager:
         archive_file = self._archive_file_path(doc)
         if archive_file and archive_file.exists():
             shutil.copy2(archive_file, dest)
+        elif doc.get("archive_path"):
+            # archive_path registrato ma file fisico mancante
+            raise FileNotFoundError(
+                f"File archiviato non trovato per {doc['code']} rev.{doc['revision']}:\n"
+                f"{archive_file}\n"
+                "Verificare che la cartella condivisa sia accessibile."
+            )
         else:
-            if not dest.exists():
-                dest.touch()
+            # Documento mai archiviato: non creare file fantasma
+            raise PermissionError(
+                f"Impossibile fare checkout di {doc['code']} rev.{doc['revision']}:\n"
+                "nessun file in archivio.\n"
+                "Creare il file in SolidWorks e importarlo in PDM prima del checkout."
+            )
         return dest
 
     def _copy_workspace_to_archive(self, doc: dict, ws_file: Path):
@@ -495,9 +514,16 @@ class CheckoutManager:
         if doc["doc_type"] == "Disegno":
             return
         drw = self.db.fetchone(
-            "SELECT * FROM documents WHERE code=? AND doc_type='Disegno'",
-            (doc["code"],),
+            "SELECT * FROM documents WHERE code=? AND doc_type='Disegno' "
+            "AND revision=?",
+            (doc["code"], doc["revision"]),
         )
+        if not drw:
+            drw = self.db.fetchone(
+                "SELECT * FROM documents WHERE code=? AND doc_type='Disegno' "
+                "AND state != 'Obsoleto' ORDER BY revision DESC",
+                (doc["code"],),
+            )
         if drw and drw["state"] not in READONLY_STATES and not drw["is_locked"]:
             try:
                 self.checkout(drw["id"], include_drw=False)

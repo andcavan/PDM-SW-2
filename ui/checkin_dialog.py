@@ -12,6 +12,7 @@ from PyQt6.QtGui import QColor
 from ui.session import session
 from ui.styles import TYPE_ICON
 from core.checkout_manager import READONLY_STATES
+from config import WORKFLOW_STATES
 
 
 class CheckinDialog(QDialog):
@@ -37,6 +38,8 @@ class CheckinDialog(QDialog):
         if not self.doc:
             layout.addWidget(QLabel("Documento non trovato"))
             return
+
+        self._checkin_blocked = False
 
         # Info documento principale
         icon = TYPE_ICON.get(self.doc["doc_type"], "")
@@ -74,6 +77,7 @@ class CheckinDialog(QDialog):
         btn_ok = QPushButton("\U0001f4e5  Check-in")
         btn_ok.setObjectName("btn_primary")
         btn_ok.clicked.connect(self._do_checkin)
+        btn_ok.setEnabled(not self._checkin_blocked)
         btn_row.addWidget(btn_cancel)
         btn_row.addWidget(btn_ok)
         layout.addLayout(btn_row)
@@ -87,9 +91,12 @@ class CheckinDialog(QDialog):
         grp_layout = QVBoxLayout(grp)
 
         if not mod_info["ws_exists"]:
-            lbl = QLabel("\u26a0\ufe0f  File non trovato nella workspace")
-            lbl.setStyleSheet("color: #f38ba8;")
+            lbl = QLabel("⛔  File non trovato nella workspace — check-in non disponibile.\n"
+                         "Il file deve trovarsi in: " + str(session.checkout._ws_file_path(self.doc)))
+            lbl.setWordWrap(True)
+            lbl.setStyleSheet("color: #f38ba8; font-weight: bold;")
             grp_layout.addWidget(lbl)
+            self._checkin_blocked = True
         elif mod_info["conflict"]:
             lbl = QLabel(
                 "\u26a0\ufe0f  CONFLITTO: il file in archivio \u00e8 stato aggiornato "
@@ -118,6 +125,42 @@ class CheckinDialog(QDialog):
 
         self._single_mod_info = mod_info
         layout.addWidget(grp)
+
+        # DRW companion per Parte/Assieme
+        self._drw_companion_id = None
+        self.chk_drw = None
+        if self.doc["doc_type"] in ("Parte", "Assieme"):
+            drw_doc = session.files.get_drw_document(self.document_id)
+            grp_drw = QGroupBox("Disegno associato (DRW)")
+            drw_layout = QVBoxLayout(grp_drw)
+            uid = session.user["id"]
+            if drw_doc and drw_doc.get("is_locked") and drw_doc.get("locked_by") == uid:
+                drw_mod  = session.checkout.is_file_modified(drw_doc["id"])
+                drw_state = drw_doc["state"]
+                drw_color = WORKFLOW_STATES.get(drw_state, {}).get("color", "#cdd6f4")
+                mod_text  = "✅ modificato" if drw_mod.get("modified") else "⚠️ non modificato"
+                self.chk_drw = QCheckBox(
+                    f"Esegui check-in DRW  {drw_doc['code']}  — "
+                    f"{drw_state}  ({mod_text})"
+                )
+                self.chk_drw.setStyleSheet(f"color: {drw_color};")
+                self.chk_drw.setChecked(drw_mod.get("modified", False))
+                self._drw_companion_id = drw_doc["id"]
+                drw_layout.addWidget(self.chk_drw)
+            elif drw_doc and drw_doc.get("is_locked"):
+                locker = drw_doc.get("locked_by_name", "altro utente")
+                lbl_drw = QLabel(f"⚠️  DRW in checkout da {locker} — non disponibile")
+                lbl_drw.setStyleSheet("color: #f38ba8;")
+                drw_layout.addWidget(lbl_drw)
+            elif drw_doc:
+                lbl_drw = QLabel(f"ℹ️  DRW {drw_doc['code']} — non in checkout")
+                lbl_drw.setStyleSheet("color: #6c7086;")
+                drw_layout.addWidget(lbl_drw)
+            else:
+                lbl_drw = QLabel("— Nessun DRW associato")
+                lbl_drw.setStyleSheet("color: #6c7086;")
+                drw_layout.addWidget(lbl_drw)
+            layout.addWidget(grp_drw)
 
     # ------------------------------------------------------------------
     def _build_bom_table(self, layout):
@@ -298,6 +341,22 @@ class CheckinDialog(QDialog):
             msg += "\nFile archiviato."
         else:
             msg += "\nLock rilasciato (file non archiviato)."
+
+        # Checkin DRW companion se selezionato
+        drw_id = getattr(self, "_drw_companion_id", None)
+        chk_drw = getattr(self, "chk_drw", None)
+        if drw_id and chk_drw and chk_drw.isChecked():
+            try:
+                drw_mod = session.checkout.is_file_modified(drw_id)
+                r_drw = session.checkout.checkin(
+                    drw_id,
+                    archive_file=drw_mod.get("modified", True),
+                    delete_from_workspace=delete_ws,
+                    notes=notes,
+                )
+                msg += "\nDRW archiviato." if r_drw.get("archived") else "\nDRW: lock rilasciato."
+            except Exception as e_drw:
+                msg += f"\n\n⚠️ Errore DRW: {e_drw}"
 
         QMessageBox.information(self, "OK", msg)
         self.accept()

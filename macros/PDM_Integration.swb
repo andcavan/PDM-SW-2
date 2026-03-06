@@ -1,7 +1,14 @@
 ' =============================================================================
-'  PDM_Integration.swb  -  Macro SolidWorks per integrazione PDM-SW  v2.3
+'  PDM_Integration.swb  -  Macro SolidWorks per integrazione PDM-SW  v3.0
 '
 '  IMPORTANTE: Percorso HARDCODED. Modificare PDM_APP_PATH se necessario.
+'
+'  Comandi rapidi (toolbar/shortcut):
+'    PDM_Panel      -> apre il pannello Qt completo con file attivo
+'    PDM_Checkout   -> checkout diretto del file attivo
+'    PDM_Checkin    -> salva + checkin diretto del file attivo
+'    PDM_UndoCheckout -> annulla checkout del file attivo
+'    PDM_OpenApp    -> apre l'applicazione PDM-SW principale
 ' =============================================================================
 
 ' >>> MODIFICARE QUESTO PERCORSO SE L'APP NON E' QUI <<<
@@ -12,75 +19,25 @@ Dim swModel As Object
 
 
 ' ===========================================================================
-'  Sub principale: mostra menu azioni PDM
+'  Sub principale: apre il pannello Qt PDM
+'  (rimpiazza il vecchio InputBox con numeri)
 ' ===========================================================================
 Sub main()
     On Error Resume Next
+    Dim fp As String
+    fp = GetActiveFilePathSilent()
+    RunPanel fp
+End Sub
 
-    Dim swApp As Object
-    Set swApp = Application.SldWorks
-    If swApp Is Nothing Then
-        MsgBox "Impossibile connettersi a SolidWorks.", vbCritical, "PDM-SW"
-        Exit Sub
-    End If
 
-    Set swModel = swApp.ActiveDoc
-
-    If swModel Is Nothing Then
-        MsgBox "Nessun documento aperto in SolidWorks.", vbExclamation, "PDM-SW"
-        Exit Sub
-    End If
-
-    Dim filePath As String
-    filePath = swModel.GetPathName()
-
-    If filePath = "" Then
-        MsgBox "Il documento non e' stato ancora salvato." & vbCrLf & _
-               "Salvare prima il file.", vbExclamation, "PDM-SW"
-        Exit Sub
-    End If
-
-    Dim fileName As String
-    Dim p As Long
-    p = InStrRev(filePath, "\")
-    If p > 0 Then
-        fileName = Mid(filePath, p + 1)
-    Else
-        fileName = filePath
-    End If
-
-    ' Mostra menu
-    Dim msg As String
-    msg = "File: " & fileName & vbCrLf & vbCrLf & _
-          "1 = CHECKOUT" & vbCrLf & _
-          "2 = CHECK-IN" & vbCrLf & _
-          "3 = Annulla Checkout" & vbCrLf & _
-          "4 = Importa proprieta in PDM" & vbCrLf & _
-          "5 = Esporta proprieta da PDM" & vbCrLf & _
-          "6 = Apri applicazione PDM"
-
-    Dim choice As String
-    choice = InputBox(msg, "PDM-SW - Menu", "")
-    If choice = "" Then Exit Sub
-
-    Select Case Trim(choice)
-        Case "1"
-            RunBridge "checkout", filePath
-        Case "2"
-            swModel.Save
-            RunBridge "checkin", filePath
-        Case "3"
-            RunBridge "undo_checkout", filePath
-        Case "4"
-            ' Leggi proprietà in VBA e passale a Python
-            ExportPropsFromSW filePath
-        Case "5"
-            RunBridge "export_props", filePath
-        Case "6"
-            RunBridge "open", ""
-        Case Else
-            MsgBox "Scelta non valida: " & choice, vbExclamation, "PDM-SW"
-    End Select
+' ===========================================================================
+'  Apre il pannello Qt PDM con il file attivo
+' ===========================================================================
+Sub PDM_Panel()
+    On Error Resume Next
+    Dim fp As String
+    fp = GetActiveFilePathSilent()
+    RunPanel fp
 End Sub
 
 
@@ -119,7 +76,7 @@ End Sub
 
 
 ' ===========================================================================
-'  Helper: ottiene il percorso del file attivo
+'  Helper: ottiene il percorso del file attivo (con messaggi di errore)
 ' ===========================================================================
 Private Function GetActiveFilePath() As String
     On Error Resume Next
@@ -151,7 +108,77 @@ End Function
 
 
 ' ===========================================================================
-'  Esegue il bridge Python e mostra il risultato
+'  Helper: ottiene il percorso del file attivo senza messaggi (per il pannello)
+'  Ritorna "" se nessun doc aperto o non salvato
+' ===========================================================================
+Private Function GetActiveFilePathSilent() As String
+    On Error Resume Next
+    GetActiveFilePathSilent = ""
+    Dim sw As Object
+    Set sw = Application.SldWorks
+    If sw Is Nothing Then Exit Function
+    Dim doc As Object
+    Set doc = sw.ActiveDoc
+    If doc Is Nothing Then Exit Function
+    GetActiveFilePathSilent = doc.GetPathName()
+End Function
+
+
+' ===========================================================================
+'  Apre il pannello Qt PDM (non-bloccante: VBA non aspetta la chiusura)
+' ===========================================================================
+Private Sub RunPanel(filePath As String)
+    On Error Resume Next
+
+    Dim appDir As String
+    appDir = PDM_APP_PATH
+
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+
+    If Not fso.FolderExists(appDir) Then
+        MsgBox "Cartella PDM non trovata:" & vbCrLf & appDir, vbCritical, "PDM-SW"
+        Exit Sub
+    End If
+
+    ' Trova python nel venv
+    Dim pythonExe As String
+    pythonExe = appDir & "\.venv\Scripts\pythonw.exe"
+    If Not fso.FileExists(pythonExe) Then
+        pythonExe = appDir & "\.venv\Scripts\python.exe"
+    End If
+    If Not fso.FileExists(pythonExe) Then
+        MsgBox "Python non trovato in:" & vbCrLf & appDir & "\.venv\Scripts\", _
+               vbCritical, "PDM-SW"
+        Exit Sub
+    End If
+
+    Dim panelScript As String
+    panelScript = appDir & "\macros\pdm_panel.py"
+    If Not fso.FileExists(panelScript) Then
+        MsgBox "Pannello non trovato:" & vbCrLf & panelScript, vbCritical, "PDM-SW"
+        Exit Sub
+    End If
+
+    ' Costruisce comando
+    Dim cmd As String
+    cmd = Chr(34) & pythonExe & Chr(34) & " " & Chr(34) & panelScript & Chr(34)
+    If filePath <> "" Then
+        cmd = cmd & " " & Chr(34) & filePath & Chr(34)
+    End If
+
+    WriteDebugLog "RunPanel CMD: " & cmd
+
+    ' Lancia SENZA aspettare (bWait = False)
+    Dim wsShell As Object
+    Set wsShell = CreateObject("WScript.Shell")
+    wsShell.CurrentDirectory = appDir
+    wsShell.Run cmd, 0, False      ' <-- False = non-bloccante
+End Sub
+
+
+' ===========================================================================
+'  Esegue il bridge Python e mostra il risultato (blocca VBA fino al termine)
 ' ===========================================================================
 Private Sub RunBridge(action As String, filePath As String)
     On Error Resume Next
@@ -159,7 +186,6 @@ Private Sub RunBridge(action As String, filePath As String)
     Dim appDir As String
     appDir = PDM_APP_PATH
 
-    ' Verifica che la cartella esista
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     If fso Is Nothing Then
@@ -208,10 +234,9 @@ Private Sub RunBridge(action As String, filePath As String)
         cmd = cmd & " --file " & Chr(34) & filePath & Chr(34)
     End If
 
-    ' Scrivi log debug VBA
-    WriteDebugLog "CMD: " & cmd
+    WriteDebugLog "RunBridge CMD: " & cmd
 
-    ' Esegue
+    ' Esegue (bloccante: True)
     Dim wsShell As Object
     Set wsShell = CreateObject("WScript.Shell")
     If wsShell Is Nothing Then
@@ -224,7 +249,7 @@ Private Sub RunBridge(action As String, filePath As String)
     Dim retCode As Long
     retCode = wsShell.Run(cmd, 0, True)
 
-    WriteDebugLog "RC: " & retCode
+    WriteDebugLog "RunBridge RC: " & retCode
 
     ' Legge risultato
     If fso.FileExists(resultFile) Then
@@ -235,7 +260,6 @@ Private Sub RunBridge(action As String, filePath As String)
             content = ts.ReadAll()
             ts.Close
 
-            ' Cerca prima riga (OK o ERR)
             Dim isError As Boolean
             isError = False
             Dim msgText As String
@@ -270,7 +294,7 @@ Private Sub RunBridge(action As String, filePath As String)
                "Controllare: " & appDir & "\macros\sw_bridge.log", _
                vbWarning, "PDM-SW"
     Else
-        If action <> "open" Then
+        If action <> "open" And action <> "panel" Then
             MsgBox "Nessun risultato dal bridge Python." & vbCrLf & _
                    "Controllare: " & appDir & "\macros\sw_bridge.log", _
                    vbWarning, "PDM-SW"
@@ -298,12 +322,12 @@ End Sub
 
 
 ' ===========================================================================
-'  Legge proprietà custom dal modello SW aperto e le passa a Python
+'  Legge proprieta' custom dal modello SW aperto e le passa a Python
+'  (mantenuto per compatibilita' con toolbar che chiamano RunBridge direttamente)
 ' ===========================================================================
 Private Sub ExportPropsFromSW(filePath As String)
     On Error Resume Next
 
-    ' Ottieni il modello attivo
     Dim sw As Object
     Set sw = Application.SldWorks
     If sw Is Nothing Then
@@ -318,7 +342,6 @@ Private Sub ExportPropsFromSW(filePath As String)
         Exit Sub
     End If
 
-    ' Leggi proprietà custom dalla configurazione default
     Dim mgr As Object
     Set mgr = doc.Extension.CustomPropertyManager("")
     If mgr Is Nothing Then
@@ -328,7 +351,6 @@ Private Sub ExportPropsFromSW(filePath As String)
 
     Dim propCount As Long
     propCount = mgr.Count
-
     WriteDebugLog "ExportPropsFromSW: count=" & propCount
 
     If propCount = 0 Then
@@ -336,7 +358,6 @@ Private Sub ExportPropsFromSW(filePath As String)
         Exit Sub
     End If
 
-    ' Ottieni nomi proprietà
     Dim names As Variant
     names = mgr.GetNames()
     If IsEmpty(names) Then
@@ -344,7 +365,6 @@ Private Sub ExportPropsFromSW(filePath As String)
         Exit Sub
     End If
 
-    ' Scrivi proprietà in file JSON
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     Dim propsFile As String
@@ -367,8 +387,6 @@ Private Sub ExportPropsFromSW(filePath As String)
 
     For i = LBound(names) To UBound(names)
         propName = names(i)
-
-        ' Leggi valore risolto
         Dim retCode As Long
         propVal = ""
         resolvedVal = ""
@@ -381,7 +399,6 @@ Private Sub ExportPropsFromSW(filePath As String)
             finalVal = propVal
         End If
 
-        ' Escape JSON: backslash e doppi apici
         propName = Replace(propName, "\", "\\")
         propName = Replace(propName, Chr(34), "\" & Chr(34))
         finalVal = Replace(finalVal, "\", "\\")
@@ -389,20 +406,16 @@ Private Sub ExportPropsFromSW(filePath As String)
         finalVal = Replace(finalVal, vbCr, "")
         finalVal = Replace(finalVal, vbLf, " ")
 
-        If Not firstProp Then
-            f.Write ","
-        End If
+        If Not firstProp Then f.Write ","
         f.Write Chr(34) & propName & Chr(34) & ":" & Chr(34) & finalVal & Chr(34)
         firstProp = False
-
         WriteDebugLog "  prop: " & propName & " = " & finalVal
     Next i
 
     f.Write "}"
     f.Close
-
     WriteDebugLog "Props scritte in " & propsFile
 
-    ' Chiama bridge con azione import_props_json
     RunBridge "import_props_json", filePath
 End Sub
+
