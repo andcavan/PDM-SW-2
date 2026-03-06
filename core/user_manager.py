@@ -37,8 +37,10 @@ class UserManager:
         if not user:
             return None
         stored = user.get("password_hash") or ""
-        if not stored or stored == _hash(password):
-            # Aggiorna workstation
+        # Se stored è vuoto l'utente non ha password → accede solo con stringa vuota
+        if stored != _hash(password):
+            return None
+        # Aggiorna workstation
             self.db.execute(
                 "UPDATE users SET workstation=? WHERE id=?",
                 (socket.gethostname(), user["id"]),

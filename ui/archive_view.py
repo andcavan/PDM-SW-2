@@ -88,6 +88,19 @@ class ArchiveView(QWidget):
         left_layout.setContentsMargins(0, 0, 0, 0)
         left_layout.setSpacing(4)
 
+        # Barra espandi/comprimi
+        exp_row = QHBoxLayout()
+        btn_expand = QPushButton("▶  Espandi tutto")
+        btn_expand.setToolTip("Espandi tutti i nodi codice")
+        btn_expand.clicked.connect(self.tree_expand_all)
+        btn_collapse = QPushButton("◀  Comprimi tutto")
+        btn_collapse.setToolTip("Comprimi tutti i nodi codice")
+        btn_collapse.clicked.connect(self.tree_collapse_all)
+        exp_row.addWidget(btn_collapse)
+        exp_row.addWidget(btn_expand)
+        exp_row.addStretch()
+        left_layout.addLayout(exp_row)
+
         # Tree widget
         self.tree = QTreeWidget()
         self.tree.setHeaderLabels([
@@ -136,7 +149,18 @@ class ArchiveView(QWidget):
         self.splitter.setCollapsible(0, False)
         self.splitter.setCollapsible(1, True)
 
+        # Ripristina dimensioni splitter salvate
+        s = QSettings("PDM-SW", "ArchiveView")
+        splitter_state = s.value("splitterState")
+        if splitter_state:
+            self.splitter.restoreState(splitter_state)
+
         layout.addWidget(self.splitter)
+
+    def save_layout(self):
+        """Salva lo stato dello splitter (chiamata da MainWindow.closeEvent)."""
+        s = QSettings("PDM-SW", "ArchiveView")
+        s.setValue("splitterState", self.splitter.saveState())
 
     # ------------------------------------------------------------------
     #  Refresh dati
@@ -151,6 +175,20 @@ class ArchiveView(QWidget):
             state = ""
 
         docs = session.files.search_documents(text=text, state=state)
+
+        # Ricorda quali codici erano espansi e la selezione corrente
+        expanded_codes: set[str] = set()
+        selected_key = None
+        root_item = self.tree.invisibleRootItem()
+        for i in range(root_item.childCount()):
+            child = root_item.child(i)
+            if child.isExpanded():
+                val = child.data(COL_CODE, Qt.ItemDataRole.UserRole)
+                if isinstance(val, str) and val.startswith("CODE:"):
+                    expanded_codes.add(val[5:])
+        sel_items = self.tree.selectedItems()
+        if sel_items:
+            selected_key = sel_items[0].data(COL_CODE, Qt.ItemDataRole.UserRole)
 
         # Raggruppa per codice
         groups: dict[str, list[dict]] = {}
@@ -191,7 +229,7 @@ class ArchiveView(QWidget):
                 nest_parent = type_items.get(doc["doc_type"], parent_item)
                 self._make_tree_item(nest_parent, doc)
 
-            parent_item.setExpanded(True)
+            parent_item.setExpanded(code in expanded_codes)   # ripristina stato o lascia compresso
 
         total = sum(len(v) for v in groups.values())
         self.lbl_count.setText(
@@ -200,6 +238,40 @@ class ArchiveView(QWidget):
 
         # Applica filtro tipo corrente
         self._apply_type_filter()
+
+        # Ripristina selezione precedente (senza emettere segnali extra)
+        if selected_key is not None:
+            root = self.tree.invisibleRootItem()
+            found: "QTreeWidgetItem | None" = None
+            for i in range(root.childCount()):
+                parent = root.child(i)
+                if parent.data(COL_CODE, Qt.ItemDataRole.UserRole) == selected_key:
+                    found = parent
+                    break
+                for j in range(parent.childCount()):
+                    child = parent.child(j)
+                    if child.data(COL_CODE, Qt.ItemDataRole.UserRole) == selected_key:
+                        found = child
+                        break
+                if found:
+                    break
+            if found:
+                self.tree.blockSignals(True)
+                self.tree.setCurrentItem(found)
+                self.tree.blockSignals(False)
+                # Aggiorna il pannello dettaglio con i dati freschi
+                self._on_selection_changed()
+
+    # ------------------------------------------------------------------
+    #  Espandi / Comprimi
+    # ------------------------------------------------------------------
+    def tree_expand_all(self):
+        self.tree.expandAll()
+
+    def tree_collapse_all(self):
+        root = self.tree.invisibleRootItem()
+        for i in range(root.childCount()):
+            root.child(i).setExpanded(False)
 
     # ------------------------------------------------------------------
     #  Filtro tipo (agisce solo sui figli)

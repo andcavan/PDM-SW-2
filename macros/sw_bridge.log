@@ -341,3 +341,1496 @@ Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)
 2026-03-06 01:38:07 [INFO] pdm_panel avviato  |  file=C:\Users\prog3\Desktop\APP MECCANICA\_ws2\Parte1.SLDPRT
 2026-03-06 01:38:58 [INFO] pdm_panel avviato  |  file=C:\Users\prog3\Desktop\Assieme1.SLDASM
 2026-03-06 01:41:07 [INFO] pdm_panel avviato  |  file=C:\Users\prog3\Desktop\Assieme1.SLDASM
+2026-03-06 21:34:55 [INFO] pdm_panel avviato  |  file=K:\WorkCad\SolidworksWork\TECNOMBM\TESTA FRESA\TSF_0100-0997.SLDASM
+2026-03-06 21:37:44 [INFO] pdm_asm_import avviato  |  file=
+2026-03-06 21:40:35 [DEBUG] Attempting to acquire lock 2409605869120 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Lock 2409605869120 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Attempting to release lock 2409605869120 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Lock 2409605869120 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Attempting to acquire lock 2410249849424 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Lock 2410249849424 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Attempting to release lock 2410249849424 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Lock 2410249849424 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Attempting to acquire lock 2410249849424 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Lock 2410249849424 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Attempting to release lock 2410249849424 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Lock 2410249849424 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Attempting to acquire lock 2409605951440 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Lock 2409605951440 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Attempting to release lock 2409605951440 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Lock 2409605951440 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Attempting to acquire lock 2409605951440 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Lock 2409605951440 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Attempting to release lock 2409605951440 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Lock 2409605951440 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Attempting to acquire lock 2409605966608 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Lock 2409605966608 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Attempting to release lock 2409605966608 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Lock 2409605966608 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Attempting to acquire lock 2409605627648 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Lock 2409605627648 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Attempting to release lock 2409605627648 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Lock 2409605627648 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Attempting to acquire lock 2409605627648 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Lock 2409605627648 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Attempting to release lock 2409605627648 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Lock 2409605627648 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Attempting to acquire lock 2409605532752 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Lock 2409605532752 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Attempting to release lock 2409605532752 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Lock 2409605532752 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Attempting to acquire lock 2409605532752 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Lock 2409605532752 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Attempting to release lock 2409605532752 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [DEBUG] Lock 2409605532752 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:40:35 [ERROR] Pack and Go fallito: Pack and Go non disponibile: (-2147352561, 'Parametro non facoltativo.', None, None)
+Traceback (most recent call last):
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 814, in _run_pack_and_go
+    pgo = model.Extension.GetPackAndGo()
+  File "<COMObject <unknown>>", line 2, in GetPackAndGo
+pywintypes.com_error: (-2147352561, 'Parametro non facoltativo.', None, None)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 724, in _import
+    pgo_count = self._run_pack_and_go(ws_root, stem_to_code)
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 816, in _run_pack_and_go
+    raise RuntimeError(f"Pack and Go non disponibile: {e}")
+RuntimeError: Pack and Go non disponibile: (-2147352561, 'Parametro non facoltativo.', None, None)
+2026-03-06 21:43:18 [INFO] pdm_asm_import avviato  |  file=
+2026-03-06 21:44:45 [INFO] pdm_panel avviato  |  file=K:\WorkCad\SolidworksWork\TECNOMBM\TESTA FRESA\TSF_0100-0997.SLDASM
+2026-03-06 21:53:56 [INFO] pdm_panel avviato  |  file=K:\WorkCad\SolidworksWork\TECNOMBM\TESTA FRESA\TSF_0100-0997.SLDASM
+2026-03-06 21:54:19 [INFO] pdm_asm_import avviato  |  file=
+2026-03-06 21:56:06 [DEBUG] Attempting to acquire lock 2240957296192 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240957296192 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to release lock 2240957296192 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240957296192 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to acquire lock 2241584515664 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2241584515664 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to release lock 2241584515664 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2241584515664 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to acquire lock 2241584515664 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2241584515664 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to release lock 2241584515664 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2241584515664 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to acquire lock 2240957378512 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240957378512 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to release lock 2240957378512 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240957378512 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to acquire lock 2240957378512 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240957378512 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to release lock 2240957378512 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240957378512 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to acquire lock 2240957393680 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240957393680 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to release lock 2240957393680 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240957393680 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to acquire lock 2240957038336 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240957038336 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to release lock 2240957038336 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240957038336 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to acquire lock 2240957038336 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240957038336 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to release lock 2240957038336 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240957038336 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to acquire lock 2240956943696 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240956943696 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to release lock 2240956943696 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240956943696 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to acquire lock 2240956943696 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240956943696 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to release lock 2240956943696 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240956943696 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [ERROR] Pack and Go fallito: Pack and Go non disponibile: (-2147352561, 'Parametro non facoltativo.', None, None)
+Traceback (most recent call last):
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 851, in _run_pack_and_go
+    pgo = model.Extension.GetPackAndGo()
+  File "<COMObject <unknown>>", line 2, in GetPackAndGo
+pywintypes.com_error: (-2147352561, 'Parametro non facoltativo.', None, None)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 724, in _import
+    pgo_count = self._run_pack_and_go(ws_root, stem_to_code)
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 853, in _run_pack_and_go
+    raise RuntimeError(f"Pack and Go non disponibile: {e}")
+RuntimeError: Pack and Go non disponibile: (-2147352561, 'Parametro non facoltativo.', None, None)
+2026-03-06 21:56:06 [INFO] Fallback copiato: TSF_0100-0994.SLDASM \u2192 AAA_0100-9995.SLDASM
+2026-03-06 21:56:06 [INFO] Fallback copiato: TSF_0100-0007.SLDPRT \u2192 AAA_0100-0020.SLDPRT
+2026-03-06 21:56:06 [INFO] Fallback copiato: TSF_0100-0006.SLDPRT \u2192 AAA_0100-0021.SLDPRT
+2026-03-06 21:56:06 [INFO] Fallback copiato: TSF_0100-0025.SLDPRT \u2192 AAA_0100-0022.SLDPRT
+2026-03-06 21:56:06 [INFO] Fallback copia diretta: 4 file copiati
+2026-03-06 21:56:06 [WARNING] File workspace non trovato, skip archiviazione: C:\Users\prog3\Desktop\APP MECCANICA\_ws2\AAA_0100-V003.SLDPRT
+2026-03-06 21:56:06 [DEBUG] Attempting to acquire lock 2240957324640 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240957324640 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to release lock 2240957324640 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240957324640 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to acquire lock 2240957324640 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240957324640 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to release lock 2240957324640 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240957324640 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to acquire lock 2240956135056 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240956135056 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to release lock 2240956135056 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240956135056 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to acquire lock 2240956136176 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240956136176 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Attempting to release lock 2240956136176 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:56:06 [DEBUG] Lock 2240956136176 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 21:57:44 [INFO] pdm_asm_import avviato  |  file=
+2026-03-06 22:03:00 [INFO] pdm_asm_import avviato  |  file=
+2026-03-06 22:05:13 [INFO] pdm_asm_import avviato  |  file=
+2026-03-06 22:06:31 [DEBUG] Attempting to acquire lock 2621163433200 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Lock 2621163433200 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Attempting to release lock 2621163433200 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Lock 2621163433200 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Attempting to acquire lock 2621790620240 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Lock 2621790620240 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Attempting to release lock 2621790620240 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Lock 2621790620240 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Attempting to acquire lock 2621163388624 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Lock 2621163388624 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Attempting to release lock 2621163388624 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Lock 2621163388624 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Attempting to acquire lock 2621163580176 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Lock 2621163580176 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Attempting to release lock 2621163580176 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Lock 2621163580176 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Attempting to acquire lock 2621163580176 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Lock 2621163580176 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Attempting to release lock 2621163580176 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Lock 2621163580176 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Attempting to acquire lock 2621163481584 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Lock 2621163481584 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Attempting to release lock 2621163481584 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:31 [DEBUG] Lock 2621163481584 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:32 [ERROR] Pack and Go fallito: Pack and Go non disponibile: (-2147352561, 'Parametro non facoltativo.', None, None)
+Traceback (most recent call last):
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 892, in _run_pack_and_go
+    pgo = model.Extension.GetPackAndGo()
+  File "<COMObject <unknown>>", line 2, in GetPackAndGo
+pywintypes.com_error: (-2147352561, 'Parametro non facoltativo.', None, None)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 724, in _import
+    pgo_count = self._run_pack_and_go(ws_root, stem_to_code)
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 894, in _run_pack_and_go
+    raise RuntimeError(f"Pack and Go non disponibile: {e}")
+RuntimeError: Pack and Go non disponibile: (-2147352561, 'Parametro non facoltativo.', None, None)
+2026-03-06 22:06:32 [INFO] Fallback copy2: TSF_0100-0002.SLDPRT \u2192 AAA_0100-0023.SLDPRT
+2026-03-06 22:06:32 [INFO] Fallback copy2: TSF_0100-0024.SLDPRT \u2192 AAA_0100-0024.SLDPRT
+2026-03-06 22:06:32 [INFO] Fallback copy2: TSEI - UNI5933.SLDPRT \u2192 AAA_0100-0025.SLDPRT
+2026-03-06 22:06:32 [INFO] Fallback copia diretta: 3 file copiati
+2026-03-06 22:06:32 [DEBUG] Attempting to acquire lock 2621790601568 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:32 [DEBUG] Lock 2621790601568 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:32 [DEBUG] Attempting to release lock 2621790601568 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:32 [DEBUG] Lock 2621790601568 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:32 [DEBUG] Attempting to acquire lock 2621790601568 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:32 [DEBUG] Lock 2621790601568 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:32 [DEBUG] Attempting to release lock 2621790601568 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:32 [DEBUG] Lock 2621790601568 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:32 [DEBUG] Attempting to acquire lock 2621163038288 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:32 [DEBUG] Lock 2621163038288 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:32 [DEBUG] Attempting to release lock 2621163038288 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:06:32 [DEBUG] Lock 2621163038288 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:22:51 [INFO] pdm_asm_import avviato  |  file=
+2026-03-06 22:23:25 [INFO] pdm_asm_import avviato  |  file=
+2026-03-06 22:28:15 [DEBUG] Attempting to acquire lock 1831906110704 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1831906110704 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to release lock 1831906110704 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1831906110704 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to acquire lock 1832533265296 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1832533265296 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to release lock 1832533265296 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1832533265296 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to acquire lock 1832533265296 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1832533265296 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to release lock 1832533265296 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1832533265296 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to acquire lock 1831906192448 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1831906192448 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to release lock 1831906192448 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1831906192448 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to acquire lock 1831906192448 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1831906192448 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to release lock 1831906192448 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1831906192448 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to acquire lock 1831906159376 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1831906159376 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to release lock 1831906159376 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1831906159376 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to acquire lock 1832533296272 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1832533296272 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to release lock 1832533296272 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1832533296272 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to acquire lock 1832533296272 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1832533296272 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to release lock 1832533296272 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1832533296272 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to acquire lock 1831905676880 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1831905676880 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to release lock 1831905676880 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1831905676880 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to acquire lock 1831905676880 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1831905676880 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to release lock 1831905676880 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1831905676880 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [ERROR] Pack and Go fallito: Pack and Go non disponibile: (-2147352561, 'Parametro non facoltativo.', None, None)
+Traceback (most recent call last):
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 892, in _run_pack_and_go
+    pgo = model.Extension.GetPackAndGo()
+  File "<COMObject <unknown>>", line 2, in GetPackAndGo
+pywintypes.com_error: (-2147352561, 'Parametro non facoltativo.', None, None)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 724, in _import
+    pgo_count = self._run_pack_and_go(ws_root, stem_to_code)
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 894, in _run_pack_and_go
+    raise RuntimeError(f"Pack and Go non disponibile: {e}")
+RuntimeError: Pack and Go non disponibile: (-2147352561, 'Parametro non facoltativo.', None, None)
+2026-03-06 22:28:15 [INFO] Fallback copy2: TSF_0100-0025.SLDPRT \u2192 AAA_0100-0026.SLDPRT
+2026-03-06 22:28:15 [INFO] Fallback copy2: TSF_0100-0994.SLDASM \u2192 AAA_0100-9993.SLDASM
+2026-03-06 22:28:15 [INFO] Fallback copy2: TSF_0100-0007.SLDPRT \u2192 AAA_0100-0027.SLDPRT
+2026-03-06 22:28:15 [INFO] Fallback copy2: TSF_0100-0006.SLDPRT \u2192 AAA_0100-0028.SLDPRT
+2026-03-06 22:28:15 [INFO] Fallback copia diretta: 4 file copiati
+2026-03-06 22:28:15 [WARNING] File workspace non trovato, skip archiviazione: C:\Users\prog3\Desktop\APP MECCANICA\_ws2\AAA_0100-9994.SLDPRT
+2026-03-06 22:28:15 [DEBUG] Attempting to acquire lock 1831906073952 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1831906073952 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to release lock 1831906073952 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1831906073952 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to acquire lock 1831906073952 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1831906073952 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to release lock 1831906073952 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1831906073952 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to acquire lock 1831904998832 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1831904998832 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to release lock 1831904998832 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1831904998832 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to acquire lock 1831904999952 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1831904999952 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Attempting to release lock 1831904999952 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:28:15 [DEBUG] Lock 1831904999952 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:44:25 [INFO] pdm_asm_import avviato  |  file=
+2026-03-06 22:44:27 [WARNING] Ricorsione fallita per K:\WorkCad\SolidworksWork\TECNOMBM\TESTA FRESA\TSF_0100-0994.SLDASM: (-2147352573, 'Impossibile trovare membro.', None, None)
+2026-03-06 22:45:33 [DEBUG] Attempting to acquire lock 2885654196112 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885654196112 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to release lock 2885654196112 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885654196112 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to acquire lock 2884142025616 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2884142025616 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to release lock 2884142025616 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2884142025616 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to acquire lock 2884142025616 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2884142025616 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to release lock 2884142025616 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2884142025616 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to acquire lock 2885654294784 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885654294784 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to release lock 2885654294784 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885654294784 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to acquire lock 2885654294784 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885654294784 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to release lock 2885654294784 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885654294784 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to acquire lock 2885654310224 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885654310224 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to release lock 2885654310224 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885654310224 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to acquire lock 2885653937648 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885653937648 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to release lock 2885653937648 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885653937648 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to acquire lock 2885653937648 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885653937648 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to release lock 2885653937648 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885653937648 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to acquire lock 2885653859408 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885653859408 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to release lock 2885653859408 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885653859408 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to acquire lock 2885653859408 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885653859408 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to release lock 2885653859408 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885653859408 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [ERROR] Pack and Go fallito: Pack and Go non disponibile: (-2147352561, 'Parametro non facoltativo.', None, None)
+Traceback (most recent call last):
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 909, in _run_pack_and_go
+    pgo = model.Extension.GetPackAndGo()
+  File "<COMObject <unknown>>", line 2, in GetPackAndGo
+pywintypes.com_error: (-2147352561, 'Parametro non facoltativo.', None, None)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 741, in _import
+    pgo_count = self._run_pack_and_go(ws_root, stem_to_code)
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 911, in _run_pack_and_go
+    raise RuntimeError(f"Pack and Go non disponibile: {e}")
+RuntimeError: Pack and Go non disponibile: (-2147352561, 'Parametro non facoltativo.', None, None)
+2026-03-06 22:45:33 [INFO] Fallback copy2: TSF_0100-0025.SLDPRT \u2192 AAA_0100-0029.SLDPRT
+2026-03-06 22:45:33 [INFO] Fallback copy2: TSF_0100-0994.SLDASM \u2192 AAA_0100-9992.SLDASM
+2026-03-06 22:45:33 [INFO] Fallback copy2: TSF_0100-0007.SLDPRT \u2192 AAA_0100-0030.SLDPRT
+2026-03-06 22:45:33 [INFO] Fallback copy2: TSF_0100-0006.SLDPRT \u2192 AAA_0100-0031.SLDPRT
+2026-03-06 22:45:33 [INFO] Fallback copia diretta: 4 file copiati
+2026-03-06 22:45:33 [WARNING] File workspace non trovato, skip archiviazione: C:\Users\prog3\Desktop\APP MECCANICA\_ws2\AAA_V003.SLDPRT
+2026-03-06 22:45:33 [DEBUG] Attempting to acquire lock 2885654240368 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885654240368 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to release lock 2885654240368 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885654240368 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to acquire lock 2885654240368 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885654240368 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to release lock 2885654240368 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885654240368 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to acquire lock 2885653034864 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885653034864 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to release lock 2885653034864 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885653034864 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to acquire lock 2885653035536 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885653035536 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Attempting to release lock 2885653035536 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:45:33 [DEBUG] Lock 2885653035536 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:07 [INFO] pdm_panel avviato  |  file=K:\WorkCad\SolidworksWork\TECNOMBM\TESTA FRESA\TSF_0100-0997.SLDASM
+2026-03-06 22:48:33 [INFO] _create() avviato — file_path='K:\\WorkCad\\SolidworksWork\\TECNOMBM\\TESTA FRESA\\TSF_0100-0997.SLDASM' ext='.SLDASM' doc_type='Assieme'
+2026-03-06 22:48:33 [DEBUG] Attempting to acquire lock 2194174562656 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:33 [DEBUG] Lock 2194174562656 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:33 [DEBUG] Attempting to release lock 2194174562656 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:33 [DEBUG] Lock 2194174562656 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:33 [INFO] Tentativo salvataggio: sw_doc=True dest_ws=C:\Users\prog3\Desktop\APP MECCANICA\_ws2\AAA_0100-9991.SLDASM
+2026-03-06 22:48:52 [INFO] SW SaveAs3 OK \u2192 C:\Users\prog3\Desktop\APP MECCANICA\_ws2\AAA_0100-9991.SLDASM
+2026-03-06 22:48:52 [DEBUG] Attempting to acquire lock 2194174016912 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:52 [DEBUG] Lock 2194174016912 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:52 [DEBUG] Attempting to release lock 2194174016912 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:52 [DEBUG] Lock 2194174016912 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:52 [INFO] Documento creato: code=AAA_0100-9991 id=71 ext=.SLDASM type=Assieme
+2026-03-06 22:48:52 [DEBUG] Attempting to acquire lock 2194174016912 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:52 [DEBUG] Lock 2194174016912 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:52 [DEBUG] Attempting to release lock 2194174016912 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:52 [DEBUG] Lock 2194174016912 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:52 [INFO] File archiviato \u2192 C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\archive\AAA_0100-9991\00\AAA_0100-9991.SLDASM
+2026-03-06 22:48:52 [DEBUG] Attempting to acquire lock 2194174495488 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:52 [DEBUG] Lock 2194174495488 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:52 [DEBUG] Attempting to release lock 2194174495488 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:52 [DEBUG] Lock 2194174495488 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:52 [DEBUG] Attempting to acquire lock 2194174495488 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:52 [DEBUG] Lock 2194174495488 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:52 [DEBUG] Attempting to release lock 2194174495488 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:52 [DEBUG] Lock 2194174495488 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:52 [DEBUG] Attempting to acquire lock 2194174483280 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:52 [DEBUG] Lock 2194174483280 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:52 [DEBUG] Attempting to release lock 2194174483280 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:48:52 [DEBUG] Lock 2194174483280 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:49:44 [INFO] pdm_asm_import avviato  |  file=
+2026-03-06 22:49:46 [WARNING] Ricorsione fallita per K:\WorkCad\SolidworksWork\TECNOMBM\TESTA FRESA\TSF_0100-0994.SLDASM: (-2147352573, 'Impossibile trovare membro.', None, None)
+2026-03-06 22:50:41 [INFO] pdm_panel avviato  |  file=K:\WorkCad\SolidworksWork\TECNOMBM\TESTA FRESA\TSF_0100-0994.SLDASM
+2026-03-06 22:51:00 [INFO] _create() avviato — file_path='K:\\WorkCad\\SolidworksWork\\TECNOMBM\\TESTA FRESA\\TSF_0100-0994.SLDASM' ext='.SLDASM' doc_type='Assieme'
+2026-03-06 22:51:00 [DEBUG] Attempting to acquire lock 1405316419936 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:00 [DEBUG] Lock 1405316419936 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:00 [DEBUG] Attempting to release lock 1405316419936 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:00 [DEBUG] Lock 1405316419936 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:00 [INFO] Tentativo salvataggio: sw_doc=True dest_ws=C:\Users\prog3\Desktop\APP MECCANICA\_ws2\AAA_0100-9990.SLDASM
+2026-03-06 22:51:05 [INFO] SW SaveAs3 OK \u2192 C:\Users\prog3\Desktop\APP MECCANICA\_ws2\AAA_0100-9990.SLDASM
+2026-03-06 22:51:05 [DEBUG] Attempting to acquire lock 1405315874192 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:05 [DEBUG] Lock 1405315874192 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:05 [DEBUG] Attempting to release lock 1405315874192 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:05 [DEBUG] Lock 1405315874192 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:05 [INFO] Documento creato: code=AAA_0100-9990 id=72 ext=.SLDASM type=Assieme
+2026-03-06 22:51:05 [DEBUG] Attempting to acquire lock 1405315874192 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:05 [DEBUG] Lock 1405315874192 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:05 [DEBUG] Attempting to release lock 1405315874192 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:05 [DEBUG] Lock 1405315874192 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:05 [INFO] File archiviato \u2192 C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\archive\AAA_0100-9990\00\AAA_0100-9990.SLDASM
+2026-03-06 22:51:05 [DEBUG] Attempting to acquire lock 1405316352768 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:05 [DEBUG] Lock 1405316352768 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:05 [DEBUG] Attempting to release lock 1405316352768 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:05 [DEBUG] Lock 1405316352768 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:05 [DEBUG] Attempting to acquire lock 1405316352768 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:05 [DEBUG] Lock 1405316352768 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:05 [DEBUG] Attempting to release lock 1405316352768 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:05 [DEBUG] Lock 1405316352768 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:05 [DEBUG] Attempting to acquire lock 1405316340560 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:05 [DEBUG] Lock 1405316340560 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:05 [DEBUG] Attempting to release lock 1405316340560 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:05 [DEBUG] Lock 1405316340560 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:51:53 [INFO] pdm_asm_import avviato  |  file=
+2026-03-06 22:52:07 [DEBUG] Attempting to acquire lock 2922027183680 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Lock 2922027183680 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Attempting to release lock 2922027183680 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Lock 2922027183680 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Attempting to acquire lock 2922654367824 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Lock 2922654367824 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Attempting to release lock 2922654367824 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Lock 2922654367824 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Attempting to acquire lock 2922654367824 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Lock 2922654367824 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Attempting to release lock 2922654367824 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Lock 2922654367824 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Attempting to acquire lock 2922027297856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Lock 2922027297856 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Attempting to release lock 2922027297856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Lock 2922027297856 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Attempting to acquire lock 2922027297856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Lock 2922027297856 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Attempting to release lock 2922027297856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Lock 2922027297856 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Attempting to acquire lock 2922027265072 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Lock 2922027265072 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Attempting to release lock 2922027265072 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Lock 2922027265072 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [ERROR] Pack and Go fallito: Pack and Go non disponibile: (-2147352561, 'Parametro non facoltativo.', None, None)
+Traceback (most recent call last):
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 909, in _run_pack_and_go
+    pgo = model.Extension.GetPackAndGo()
+  File "<COMObject <unknown>>", line 2, in GetPackAndGo
+pywintypes.com_error: (-2147352561, 'Parametro non facoltativo.', None, None)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 741, in _import
+    pgo_count = self._run_pack_and_go(ws_root, stem_to_code)
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 911, in _run_pack_and_go
+    raise RuntimeError(f"Pack and Go non disponibile: {e}")
+RuntimeError: Pack and Go non disponibile: (-2147352561, 'Parametro non facoltativo.', None, None)
+2026-03-06 22:52:07 [INFO] Fallback copy2: TSF_0100-0002.SLDPRT \u2192 AAA_0100-0032.SLDPRT
+2026-03-06 22:52:07 [INFO] Fallback copy2: TSF_0100-0024.SLDPRT \u2192 AAA_0100-0033.SLDPRT
+2026-03-06 22:52:07 [INFO] Fallback copia diretta: 2 file copiati
+2026-03-06 22:52:07 [WARNING] File workspace non trovato, skip archiviazione: C:\Users\prog3\Desktop\APP MECCANICA\_ws2\AAA_V004.SLDPRT
+2026-03-06 22:52:07 [DEBUG] Attempting to acquire lock 2922654400592 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Lock 2922654400592 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Attempting to release lock 2922654400592 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Lock 2922654400592 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Attempting to acquire lock 2922654400592 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Lock 2922654400592 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Attempting to release lock 2922654400592 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:52:07 [DEBUG] Lock 2922654400592 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:54:52 [INFO] pdm_asm_import avviato  |  file=
+2026-03-06 22:56:26 [DEBUG] Attempting to acquire lock 2660691930688 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Lock 2660691930688 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Attempting to release lock 2660691930688 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Lock 2660691930688 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Attempting to acquire lock 2659188591504 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Lock 2659188591504 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Attempting to release lock 2659188591504 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Lock 2659188591504 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Attempting to acquire lock 2659188591504 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Lock 2659188591504 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Attempting to release lock 2659188591504 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Lock 2659188591504 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Attempting to acquire lock 2660691996624 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Lock 2660691996624 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Attempting to release lock 2660691996624 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Lock 2660691996624 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Attempting to acquire lock 2660691996624 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Lock 2660691996624 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Attempting to release lock 2660691996624 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Lock 2660691996624 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Attempting to acquire lock 2660692007760 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Lock 2660692007760 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Attempting to release lock 2660692007760 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Lock 2660692007760 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Attempting to acquire lock 2660691705600 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Lock 2660691705600 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Attempting to release lock 2660691705600 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Lock 2660691705600 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Attempting to acquire lock 2660691705600 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Lock 2660691705600 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Attempting to release lock 2660691705600 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Lock 2660691705600 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Attempting to acquire lock 2660691610960 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Lock 2660691610960 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Attempting to release lock 2660691610960 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Lock 2660691610960 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Attempting to acquire lock 2660691610960 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Lock 2660691610960 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Attempting to release lock 2660691610960 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:26 [DEBUG] Lock 2660691610960 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:27 [ERROR] Pack and Go fallito: Pack and Go non disponibile: (-2147352561, 'Parametro non facoltativo.', None, None)
+Traceback (most recent call last):
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 923, in _run_pack_and_go
+    pgo = model.Extension.GetPackAndGo()
+  File "<COMObject <unknown>>", line 2, in GetPackAndGo
+pywintypes.com_error: (-2147352561, 'Parametro non facoltativo.', None, None)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 755, in _import
+    pgo_count = self._run_pack_and_go(ws_root, stem_to_code)
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 925, in _run_pack_and_go
+    raise RuntimeError(f"Pack and Go non disponibile: {e}")
+RuntimeError: Pack and Go non disponibile: (-2147352561, 'Parametro non facoltativo.', None, None)
+2026-03-06 22:56:27 [INFO] Fallback copy2: TSF_0100-0025.SLDPRT \u2192 AAA_0100-0034.SLDPRT
+2026-03-06 22:56:27 [INFO] Fallback copy2: TSF_0100-0002.SLDPRT \u2192 AAA_0100-0035.SLDPRT
+2026-03-06 22:56:27 [INFO] Fallback copy2: TSF_0100-0024.SLDPRT \u2192 AAA_0100-0036.SLDPRT
+2026-03-06 22:56:27 [INFO] Fallback copy2: TSF_0100-0007.SLDPRT \u2192 AAA_0100-0037.SLDPRT
+2026-03-06 22:56:27 [INFO] Fallback copy2: TSF_0100-0006.SLDPRT \u2192 AAA_0100-0038.SLDPRT
+2026-03-06 22:56:27 [INFO] Fallback copia diretta: 5 file copiati
+2026-03-06 22:56:27 [DEBUG] Attempting to acquire lock 2660691942752 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:27 [DEBUG] Lock 2660691942752 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:27 [DEBUG] Attempting to release lock 2660691942752 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:27 [DEBUG] Lock 2660691942752 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:27 [DEBUG] Attempting to acquire lock 2660691942752 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:27 [DEBUG] Lock 2660691942752 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:27 [DEBUG] Attempting to release lock 2660691942752 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:27 [DEBUG] Lock 2660691942752 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:27 [DEBUG] Attempting to acquire lock 2660690819152 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:27 [DEBUG] Lock 2660690819152 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:27 [DEBUG] Attempting to release lock 2660690819152 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:27 [DEBUG] Lock 2660690819152 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:27 [DEBUG] Attempting to acquire lock 2660690819376 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:27 [DEBUG] Lock 2660690819376 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:27 [DEBUG] Attempting to release lock 2660690819376 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:27 [DEBUG] Lock 2660690819376 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:27 [DEBUG] Attempting to acquire lock 2660691293472 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:27 [DEBUG] Lock 2660691293472 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:27 [DEBUG] Attempting to release lock 2660691293472 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:56:27 [DEBUG] Lock 2660691293472 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 22:58:29 [INFO] pdm_asm_import avviato  |  file=
+2026-03-06 23:01:28 [INFO] pdm_asm_import avviato  |  file=
+2026-03-06 23:01:50 [DEBUG] Attempting to acquire lock 2764227030592 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Lock 2764227030592 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Attempting to release lock 2764227030592 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Lock 2764227030592 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Attempting to acquire lock 2764854184848 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Lock 2764854184848 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Attempting to release lock 2764854184848 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Lock 2764854184848 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Attempting to acquire lock 2764854184848 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Lock 2764854184848 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Attempting to release lock 2764854184848 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Lock 2764854184848 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Attempting to acquire lock 2764227096528 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Lock 2764227096528 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Attempting to release lock 2764227096528 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Lock 2764227096528 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [ERROR] Pack and Go fallito: Pack and Go non disponibile: (-2147352561, 'Parametro non facoltativo.', None, None)
+Traceback (most recent call last):
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 921, in _run_pack_and_go
+    pgo = model.Extension.GetPackAndGo()
+  File "<COMObject <unknown>>", line 2, in GetPackAndGo
+pywintypes.com_error: (-2147352561, 'Parametro non facoltativo.', None, None)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 753, in _import
+    pgo_count = self._run_pack_and_go(ws_root, stem_to_code)
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 923, in _run_pack_and_go
+    raise RuntimeError(f"Pack and Go non disponibile: {e}")
+RuntimeError: Pack and Go non disponibile: (-2147352561, 'Parametro non facoltativo.', None, None)
+2026-03-06 23:01:50 [INFO] Fallback copy2: TSF_0100-0995.SLDASM \u2192 AAA_0100-9989.SLDASM
+2026-03-06 23:01:50 [INFO] Fallback copy2: TSF_0100-0019.SLDPRT \u2192 AAA_0100-0039.SLDPRT
+2026-03-06 23:01:50 [INFO] Fallback copia diretta: 2 file copiati
+2026-03-06 23:01:50 [DEBUG] Attempting to acquire lock 2764227096528 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Lock 2764227096528 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Attempting to release lock 2764227096528 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Lock 2764227096528 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Attempting to acquire lock 2764227112560 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Lock 2764227112560 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Attempting to release lock 2764227112560 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Lock 2764227112560 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Attempting to acquire lock 2764226789120 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Lock 2764226789120 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Attempting to release lock 2764226789120 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:01:50 [DEBUG] Lock 2764226789120 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:09:39 [INFO] pdm_asm_import avviato  |  file=
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2240407547792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240407547792 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2240407547792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240407547792 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034800016 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034800016 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034800016 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034800016 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034800016 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034800016 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034800016 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034800016 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2240407629776 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240407629776 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2240407629776 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240407629776 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2240407629776 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240407629776 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2240407629776 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240407629776 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2240407640912 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240407640912 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2240407640912 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240407640912 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2240407305984 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240407305984 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2240407305984 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240407305984 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2240407305984 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240407305984 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2240407305984 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240407305984 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2240407211600 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240407211600 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2240407211600 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240407211600 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2240407211600 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240407211600 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2240407211600 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240407211600 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2240406885616 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240406885616 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2240406885616 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240406885616 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2240406885616 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240406885616 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2240406885616 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240406885616 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2240406420432 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240406420432 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2240406420432 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240406420432 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2240406420432 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240406420432 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2240406420432 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240406420432 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241035167984 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241035167984 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241035167984 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241035167984 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2240405989200 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240405989200 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2240405989200 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240405989200 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2240405989200 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240405989200 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2240405989200 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240405989200 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241035185584 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241035185584 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241035185584 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241035185584 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241035185584 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241035185584 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241035185584 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241035185584 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241035204272 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241035204272 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241035204272 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241035204272 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241035204272 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241035204272 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241035204272 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241035204272 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2240406289536 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240406289536 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2240406289536 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2240406289536 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034756688 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034756688 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034756688 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034756688 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034757072 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034757072 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034757072 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034757072 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241035147696 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241035147696 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241035147696 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241035147696 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241035147920 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241035147920 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241035147920 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241035147920 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:12:46 [ERROR] Pack and Go fallito: Pack and Go non disponibile: (-2147352561, 'Parametro non facoltativo.', None, None)
+Traceback (most recent call last):
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 929, in _run_pack_and_go
+    pgo = model.Extension.GetPackAndGo()
+  File "<COMObject <unknown>>", line 2, in GetPackAndGo
+pywintypes.com_error: (-2147352561, 'Parametro non facoltativo.', None, None)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 753, in _import
+    pgo_count = self._run_pack_and_go(ws_root, stem_to_code)
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 931, in _run_pack_and_go
+    raise RuntimeError(f"Pack and Go non disponibile: {e}")
+RuntimeError: Pack and Go non disponibile: (-2147352561, 'Parametro non facoltativo.', None, None)
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0993.SLDASM \u2192 AAA_0100-9988.SLDASM
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0029.SLDPRT \u2192 AAA_0100-0040.SLDPRT
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-S010.SLDASM \u2192 AAA_0100-9987.SLDASM
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0037.SLDPRT \u2192 AAA_0100-0041.SLDPRT
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0998.SLDASM \u2192 AAA_0100-9986.SLDASM
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0005.SLDPRT \u2192 AAA_0100-9985.SLDPRT
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0996.SLDASM \u2192 AAA_0100-9984.SLDASM
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0021.SLDPRT \u2192 AAA_0100-0042.SLDPRT
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0017.SLDPRT \u2192 AAA_0100-0043.SLDPRT
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0018.SLDPRT \u2192 AAA_0100-0044.SLDPRT
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0012.SLDPRT \u2192 AAA_0100-0045.SLDPRT
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0034.SLDPRT \u2192 AAA_0100-0046.SLDPRT
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0995.SLDASM \u2192 AAA_0100-9983.SLDASM
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0019.SLDPRT \u2192 AAA_0100-0047.SLDPRT
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0036.SLDPRT \u2192 AAA_0100-0048.SLDPRT
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0997.SLDASM \u2192 AAA_0100-9982.SLDASM
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0007.SLDPRT \u2192 AAA_0100-0049.SLDPRT
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0025.SLDPRT \u2192 AAA_0100-0050.SLDPRT
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0006.SLDPRT \u2192 AAA_0100-0051.SLDPRT
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0994.SLDASM \u2192 AAA_0100-9981.SLDASM
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0024.SLDPRT \u2192 AAA_0100-0052.SLDPRT
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0002.SLDPRT \u2192 AAA_0100-0053.SLDPRT
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-CINGHIA AT10-25.SLDPRT \u2192 AAA_0100-0054.SLDPRT
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0031.SLDPRT \u2192 AAA_0100-0055.SLDPRT
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0030.SLDPRT \u2192 AAA_0100-0056.SLDPRT
+2026-03-06 23:12:46 [INFO] Fallback copy2: TSF_0100-0032.SLDPRT \u2192 AAA_0100-0057.SLDPRT
+2026-03-06 23:12:46 [INFO] Fallback copia diretta: 26 file copiati
+2026-03-06 23:12:51 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:51 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:51 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:51 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:51 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:52 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:52 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:52 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:52 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:52 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:52 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:52 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:52 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:52 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:53 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:53 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:53 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:53 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:53 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:53 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:53 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:53 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:53 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:53 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:53 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:59 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:59 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:12:59 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:00 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:00 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:00 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:00 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:00 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:00 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:00 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:00 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:00 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:00 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:01 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:01 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:01 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:01 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:01 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:01 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:01 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:04 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:06 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:06 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:06 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:06 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:06 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:10 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:15 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:15 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:15 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:15 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:15 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:15 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:16 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:16 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241035279856 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241035279856 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to acquire lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Attempting to release lock 2241034681808 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:13:17 [DEBUG] Lock 2241034681808 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:16:33 [INFO] pdm_asm_import avviato  |  file=
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2330416426560 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330416426560 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2330416426560 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330416426560 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331043679120 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043679120 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331043679120 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043679120 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331043679120 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043679120 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331043679120 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043679120 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2330416605968 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330416605968 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2330416605968 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330416605968 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2330416605968 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330416605968 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2330416605968 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330416605968 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2330416503344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330416503344 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2330416503344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330416503344 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331043693168 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043693168 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331043693168 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043693168 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331043693168 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043693168 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331043693168 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043693168 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2330415992656 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330415992656 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2330415992656 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330415992656 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2330415992656 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330415992656 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2330415992656 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330415992656 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2330416010720 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330416010720 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2330416010720 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330416010720 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2330416010720 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330416010720 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2330416010720 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330416010720 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2330415397392 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330415397392 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2330415397392 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330415397392 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2330415397392 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330415397392 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2330415397392 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330415397392 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331044060352 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331044060352 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331044060352 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331044060352 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2330414967760 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330414967760 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2330414967760 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330414967760 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2330414967760 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330414967760 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2330414967760 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330414967760 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331044093936 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331044093936 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331044093936 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331044093936 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331044093936 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331044093936 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331044093936 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331044093936 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331044107344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331044107344 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331044107344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331044107344 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331044107344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331044107344 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331044107344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331044107344 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2330415266368 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330415266368 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2330415266368 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2330415266368 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331043635792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043635792 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331043635792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043635792 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331043636176 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043636176 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331043636176 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043636176 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331043893824 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043893824 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331043893824 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043893824 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331043894048 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043894048 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331043894048 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043894048 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to acquire lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Attempting to release lock 2331043567792 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [DEBUG] Lock 2331043567792 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:32 [ERROR] Pack and Go fallito: Pack and Go non disponibile: (-2147352561, 'Parametro non facoltativo.', None, None)
+Traceback (most recent call last):
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 929, in _run_pack_and_go
+    pgo = model.Extension.GetPackAndGo()
+  File "<COMObject <unknown>>", line 2, in GetPackAndGo
+pywintypes.com_error: (-2147352561, 'Parametro non facoltativo.', None, None)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 753, in _import
+    pgo_count = self._run_pack_and_go(ws_root, stem_to_code)
+  File "c:\Users\prog3\Desktop\APP MECCANICA\PDM-SW-2\ui\asm_import_wizard.py", line 931, in _run_pack_and_go
+    raise RuntimeError(f"Pack and Go non disponibile: {e}")
+RuntimeError: Pack and Go non disponibile: (-2147352561, 'Parametro non facoltativo.', None, None)
+2026-03-06 23:18:32 [WARNING] copy2 fallita per AAA_0100-9987.SLDASM: [WinError 32] Impossibile accedere al file. Il file è utilizzato da un altro processo
+2026-03-06 23:18:32 [WARNING] Fallback: impossibile copiare AAA_0100-9987.SLDASM
+2026-03-06 23:18:32 [INFO] Fallback copy2: TSF_0100-0995.SLDASM \u2192 AAA_0100-9980.SLDASM
+2026-03-06 23:18:32 [INFO] Fallback copy2: TSF_0100-0019.SLDPRT \u2192 AAA_0100-0058.SLDPRT
+2026-03-06 23:18:32 [INFO] Fallback copy2: TSF_0100-0998.SLDASM \u2192 AAA_0100-9979.SLDASM
+2026-03-06 23:18:32 [INFO] Fallback copy2: TSF_0100-0005.SLDPRT \u2192 AAA_0100-0059.SLDPRT
+2026-03-06 23:18:32 [INFO] Fallback copy2: TSF_0100-0997.SLDASM \u2192 AAA_0100-9978.SLDASM
+2026-03-06 23:18:32 [INFO] Fallback copy2: TSF_0100-0025.SLDPRT \u2192 AAA_0100-0060.SLDPRT
+2026-03-06 23:18:32 [INFO] Fallback copy2: TSF_0100-0007.SLDPRT \u2192 AAA_0100-0061.SLDPRT
+2026-03-06 23:18:32 [INFO] Fallback copy2: TSF_0100-0006.SLDPRT \u2192 AAA_0100-0062.SLDPRT
+2026-03-06 23:18:32 [INFO] Fallback copy2: TSF_0100-0994.SLDASM \u2192 AAA_0100-9977.SLDASM
+2026-03-06 23:18:32 [INFO] Fallback copy2: TSF_0100-0002.SLDPRT \u2192 AAA_0100-0063.SLDPRT
+2026-03-06 23:18:32 [INFO] Fallback copy2: TSF_0100-0024.SLDPRT \u2192 AAA_0100-0064.SLDPRT
+2026-03-06 23:18:32 [INFO] Fallback copy2: TSF_0100-0996.SLDASM \u2192 AAA_0100-9976.SLDASM
+2026-03-06 23:18:32 [INFO] Fallback copy2: TSF_0100-0021.SLDPRT \u2192 AAA_0100-0065.SLDPRT
+2026-03-06 23:18:32 [INFO] Fallback copy2: TSF_0100-0018.SLDPRT \u2192 AAA_0100-0066.SLDPRT
+2026-03-06 23:18:32 [INFO] Fallback copy2: TSF_0100-0034.SLDPRT \u2192 AAA_0100-0067.SLDPRT
+2026-03-06 23:18:32 [INFO] Fallback copy2: TSF_0100-0017.SLDPRT \u2192 AAA_0100-0068.SLDPRT
+2026-03-06 23:18:32 [INFO] Fallback copy2: TSF_0100-0012.SLDPRT \u2192 AAA_0100-0069.SLDPRT
+2026-03-06 23:18:32 [INFO] Fallback copy2: TSF_0100-0036.SLDPRT \u2192 AAA_0100-0070.SLDPRT
+2026-03-06 23:18:32 [INFO] Fallback copy2: TSF_0100-0037.SLDPRT \u2192 AAA_0100-0071.SLDPRT
+2026-03-06 23:18:32 [INFO] Fallback copia diretta: 19 file copiati
+2026-03-06 23:18:35 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:35 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:36 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:36 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:36 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:36 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:36 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:36 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:36 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:36 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:36 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:36 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:37 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:37 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:37 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:37 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:37 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:37 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:37 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:41 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:43 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:47 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:47 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:47 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:48 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:48 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:48 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:49 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:50 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:52 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:52 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:52 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:52 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:52 [WARNING] Errore componente in fix_refs: <unknown>.ReplaceReferencedDocument
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175344 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175344 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175344 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175344 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175344 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175344 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175344 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175344 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175344 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175344 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175344 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175344 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175344 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175344 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175344 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175344 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175344 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175344 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175344 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175344 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175344 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to acquire lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Attempting to release lock 2331044175248 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-06 23:18:53 [DEBUG] Lock 2331044175248 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock

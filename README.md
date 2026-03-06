@@ -1,6 +1,6 @@
 # PDM-SW – Sistema PDM per SolidWorks
 
-> **Versione 2.9.2** – Archive view redesign & creazione archive-first
+> **Versione 2.10.0** – Pannello dettaglio nodo-codice con preview thumbnail e azioni WS/SW
 
 Sistema PDM (Product Data Management) leggero, senza server, per la gestione di documenti SolidWorks in ambiente di rete con architettura peer‑to‑peer.
 
@@ -21,13 +21,67 @@ Sistema PDM (Product Data Management) leggero, senza server, per la gestione di 
 
 ```
 python make_dist.py           # crea dist/PDM-SW-2/
-python make_dist.py --zip     # crea anche dist/PDM-SW-2_v2.9.0.zip
+python make_dist.py --zip     # crea anche dist/PDM-SW-2_v2.10.0.zip
 python make_dist.py --clean   # pulisce dist/ prima di procedere
 ```
 
 ---
 
 ## Changelog
+
+### v2.10.0
+**Pannello dettaglio nodo-codice rinnovato + fix thumbnail**
+
+- **`ui/detail_panel.py`** – `_build_code_panel` completamente ridisegnato:
+  - Card **Parte/Assieme**: thumbnail 110×110 con fallback icona tipo, label info (Rev., stato), pulsante **📤 Esporta in WS** (visibile solo se file in archivio e NON già in workspace), pulsante **🔨 Apri in SolidWorks** (visibile se file disponibile in archivio o workspace).
+  - Card **Disegno**: stessa struttura + pulsante **📐 Aggiungi DRW** (visibile solo se PRT/ASM archiviato e DRW assente).
+  - Sezione **Azioni** (Crea in SW / Crea da file) rimane ma è visibile solo quando il PRT/ASM non ha ancora un file in archivio.
+  - Nuovo helper `_load_thumb_to(doc, lbl)`: carica thumbnail in un label target generico (riutilizzabile per ambedue le card).
+  - Nuovo helper `_export_doc_to_ws(doc)`: copia file da archivio a workspace con `shutil.copy2`, poi ricarica il pannello per aggiornare i pulsanti.
+  - Nuovo helper `_open_in_solidworks(doc)`: cerca il file prima in workspace poi in archivio, apre con `SLDWORKS.exe` configurato (fallback a `cmd start`).
+  - Nuovo helper `_is_in_workspace(doc)` e `_get_archive_file(doc)`.
+  - Fix `_load_thumbnail`: rimossa doppia chiamata ridondante `setText`.
+
+---
+
+### v2.9.9
+**Fix wizard importazione ASM**
+
+- **`core/asm_manager.py`** – `_read_components_recursive`: rimosso il fallback `except TypeError: raw = model.GetComponents` che restituiva l'oggetto metodo anziché il risultato (causa principale del blocco al primo livello). Aggiunto `sw.GetOpenDocumentByName(fp)` come step intermedio prima di `OpenDoc6`. Log warning invece di `pass` silenzioso per facilitare il debug.
+- **`ui/asm_import_wizard.py`** – `_set_row`: la colonn **Livello** ora usa il default per tipo (depth=0 → LIV0-Macchina forzato e non modificabile, ASM → LIV1-Gruppo, PRT → LIV2-Parte) indipendentemente dalla selezione globale. La radice ASM ha checkbox disabilitata (sempre inclusa) e combo livello disabilitata.
+- **`ui/asm_import_wizard.py`** – `_fill_group_combo`: aggiunto `blockSignals(True/False)` per evitare che il `clear()` generi eventi `currentIndexChanged` fantasma durante la costruzione delle righe.
+- **`ui/asm_import_wizard.py`** – `_populate_table`: aggiunto refresh forzato di tutti i codici proposti dopo il completamento della tabella, garantendo che tutte le righe (non solo la prima) mostrino il codice proposto.
+
+---
+
+### v2.9.5
+**Fix Pack&Go multi-livello**
+
+- **`core/asm_manager.py`** – `_read_components_recursive`: quando `GetModelDoc2()` restituisce `None` (componente **lightweight**), apre il sotto-assieme silenziosamente in SW (`OpenDoc6` silent+read-only), ne legge la struttura e poi lo chiude. La ricorsione ora raggiunge tutti i livelli indipendentemente dalla modalità di caricamento dei componenti. Parametro `sw` (istanza SolidWorks) propagato lungo tutta la catena ricorsiva.
+- **`ui/asm_import_wizard.py`** – `_run_pack_and_go`: parsing robusto della tupla COM restituita da `GetDocumentNames()` (gestisce sia 2-tuple che 3-tuple in base a versione SW/win32com). Controllo esplicito sul risultato di `Save()` con errore chiaro se nessun file viene creato.
+
+---
+
+### v2.9.4
+**Wizard importazione massiva struttura ASM da SolidWorks**
+
+- **`core/asm_manager.py`**: aggiunto `read_asm_tree_from_active()` — legge ricorsivamente la struttura di un assieme aperto in SolidWorks via COM, senza scrivere nulla nel DB. Ritorna lista piatta DFS con `{name, path, type, depth, parent_path, quantity}`.
+- **`ui/asm_import_wizard.py`** (NUOVO): dialog wizard `AsmImportWizard`. Mostra l'albero dell'assieme in una tabella con per ogni componente: checkbox inclusione, combo macchina/gruppo/livello per row, anteprima codice auto-aggiornata. Impostazioni globali con "Applica a tutti". Riconosce automaticamente i documenti già presenti nel PDM. Alla conferma: genera i codici, crea i documenti nel DB, esegue **Pack and Go** via COM (copia workspace con file rinominati e riferimenti aggiornati), archivia i file nel PDM e collega la BOM.
+- **`macros/pdm_asm_import.py`** (NUOVO): entry point Qt per il wizard, lanciabile dalla macro VBA in modalità non-bloccante.
+- **`macros/PDM_Integration.swb`**: aggiunto sub `PDM_ImportAsm()` e helper `RunAsmImport()` — rileva il file `.SLDASM` attivo e lancia il wizard.
+- **`ui/main_window.py`**: aggiunto menu **SolidWorks → 📦 Importa struttura ASM da SW…** come alternativa alla macro VBA.
+
+---
+
+### v2.9.3
+**Fix sicurezza autenticazione, backup DB automatico, export BOM Excel**
+
+- **`core/user_manager.py`**: fix vulnerabilità autenticazione — utenti con `password_hash` vuoto non possono più accedere con password arbitrarie; ora è richiesta la corrispondenza esatta dell'hash.
+- **`core/backup_manager.py`** (NUOVO): gestore backup database. Crea copie timestamped di `pdm.db` in `<shared_root>/database/backups/`, mantiene gli ultimi 10 backup con rotazione automatica. Supporta anche `restore()` da backup con salvataggio preventivo del DB corrente.
+- **`ui/main_window.py`**: aggiunta voce menu **Strumenti → 💾 Backup database…** che esegue un backup immediato e mostra il percorso del file creato.
+- **`ui/document_dialog.py`**: aggiunto pulsante **📊 Esporta BOM Excel** nel tab BOM — esporta la BOM appiattita (tutti i livelli) in un file `.xlsx` con intestazione colorata e larghezze colonne ottimizzate.
+
+---
 
 ### v2.9.2
 **Archive view redesign & creazione archive-first**

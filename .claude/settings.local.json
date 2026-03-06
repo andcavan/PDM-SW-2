@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"c:\\\\Users\\\\prog3\\\\Desktop\\\\APP MECCANICA\\\\PDM-SW-2\\\\ui\\\\document_dialog.py\":*)"
+    ]
+  }
+}

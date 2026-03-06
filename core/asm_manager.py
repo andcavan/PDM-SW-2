@@ -293,6 +293,148 @@ class AsmManager:
                     pass
         return count
 
+    # ------------------------------------------------------------------
+    # Lettura struttura ASM senza modifiche al DB (per wizard importazione)
+    # ------------------------------------------------------------------
+    def read_asm_tree_from_active(self) -> list:
+        """
+        Legge la struttura ASM dal documento ATTIVO in SolidWorks.
+        Usa GetComponents(False) sulla radice per ottenere TUTTI i componenti
+        a tutti i livelli in una sola chiamata COM, senza ricorsione su GetModelDoc2.
+        NON scrive nulla nel DB.
+        Ritorna lista piatta (visita DFS) di dict:
+          {name, path, type:'PRT'|'ASM', depth, parent_path, quantity}
+        Il primo elemento è sempre il documento radice (l'ASM stesso).
+        """
+        import logging
+        from collections import Counter, defaultdict
+
+        try:
+            import win32com.client as win32
+        except ImportError:
+            raise ImportError("pywin32 non installato.\nEseguire: pip install pywin32")
+
+        try:
+            sw = win32.GetActiveObject("SldWorks.Application")
+        except Exception:
+            raise RuntimeError(
+                "SolidWorks non è in esecuzione.\n"
+                "Aprire il file assieme in SolidWorks prima di avviare il wizard."
+            )
+
+        model = sw.ActiveDoc
+        if model is None:
+            raise RuntimeError("Nessun documento attivo in SolidWorks.")
+
+        asm_path = ""
+        try:
+            v = model.GetPathName
+            if callable(v):
+                v = v()
+            asm_path = str(v or "").strip()
+        except Exception:
+            pass
+
+        result = []
+
+        # Radice = l'assieme stesso
+        asm_name = Path(asm_path).stem if asm_path else "Assieme radice"
+        result.append({
+            "name":        asm_name,
+            "path":        asm_path,
+            "type":        "ASM",
+            "depth":       0,
+            "parent_path": None,
+            "quantity":    1,
+        })
+
+        # GetComponents(False) → TUTTI i componenti a tutti i livelli in un colpo solo.
+        # SolidWorks risolve internamente la gerarchia; nessuna ricorsione su GetModelDoc2.
+        try:
+            raw = model.GetComponents(False)
+        except Exception as e:
+            logging.warning("GetComponents(False) fallito: %s", e)
+            return result
+
+        if raw is None:
+            return result
+
+        try:
+            all_comps = list(raw)
+        except Exception:
+            return result
+
+        if not all_comps:
+            return result
+
+        def _get_path(obj) -> str:
+            try:
+                v = obj.GetPathName
+                if callable(v):
+                    v = v()
+                return str(v or "").strip()
+            except Exception:
+                return ""
+
+        # Prima passata: conta occorrenze (parent_key, child_key) e mantieni ordine DFS.
+        # GetComponents(False) restituisce i componenti in ordine DFS come SolidWorks li visita.
+        pair_count: Counter  = Counter()
+        pair_first: dict     = {}          # (pk, ck) → (fp, pp)
+        children_map: dict   = defaultdict(list)   # pk → [(pk, ck)] in ordine
+        pair_order_seen: set = set()
+
+        for comp in all_comps:
+            fp = _get_path(comp)
+            if not fp:
+                continue
+
+            # Padre del componente via GetParent(); None = figlio diretto della radice
+            pp = asm_path
+            try:
+                parent_comp = comp.GetParent()
+                if parent_comp is not None:
+                    pp_c = _get_path(parent_comp)
+                    if pp_c:
+                        pp = pp_c
+            except Exception:
+                pass
+
+            pk = pp.upper()
+            ck = fp.upper()
+
+            pair_count[(pk, ck)] += 1
+
+            if (pk, ck) not in pair_order_seen:
+                pair_order_seen.add((pk, ck))
+                pair_first[(pk, ck)] = (fp, pp)
+                children_map[pk].append((pk, ck))
+
+        # Visita DFS per costruire la lista piatta con depth e quantità per-istanza corrette.
+        # parent_total = quante istanze del padre esistono nel documento → normalizza qty figli.
+        def dfs(parent_path: str, depth: int, parent_total: int):
+            pk = parent_path.upper()
+            for (ppk, cck) in children_map.get(pk, []):
+                if (ppk, cck) not in pair_first:
+                    continue
+                fp, pp = pair_first[(ppk, cck)]
+                child_total = pair_count[(ppk, cck)]
+                per_instance = max(1, child_total // parent_total) if parent_total > 0 else 1
+                suffix = Path(fp).suffix.upper()
+                node_type = "ASM" if suffix == ".SLDASM" else "PRT"
+                result.append({
+                    "name":        Path(fp).stem,
+                    "path":        fp,
+                    "type":        node_type,
+                    "depth":       depth,
+                    "parent_path": pp,
+                    "quantity":    per_instance,
+                })
+                if node_type == "ASM":
+                    dfs(fp, depth + 1, child_total)
+
+        dfs(asm_path, 1, 1)
+        return result
+
     def _process_sw_component(self, *args, **kwargs) -> int:
         """Stub mantenuto per compatibilità — non più usato."""
         return 0

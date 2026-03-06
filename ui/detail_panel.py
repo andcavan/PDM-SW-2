@@ -1,6 +1,7 @@
 # =============================================================================
 #  ui/detail_panel.py  –  Pannello dettaglio documento (readonly, anteprima)
 # =============================================================================
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -26,6 +27,12 @@ _FALLBACK_ICONS = {
 
 _THUMB_SIZE = 200  # px lato thumbnail
 
+_EXT_FOR_TYPE = {
+    "Parte":   ".SLDPRT",
+    "Assieme": ".SLDASM",
+    "Disegno": ".SLDDRW",
+}
+
 
 class DetailPanel(QWidget):
     """
@@ -46,6 +53,8 @@ class DetailPanel(QWidget):
         self._current_code:   str | None = None
         self._code_action_doc_id:    int | None = None  # PRT/ASM senza file
         self._code_prt_asm_for_drw:  int | None = None  # PRT/ASM con file (per DRW)
+        self._code_prt_doc:  dict | None = None
+        self._code_drw_doc:  dict | None = None
         self._build_ui()
         self.clear()
 
@@ -365,18 +374,77 @@ class DetailPanel(QWidget):
         hdr.addLayout(code_info, 1)
         layout.addLayout(hdr)
 
-        # File in archivio
-        grp_files = QGroupBox("File in archivio")
-        files_layout = QVBoxLayout(grp_files)
-        self.lbl_prt_status = QLabel()
-        self.lbl_asm_status = QLabel()
-        self.lbl_drw_status = QLabel()
-        for lbl in (self.lbl_prt_status, self.lbl_asm_status, self.lbl_drw_status):
-            lbl.setStyleSheet("font-size: 13px; padding: 2px;")
-            files_layout.addWidget(lbl)
-        layout.addWidget(grp_files)
+        # ---- Card PRT / ASM ----
+        self.grp_prt_preview = QGroupBox("Parte / Assieme")
+        prt_h = QHBoxLayout(self.grp_prt_preview)
+        prt_h.setSpacing(8)
 
-        # Azioni
+        self.lbl_prt_thumb = QLabel()
+        self.lbl_prt_thumb.setFixedSize(QSize(110, 110))
+        self.lbl_prt_thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_prt_thumb.setStyleSheet(
+            "background-color: #181825; border: 1px solid #313244; border-radius: 6px;"
+        )
+        prt_h.addWidget(self.lbl_prt_thumb)
+
+        prt_btns = QVBoxLayout()
+        prt_btns.setSpacing(4)
+        self.lbl_prt_info = QLabel()
+        self.lbl_prt_info.setStyleSheet("font-size: 12px;")
+        self.lbl_prt_info.setWordWrap(True)
+        prt_btns.addWidget(self.lbl_prt_info)
+
+        self.btn_prt_export_ws = QPushButton("📤  Esporta in WS")
+        self.btn_prt_export_ws.setToolTip("Copia il file dall'archivio nella workspace locale")
+        self.btn_prt_export_ws.clicked.connect(self._on_prt_export_ws)
+        prt_btns.addWidget(self.btn_prt_export_ws)
+
+        self.btn_prt_open_sw = QPushButton("🔨  Apri in SolidWorks")
+        self.btn_prt_open_sw.clicked.connect(self._on_prt_open_sw)
+        prt_btns.addWidget(self.btn_prt_open_sw)
+
+        prt_btns.addStretch()
+        prt_h.addLayout(prt_btns, 1)
+        layout.addWidget(self.grp_prt_preview)
+
+        # ---- Card DRW ----
+        self.grp_drw_preview = QGroupBox("Disegno")
+        drw_h = QHBoxLayout(self.grp_drw_preview)
+        drw_h.setSpacing(8)
+
+        self.lbl_drw_thumb = QLabel()
+        self.lbl_drw_thumb.setFixedSize(QSize(110, 110))
+        self.lbl_drw_thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_drw_thumb.setStyleSheet(
+            "background-color: #181825; border: 1px solid #313244; border-radius: 6px;"
+        )
+        drw_h.addWidget(self.lbl_drw_thumb)
+
+        drw_btns = QVBoxLayout()
+        drw_btns.setSpacing(4)
+        self.lbl_drw_info = QLabel()
+        self.lbl_drw_info.setStyleSheet("font-size: 12px;")
+        self.lbl_drw_info.setWordWrap(True)
+        drw_btns.addWidget(self.lbl_drw_info)
+
+        self.btn_drw_export_ws = QPushButton("📤  Esporta in WS")
+        self.btn_drw_export_ws.setToolTip("Copia il disegno dall'archivio nella workspace locale")
+        self.btn_drw_export_ws.clicked.connect(self._on_drw_export_ws)
+        drw_btns.addWidget(self.btn_drw_export_ws)
+
+        self.btn_drw_open_sw = QPushButton("🔨  Apri in SolidWorks")
+        self.btn_drw_open_sw.clicked.connect(self._on_drw_open_sw)
+        drw_btns.addWidget(self.btn_drw_open_sw)
+
+        self.btn_add_drw = QPushButton("📐  Aggiungi DRW")
+        self.btn_add_drw.clicked.connect(self._on_add_drw)
+        drw_btns.addWidget(self.btn_add_drw)
+
+        drw_btns.addStretch()
+        drw_h.addLayout(drw_btns, 1)
+        layout.addWidget(self.grp_drw_preview)
+
+        # ---- Azioni creazione (quando non c'è ancora il file PRT/ASM) ----
         self.grp_actions = QGroupBox("Azioni")
         act_layout = QVBoxLayout(self.grp_actions)
 
@@ -388,10 +456,6 @@ class DetailPanel(QWidget):
         self.btn_create_file = QPushButton("📂  Crea da file")
         self.btn_create_file.clicked.connect(self._on_create_from_file)
         act_layout.addWidget(self.btn_create_file)
-
-        self.btn_add_drw = QPushButton("📐  Aggiungi DRW")
-        self.btn_add_drw.clicked.connect(self._on_add_drw)
-        act_layout.addWidget(self.btn_add_drw)
 
         self.chk_checkout = QCheckBox("Metti in checkout dopo la creazione")
         act_layout.addWidget(self.chk_checkout)
@@ -411,36 +475,78 @@ class DetailPanel(QWidget):
         rep = max(docs, key=lambda d: d["revision"]) if docs else None
         self.lbl_code_title.setText(rep.get("title", "") if rep else "")
 
-        # Status per tipo
         prt = next((d for d in docs if d["doc_type"] == "Parte"),   None)
         asm = next((d for d in docs if d["doc_type"] == "Assieme"), None)
         drw = next((d for d in docs if d["doc_type"] == "Disegno"), None)
+        prt_asm = prt or asm
 
-        def _status_text(doc) -> tuple[str, str]:
-            if not doc:
-                return "", ""
-            icon = TYPE_ICON.get(doc["doc_type"], "")
-            rev  = doc["revision"]
-            if doc.get("archive_path"):
-                return (f"{icon}  {doc['doc_type']}  Rev.{rev}  ✅",
-                        "color: #a6e3a1;")
-            if doc["is_locked"]:
-                return (f"{icon}  {doc['doc_type']}  Rev.{rev}  🔒 In checkout",
-                        "color: #fab387;")
-            return (f"{icon}  {doc['doc_type']}  Rev.{rev}  ❌ Non archiviato",
-                    "color: #f38ba8;")
+        # ---- Card PRT / ASM ----
+        if prt_asm:
+            self._code_prt_doc = prt_asm
+            self._load_thumb_to(prt_asm, self.lbl_prt_thumb)
+            icon = TYPE_ICON.get(prt_asm["doc_type"], "")
+            rev  = prt_asm["revision"]
+            if prt_asm.get("archive_path"):
+                info       = f"{icon} Rev.{rev}  ✅  {prt_asm.get('state', '')}"
+                info_style = "color: #a6e3a1; font-size: 12px;"
+            elif prt_asm["is_locked"]:
+                info       = f"{icon} Rev.{rev}  🔒 In checkout"
+                info_style = "color: #fab387; font-size: 12px;"
+            else:
+                info       = f"{icon} Rev.{rev}  ❌ Non archiviato"
+                info_style = "color: #f38ba8; font-size: 12px;"
+            self.lbl_prt_info.setText(info)
+            self.lbl_prt_info.setStyleSheet(info_style)
+            has_archive = bool(prt_asm.get("archive_path"))
+            in_ws = self._is_in_workspace(prt_asm)
+            self.btn_prt_export_ws.setVisible(has_archive and not in_ws)
+            self.btn_prt_open_sw.setVisible(has_archive or in_ws)
+            self.grp_prt_preview.setVisible(True)
+        else:
+            self._code_prt_doc = None
+            self.grp_prt_preview.setVisible(False)
 
-        for doc, lbl in (
-            (prt, self.lbl_prt_status),
-            (asm, self.lbl_asm_status),
-            (drw, self.lbl_drw_status),
-        ):
-            text, style = _status_text(doc)
-            lbl.setText(text)
-            lbl.setStyleSheet(f"font-size: 13px; padding: 2px; {style}")
-            lbl.setVisible(bool(text))
+        # ---- Card DRW ----
+        prt_asm_archived = bool(prt_asm and prt_asm.get("archive_path"))
+        if drw:
+            self._code_drw_doc = drw
+            self._load_thumb_to(drw, self.lbl_drw_thumb)
+            rev = drw["revision"]
+            if drw.get("archive_path"):
+                info       = f"📐 Rev.{rev}  ✅  {drw.get('state', '')}"
+                info_style = "color: #a6e3a1; font-size: 12px;"
+            elif drw["is_locked"]:
+                info       = f"📐 Rev.{rev}  🔒 In checkout"
+                info_style = "color: #fab387; font-size: 12px;"
+            else:
+                info       = f"📐 Rev.{rev}  ❌ Non archiviato"
+                info_style = "color: #f38ba8; font-size: 12px;"
+            self.lbl_drw_info.setText(info)
+            self.lbl_drw_info.setStyleSheet(info_style)
+            has_archive = bool(drw.get("archive_path"))
+            in_ws = self._is_in_workspace(drw)
+            self.btn_drw_export_ws.setVisible(has_archive and not in_ws)
+            self.btn_drw_open_sw.setVisible(has_archive or in_ws)
+            self.btn_add_drw.setVisible(False)
+            self.grp_drw_preview.setVisible(True)
+        else:
+            self._code_drw_doc = None
+            self.lbl_drw_thumb.setPixmap(QPixmap())
+            self.lbl_drw_thumb.setText("📐")
+            self.lbl_drw_thumb.setStyleSheet(
+                "background-color: #181825; border: 1px solid #313244; "
+                "border-radius: 6px; font-size: 40px; color: #585b70;"
+            )
+            self.lbl_drw_info.setText(
+                "Disegno non ancora creato" if prt_asm_archived else "Nessun disegno"
+            )
+            self.lbl_drw_info.setStyleSheet("color: #585b70; font-size: 12px;")
+            self.btn_drw_export_ws.setVisible(False)
+            self.btn_drw_open_sw.setVisible(False)
+            self.btn_add_drw.setVisible(prt_asm_archived)
+            self.grp_drw_preview.setVisible(prt_asm_archived)
 
-        # Calcola candidati azioni
+        # ---- Azioni creazione ----
         prt_asm_no_file = [
             d for d in docs
             if d["doc_type"] in ("Parte", "Assieme")
@@ -450,19 +556,11 @@ class DetailPanel(QWidget):
             d for d in docs
             if d["doc_type"] in ("Parte", "Assieme") and d.get("archive_path")
         ]
-        drw_with_file = [
-            d for d in docs
-            if d["doc_type"] == "Disegno" and d.get("archive_path")
-        ]
-
         self._code_action_doc_id   = prt_asm_no_file[0]["id"]   if prt_asm_no_file   else None
         self._code_prt_asm_for_drw = prt_asm_with_file[0]["id"] if prt_asm_with_file else None
-
-        need_drw = bool(prt_asm_with_file) and not bool(drw_with_file)
         self.btn_create_sw.setVisible(bool(prt_asm_no_file))
         self.btn_create_file.setVisible(bool(prt_asm_no_file))
-        self.btn_add_drw.setVisible(need_drw)
-        self.grp_actions.setVisible(bool(prt_asm_no_file) or need_drw)
+        self.grp_actions.setVisible(bool(prt_asm_no_file))
 
     def _on_create_in_sw(self):
         if self._code_action_doc_id:
@@ -476,11 +574,136 @@ class DetailPanel(QWidget):
         if self._code_prt_asm_for_drw:
             self.add_drw_requested.emit(self._code_prt_asm_for_drw)
 
+    def _on_prt_export_ws(self):
+        self._export_doc_to_ws(self._code_prt_doc)
+
+    def _on_drw_export_ws(self):
+        self._export_doc_to_ws(self._code_drw_doc)
+
+    def _on_prt_open_sw(self):
+        self._open_in_solidworks(self._code_prt_doc)
+
+    def _on_drw_open_sw(self):
+        self._open_in_solidworks(self._code_drw_doc)
+
+    # ------------------------------------------------------------------
+    #  Helper codice – archivio / workspace
+    # ------------------------------------------------------------------
+    def _get_archive_file(self, doc: dict) -> "Path | None":
+        """Restituisce il path completo del file in archivio, o None se assente."""
+        if not session.sp or not doc.get("archive_path"):
+            return None
+        p = session.sp.root / doc["archive_path"]
+        return p if p.exists() else None
+
+    def _is_in_workspace(self, doc: dict) -> bool:
+        """Verifica se il file esiste già nella workspace SolidWorks configurata."""
+        from config import load_local_config
+        ws = load_local_config().get("sw_workspace", "")
+        if not ws:
+            return False
+        ext = _EXT_FOR_TYPE.get(doc.get("doc_type", ""), "")
+        return (Path(ws) / (doc.get("code", "") + ext)).exists()
+
+    def _export_doc_to_ws(self, doc: "dict | None"):
+        """Copia il file dall'archivio nella workspace locale."""
+        if not doc:
+            return
+        archive_file = self._get_archive_file(doc)
+        if not archive_file:
+            QMessageBox.warning(self, "File non disponibile",
+                                "Il file non è presente nell'archivio.")
+            return
+        from config import load_local_config
+        ws = load_local_config().get("sw_workspace", "")
+        if not ws:
+            QMessageBox.warning(
+                self, "Workspace non configurata",
+                "Configurare la workspace in Strumenti → Configurazione SolidWorks."
+            )
+            return
+        ws_path = Path(ws)
+        ws_path.mkdir(parents=True, exist_ok=True)
+        dest = ws_path / archive_file.name
+        if dest.exists():
+            QMessageBox.information(self, "Già presente",
+                                    f"Il file è già nella workspace:\n{dest}")
+            return
+        try:
+            shutil.copy2(archive_file, dest)
+            QMessageBox.information(self, "Esportazione completata",
+                                    f"File copiato in:\n{dest}")
+            # Ricarica il pannello per aggiornare visibilità pulsanti
+            if session.files and self._current_code:
+                docs = [d for d in session.files.search_documents(code=self._current_code)
+                        if d["code"] == self._current_code]
+                self.load_code(self._current_code, docs)
+        except Exception as e:
+            QMessageBox.critical(self, "Errore esportazione", str(e))
+
+    def _open_in_solidworks(self, doc: "dict | None"):
+        """Apre il file in SolidWorks (cerca prima in WS, poi in archivio)."""
+        if not doc:
+            return
+        from config import load_local_config
+        ws = load_local_config().get("sw_workspace", "")
+        ext = _EXT_FOR_TYPE.get(doc.get("doc_type", ""), "")
+        target: "Path | None" = None
+        if ws:
+            ws_file = Path(ws) / (doc.get("code", "") + ext)
+            if ws_file.exists():
+                target = ws_file
+        if not target:
+            target = self._get_archive_file(doc)
+        if not target:
+            QMessageBox.warning(
+                self, "File non trovato",
+                "Il file non è disponibile nell'archivio né nella workspace."
+            )
+            return
+        try:
+            from ui.sw_config_dialog import SWConfigDialog
+            sw_exe = SWConfigDialog.get_solidworks_exe()
+            if sw_exe and Path(str(sw_exe)).exists():
+                subprocess.Popen([str(sw_exe), str(target)])
+            else:
+                # Apertura shell di fallback
+                subprocess.Popen(["cmd", "/c", "start", "", str(target)])
+        except Exception as e:
+            QMessageBox.critical(self, "Errore apertura SolidWorks", str(e))
+
     # ------------------------------------------------------------------
     #  Thumbnail
     # ------------------------------------------------------------------
+    def _load_thumb_to(self, doc: dict, lbl: QLabel):
+        """Carica thumbnail in un QLabel specifico (con fallback icona tipo)."""
+        thumb_path = self._get_thumbnail_path(doc)
+        _sz = lbl.width() or 110
+        if thumb_path and thumb_path.exists():
+            pixmap = QPixmap(str(thumb_path))
+            if not pixmap.isNull():
+                scaled = pixmap.scaled(
+                    _sz, _sz,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+                lbl.setPixmap(scaled)
+                lbl.setStyleSheet(
+                    "background-color: #181825; border: 1px solid #313244;"
+                    " border-radius: 6px;"
+                )
+                return
+        # Fallback: icona tipo
+        icon = _FALLBACK_ICONS.get(doc["doc_type"], "📄")
+        lbl.setPixmap(QPixmap())
+        lbl.setText(icon)
+        lbl.setStyleSheet(
+            "background-color: #181825; border: 1px solid #313244; "
+            "border-radius: 6px; font-size: 36px; color: #585b70;"
+        )
+
     def _load_thumbnail(self, doc: dict):
-        """Carica thumbnail da file o mostra icona fallback."""
+        """Carica thumbnail nella label principale (modalità documento)."""
         thumb_path = self._get_thumbnail_path(doc)
 
         if thumb_path and thumb_path.exists():
@@ -500,8 +723,7 @@ class DetailPanel(QWidget):
 
         # Fallback: icona tipo grande
         icon = _FALLBACK_ICONS.get(doc["doc_type"], "📄")
-        self.lbl_thumb.setText(icon)
-        self.lbl_thumb.setPixmap(QPixmap())  # Pulisci eventuale pixmap
+        self.lbl_thumb.setPixmap(QPixmap())
         self.lbl_thumb.setText(icon)
         self.lbl_thumb.setStyleSheet(
             "background-color: #181825; border: 1px solid #313244; "

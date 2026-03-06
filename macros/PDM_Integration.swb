@@ -76,6 +76,75 @@ End Sub
 
 
 ' ===========================================================================
+'  Importazione massiva struttura assieme con codifica PDM
+'  Richiede: un file .SLDASM aperto in SolidWorks
+' ===========================================================================
+Sub PDM_ImportAsm()
+    On Error Resume Next
+    Dim fp As String
+    fp = GetActiveFilePath()
+    If fp = "" Then Exit Sub
+    If UCase(Right(fp, 7)) <> ".SLDASM" Then
+        MsgBox "Il documento attivo deve essere un assieme (.SLDASM)." & vbCrLf & _
+               "Aprire il file assieme in SolidWorks e riprovare.", _
+               vbExclamation, "PDM-SW  –  Importazione ASM"
+        Exit Sub
+    End If
+    RunAsmImport fp
+End Sub
+
+
+' ===========================================================================
+'  Lancia il wizard di importazione ASM (non-bloccante)
+' ===========================================================================
+Private Sub RunAsmImport(filePath As String)
+    On Error Resume Next
+
+    Dim appDir As String
+    appDir = PDM_APP_PATH
+
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    If Not fso.FolderExists(appDir) Then
+        MsgBox "Cartella PDM non trovata:" & vbCrLf & appDir, vbCritical, "PDM-SW"
+        Exit Sub
+    End If
+
+    ' Trova python nel venv
+    Dim pythonExe As String
+    pythonExe = appDir & "\.venv\Scripts\pythonw.exe"
+    If Not fso.FileExists(pythonExe) Then
+        pythonExe = appDir & "\.venv\Scripts\python.exe"
+    End If
+    If Not fso.FileExists(pythonExe) Then
+        MsgBox "Python non trovato in:" & vbCrLf & appDir & "\.venv\Scripts\", _
+               vbCritical, "PDM-SW"
+        Exit Sub
+    End If
+
+    Dim scriptPath As String
+    scriptPath = appDir & "\macros\pdm_asm_import.py"
+    If Not fso.FileExists(scriptPath) Then
+        MsgBox "Script non trovato:" & vbCrLf & scriptPath, vbCritical, "PDM-SW"
+        Exit Sub
+    End If
+
+    Dim cmd As String
+    cmd = Chr(34) & pythonExe & Chr(34) & " " & Chr(34) & scriptPath & Chr(34)
+    If filePath <> "" Then
+        cmd = cmd & " " & Chr(34) & filePath & Chr(34)
+    End If
+
+    WriteDebugLog "RunAsmImport CMD: " & cmd
+
+    Dim wsShell As Object
+    Set wsShell = CreateObject("WScript.Shell")
+    wsShell.CurrentDirectory = appDir
+    wsShell.Run cmd, 0, False   ' <-- False = non-bloccante
+End Sub
+
+
+' ===========================================================================
 '  Helper: ottiene il percorso del file attivo (con messaggi di errore)
 ' ===========================================================================
 Private Function GetActiveFilePath() As String

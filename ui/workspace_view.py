@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (
     QPushButton, QTableWidget, QTableWidgetItem, QHeaderView,
     QMessageBox, QGroupBox, QSplitter
 )
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QSettings
 from PyQt6.QtGui import QColor
 
 from config import WORKFLOW_STATES
@@ -108,7 +108,19 @@ class WorkspaceView(QWidget):
         ws_layout.addLayout(btn_row2)
         splitter.addWidget(grp_ws)
 
+        # Ripristina dimensioni splitter salvate
+        s = QSettings("PDM-SW", "WorkspaceView")
+        splitter_state = s.value("splitterState")
+        if splitter_state:
+            splitter.restoreState(splitter_state)
+        self._splitter = splitter
+
         layout.addWidget(splitter)
+
+    def save_layout(self):
+        """Salva lo stato dello splitter (chiamata da MainWindow.closeEvent)."""
+        s = QSettings("PDM-SW", "WorkspaceView")
+        s.setValue("splitterState", self._splitter.saveState())
 
     # ------------------------------------------------------------------
     #  Refresh

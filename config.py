@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 
 APP_NAME    = "PDM-SW"
-APP_VERSION = "2.9.2"
+APP_VERSION = "2.10.0"
 
 # Cartella locale dell'applicazione (stessa posizione di questo file)
 APP_DIR = Path(__file__).parent.resolve()

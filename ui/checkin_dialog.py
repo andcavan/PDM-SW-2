@@ -1,6 +1,8 @@
 # =============================================================================
 #  ui/checkin_dialog.py  –  Dialog per check-in (singolo e ASM)
 # =============================================================================
+import logging
+import threading
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QCheckBox, QGroupBox, QTableWidget,
@@ -13,6 +15,40 @@ from ui.session import session
 from ui.styles import TYPE_ICON
 from core.checkout_manager import READONLY_STATES
 from config import WORKFLOW_STATES
+
+
+def _generate_thumbnail(doc: dict, sp):
+    """Genera thumbnail PNG del file archiviato tramite eDrawings (non bloccante)."""
+    try:
+        import time
+        import win32com.client
+        file_name = doc.get("file_name") or (doc.get("code", "") +
+            {".SLDPRT": ".SLDPRT", "Parte": ".SLDPRT",
+             "Assieme": ".SLDASM", "Disegno": ".SLDDRW"}.get(doc.get("doc_type", ""), ""))
+        arch_path = sp.archive_path(doc["code"], doc["revision"])
+        src_file = arch_path / file_name if file_name else None
+        # prova anche archive_path diretto
+        if not src_file or not src_file.exists():
+            if doc.get("archive_path"):
+                src_file = sp.root / doc["archive_path"]
+        if not src_file or not src_file.exists():
+            return
+        sp.thumbnails.mkdir(parents=True, exist_ok=True)
+        dest = sp.thumbnails / f"{doc['code']}_{doc['revision']}.png"
+        eApp = win32com.client.Dispatch("EModelView.EModelViewControl")
+        eApp.OpenDoc(str(src_file), False, False, True, "")
+        for _ in range(30):
+            time.sleep(0.5)
+            try:
+                if eApp.FileName:
+                    break
+            except Exception:
+                pass
+        eApp.SaveAs(str(dest))
+        eApp.CloseActiveDoc("")
+        logging.info("Thumbnail generata: %s", dest)
+    except Exception as e:
+        logging.warning("Thumbnail generation fallita: %s", e)
 
 
 class CheckinDialog(QDialog):
@@ -327,6 +363,17 @@ class CheckinDialog(QDialog):
             notes=notes,
         )
 
+        # Genera thumbnail in background se il file è stato archiviato
+        if result.get("archived") and session.sp:
+            import threading
+            doc_snap = session.files.get_document(self.document_id)
+            sp_snap = session.sp
+            threading.Thread(
+                target=_generate_thumbnail,
+                args=(doc_snap, sp_snap),
+                daemon=True,
+            ).start()
+
         if result.get("conflict"):
             r = QMessageBox.warning(
                 self, "Conflitto rilevato",
@@ -387,6 +434,15 @@ class CheckinDialog(QDialog):
                     notes=notes,
                 )
                 results.append(r)
+                # Thumbnail in background per ogni file archiviato
+                if r.get("archived") and session.sp:
+                    doc_snap = session.files.get_document(doc_id)
+                    sp_snap = session.sp
+                    threading.Thread(
+                        target=_generate_thumbnail,
+                        args=(doc_snap, sp_snap),
+                        daemon=True,
+                    ).start()
             except Exception as e:
                 errors.append(f"Errore su doc {doc_id}: {e}")
 

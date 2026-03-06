@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QTabWidget, QStatusBar, QLabel, QPushButton,
     QMessageBox, QToolBar, QSplitter
 )
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt, QTimer, QSettings, QByteArray
 from PyQt6.QtGui import QAction, QFont, QKeySequence
 
 from config import APP_NAME, APP_VERSION
@@ -27,11 +27,41 @@ class MainWindow(QMainWindow):
         self._build_menu()
         self._build_toolbar()
         self._update_status()
+        self._restore_geometry()
 
         # Auto-refresh ogni 30 secondi
         self._timer = QTimer()
         self._timer.timeout.connect(self._auto_refresh)
         self._timer.start(30_000)
+
+    def _settings(self) -> QSettings:
+        return QSettings(APP_NAME, "MainWindow")
+
+    def _restore_geometry(self):
+        s = self._settings()
+        geom = s.value("geometry")
+        if geom:
+            self.restoreGeometry(geom)
+        state = s.value("windowState")
+        if state:
+            self.restoreState(state)
+        tab = s.value("activeTab")
+        if tab is not None:
+            try:
+                self.tabs.setCurrentIndex(int(tab))
+            except (ValueError, TypeError):
+                pass
+
+    def closeEvent(self, event):
+        s = self._settings()
+        s.setValue("geometry",    self.saveGeometry())
+        s.setValue("windowState", self.saveState())
+        s.setValue("activeTab",   self.tabs.currentIndex())
+        if self._archive_view:
+            self._archive_view.save_layout()
+        if self._workspace_view:
+            self._workspace_view.save_layout()
+        super().closeEvent(event)
 
     # ------------------------------------------------------------------
     def _build_ui(self):
@@ -122,6 +152,12 @@ class MainWindow(QMainWindow):
         act_setup.triggered.connect(self._open_setup)
         m_tools.addAction(act_setup)
 
+        m_tools.addSeparator()
+
+        act_backup = QAction("💾 Backup database…", self)
+        act_backup.triggered.connect(self._backup_db)
+        m_tools.addAction(act_backup)
+
         # SolidWorks
         m_sw = mb.addMenu("SolidWorks")
         act_sw_checkout = QAction("Checkout da SW…", self)
@@ -131,6 +167,16 @@ class MainWindow(QMainWindow):
         act_sw_checkin = QAction("Check-in da SW…", self)
         act_sw_checkin.triggered.connect(self._sw_checkin)
         m_sw.addAction(act_sw_checkin)
+
+        m_sw.addSeparator()
+
+        act_import_asm = QAction("📦 Importa struttura ASM da SW…", self)
+        act_import_asm.setToolTip(
+            "Apre il wizard per importare massivamente la struttura di un assieme "
+            "aperto in SolidWorks, con codifica automatica e copia in workspace."
+        )
+        act_import_asm.triggered.connect(self._import_asm_wizard)
+        m_sw.addAction(act_import_asm)
 
         m_sw.addSeparator()
         act_macro_info = QAction("Informazioni macro SW", self)
@@ -339,9 +385,9 @@ class MainWindow(QMainWindow):
             self, "SolidWorks – Checkout",
             "Per fare il checkout da SolidWorks:\n\n"
             "1. Aprire il file .SLDPRT/.SLDASM/.SLDDRW in SolidWorks\n"
-            "2. Eseguire la macro PDM_Integration.swp\n"
+            "2. Eseguire la macro PDM_Integration.swb\n"
             "3. La macro effettuerà automaticamente il checkout\n\n"
-            "Percorso macro: macros/PDM_Integration.swp"
+            "Percorso macro: macros/PDM_Integration.swb"
         )
 
     def _sw_checkin(self):
@@ -349,14 +395,14 @@ class MainWindow(QMainWindow):
             self, "SolidWorks – Check-in",
             "Per fare il check-in da SolidWorks:\n\n"
             "1. Salvare il file in SolidWorks\n"
-            "2. Eseguire la macro PDM_Integration.swp\n"
+            "2. Eseguire la macro PDM_Integration.swb\n"
             "3. La macro effettuerà automaticamente il check-in"
         )
 
     def _show_macro_info(self):
         import os
         from pathlib import Path
-        macro_path = Path(__file__).parent.parent / "macros" / "PDM_Integration.swp"
+        macro_path = Path(__file__).parent.parent / "macros" / "PDM_Integration.swb"
         QMessageBox.information(
             self, "Macro SolidWorks",
             f"Posizione macro:\n{macro_path}\n\n"
@@ -364,6 +410,39 @@ class MainWindow(QMainWindow):
             "• Strumenti → Macro → Esegui → Seleziona il file .swp\n"
             "• Oppure: Strumenti → Personalizza → Macro → Assegna a pulsante barra"
         )
+
+    def _import_asm_wizard(self):
+        """Lancia il wizard di importazione massiva ASM come processo separato."""
+        import subprocess
+        from pathlib import Path
+        import sys
+        script = Path(__file__).parent.parent / "macros" / "pdm_asm_import.py"
+        venv_py = Path(__file__).parent.parent / ".venv" / "Scripts" / "pythonw.exe"
+        python_exe = str(venv_py) if venv_py.exists() else sys.executable
+        try:
+            subprocess.Popen(
+                [python_exe, str(script)],
+                cwd=str(Path(__file__).parent.parent),
+            )
+        except Exception as e:
+            QMessageBox.critical(self, "Errore", f"Impossibile avviare il wizard:\n{e}")
+
+    def _backup_db(self):
+        if not session.is_connected:
+            QMessageBox.warning(self, "Backup", "Nessun database connesso.")
+            return
+        from core.backup_manager import BackupManager
+        bm = BackupManager(session.sp.db_file)
+        try:
+            dest = bm.create()
+            backups = bm.list_backups()
+            QMessageBox.information(
+                self, "Backup completato",
+                f"Backup creato:\n{dest}\n\n"
+                f"Backup totali conservati: {len(backups)} (max {bm.keep})"
+            )
+        except Exception as e:
+            QMessageBox.critical(self, "Errore backup", str(e))
 
     def _about(self):
         from config import APP_VERSION

@@ -253,7 +253,9 @@ class DocumentDialog(QDialog):
         btn_del_comp.clicked.connect(self._del_component)
         btn_import_asm = QPushButton("Importa struttura da SW")
         btn_import_asm.clicked.connect(self._import_asm_from_sw)
-        for b in [btn_add_comp, btn_del_comp, btn_import_asm]:
+        btn_export_bom = QPushButton("📊 Esporta BOM Excel")
+        btn_export_bom.clicked.connect(self._export_bom_excel)
+        for b in [btn_add_comp, btn_del_comp, btn_import_asm, btn_export_bom]:
             btn_row.addWidget(b)
         btn_row.addStretch()
         layout.addLayout(btn_row)
@@ -1148,3 +1150,70 @@ class DocumentDialog(QDialog):
             )
         except Exception as e:
             QMessageBox.critical(self, "Errore import BOM", str(e))
+
+    def _export_bom_excel(self):
+        if not self.document_id:
+            return
+        components = session.asm.get_bom_flat(self.document_id)
+        if not components:
+            QMessageBox.information(self, "BOM vuota", "Nessun componente nella BOM.")
+            return
+
+        doc = session.files.get_document(self.document_id)
+        default_name = f"BOM_{doc['code']}_{doc['revision']}.xlsx" if doc else "BOM.xlsx"
+
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Esporta BOM Excel", default_name,
+            "Excel (*.xlsx)"
+        )
+        if not path:
+            return
+
+        try:
+            import openpyxl
+            from openpyxl.styles import Font, PatternFill, Alignment
+
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = "BOM"
+
+            if doc:
+                ws.append([f"BOM - {doc['code']} rev.{doc['revision']} - {doc['title']}"])
+                ws["A1"].font = Font(bold=True, size=12)
+                ws.append([])
+
+            headers = ["#", "Codice", "Rev.", "Tipo", "Titolo", "Qta"]
+            ws.append(headers)
+            hdr_row = ws.max_row
+            fill = PatternFill("solid", fgColor="1E3A5F")
+            font_hdr = Font(bold=True, color="FFFFFF")
+            for col, _ in enumerate(headers, 1):
+                cell = ws.cell(hdr_row, col)
+                cell.fill = fill
+                cell.font = font_hdr
+                cell.alignment = Alignment(horizontal="center")
+
+            for i, comp in enumerate(components, 1):
+                ws.append([
+                    i,
+                    comp.get("code", ""),
+                    comp.get("revision", ""),
+                    comp.get("doc_type", ""),
+                    comp.get("title", ""),
+                    comp.get("quantity", 1),
+                ])
+
+            ws.column_dimensions["A"].width = 5
+            ws.column_dimensions["B"].width = 20
+            ws.column_dimensions["C"].width = 6
+            ws.column_dimensions["D"].width = 12
+            ws.column_dimensions["E"].width = 40
+            ws.column_dimensions["F"].width = 8
+
+            wb.save(path)
+            QMessageBox.information(
+                self, "Esportazione completata",
+                f"BOM esportata in:\n{path}\n\n{len(components)} componenti."
+            )
+        except Exception as e:
+            QMessageBox.critical(self, "Errore export BOM Excel", str(e))
