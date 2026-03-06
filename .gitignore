@@ -1,0 +1,24 @@
+# Dati locali per PC (non distribuire)
+.pdm_datadir
+local_config.json
+
+# Runtime
+macros/sw_bridge.log
+macros/sw_bridge_result.txt
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+
+# Distribuzione generata
+dist/
+
+# Editor
+.idea/
+.vscode/
+*.swp

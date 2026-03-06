@@ -7,13 +7,27 @@ import os
 from pathlib import Path
 
 APP_NAME    = "PDM-SW"
-APP_VERSION = "2.8.1"
+APP_VERSION = "2.9.2"
 
 # Cartella locale dell'applicazione (stessa posizione di questo file)
 APP_DIR = Path(__file__).parent.resolve()
 
-# File di configurazione locale (percorso cartella condivisa)
-LOCAL_CFG_FILE = APP_DIR / "local_config.json"
+# File puntatore alla cartella dati locali (creato al primo avvio)
+DATA_DIR_FILE = APP_DIR / ".pdm_datadir"
+
+
+def get_data_dir() -> Path:
+    """Restituisce la cartella dati locali (dove risiede local_config.json).
+    Legge .pdm_datadir se esiste, altrimenti usa APP_DIR come fallback."""
+    if DATA_DIR_FILE.exists():
+        path_str = DATA_DIR_FILE.read_text(encoding="utf-8").strip()
+        if path_str:
+            return Path(path_str)
+    return APP_DIR
+
+
+def _get_local_cfg_file() -> Path:
+    return get_data_dir() / "local_config.json"
 
 # Chiavi che appartengono ai profili (non globali)
 PROFILE_KEYS = frozenset({
@@ -27,14 +41,17 @@ PROFILE_KEYS = frozenset({
 # ---- Raw I/O (formato interno) ------------------------------------------
 
 def _load_raw_config() -> dict:
-    if LOCAL_CFG_FILE.exists():
-        with open(LOCAL_CFG_FILE, "r", encoding="utf-8") as f:
+    cfg_file = _get_local_cfg_file()
+    if cfg_file.exists():
+        with open(cfg_file, "r", encoding="utf-8") as f:
             return json.load(f)
     return {}
 
 
 def _save_raw_config(raw: dict):
-    with open(LOCAL_CFG_FILE, "w", encoding="utf-8") as f:
+    cfg_file = _get_local_cfg_file()
+    cfg_file.parent.mkdir(parents=True, exist_ok=True)
+    with open(cfg_file, "w", encoding="utf-8") as f:
         json.dump(raw, f, indent=2, ensure_ascii=False)
 
 
@@ -90,6 +107,12 @@ def save_local_config(cfg: dict):
             profile_data[k] = v
         else:
             raw[k] = v
+
+    # Migra workspace in sospeso (_init_workspace) al primo profilo creato
+    if profile_name and profile_name not in profiles:
+        pending_ws = raw.pop("_init_workspace", None)
+        if pending_ws:
+            profile_data.setdefault("sw_workspace", pending_ws)
 
     if profile_name:
         profiles[profile_name] = profile_data

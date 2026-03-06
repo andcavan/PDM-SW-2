@@ -1,12 +1,92 @@
 # PDM-SW – Sistema PDM per SolidWorks
 
-> **Versione 2.8.1** – Fix dialog Genera Codice non si apriva
+> **Versione 2.9.2** – Archive view redesign & creazione archive-first
 
 Sistema PDM (Product Data Management) leggero, senza server, per la gestione di documenti SolidWorks in ambiente di rete con architettura peer‑to‑peer.
 
 ---
 
+## Installazione su nuovo PC
+
+1. Copia la cartella `PDM-SW-2/` in qualsiasi percorso (es. `C:\Lavoro\PDM-SW-2\`)
+2. Esegui **`install.bat`** — verifica Python, crea `.venv`, installa dipendenze
+3. Esegui **`start.bat`** — al primo avvio appare il wizard di configurazione:
+   - Scegli la **cartella dati locali** (es. `C:\Users\mario\PDM-Data\`) — conterrà `local_config.json`
+   - Scegli la **workspace SolidWorks** — cartella locale per i file in checkout
+4. Il wizard guida poi alla configurazione del percorso condiviso di rete e al login
+
+> **Nota**: `.venv/` e `local_config.json` **non** vengono copiati nella distribuzione. Ogni PC genera i propri.
+
+## Creazione distribuzione
+
+```
+python make_dist.py           # crea dist/PDM-SW-2/
+python make_dist.py --zip     # crea anche dist/PDM-SW-2_v2.9.0.zip
+python make_dist.py --clean   # pulisce dist/ prima di procedere
+```
+
+---
+
 ## Changelog
+
+### v2.9.2
+**Archive view redesign & creazione archive-first**
+
+- **`ui/archive_view.py`**: i nodi codice diventano **selezionabili** (prima erano non-selezionabili).
+  I figli (PRT/ASM/DRW) sono mostrati **solo** se `archive_path` è valorizzato **o** il doc è in checkout (`is_locked=1`).
+  Il filtro per tipo opera solo sui figli — i nodi codice rimangono sempre visibili.
+- **`ui/detail_panel.py`**: aggiunta **doppia modalità**:
+  - *Modalità documento*: comportamento precedente (thumbnail, tab info/props/BOM/storico).
+  - *Modalità codice*: mostra i tipi disponibili (PRT/ASM/DRW) con relativo stato, e pulsanti azione:
+    - `[Crea in SW]` — crea dal template SW ed archivia direttamente (popup opzionale checkout)
+    - `[Crea da file]` — importa un file esterno nell'archivio
+    - `[Aggiungi DRW]` — crea disegno DRW nell'archivio (visibile solo se PRT/ASM presente)
+  - Checkbox **"Metti in checkout dopo la creazione"** permanente nel gruppo azioni.
+- **`core/file_manager.py`**: nuovo metodo `create_to_archive(document_id, source_path=None)`.
+  Crea il file direttamente in archivio (flusso *archive-first*) — opzionalmente da template SW o
+  da file esterno. Aggiorna `archive_path` nel DB. Il checkout rimane opzionale e separato.
+- **`core/database.py`**: migrazione automatica colonna `pdf_path TEXT` su `documents`
+  (preparazione generazione PDF al checkin).
+
+---
+
+### v2.9.1
+**Sola lettura fisica su file workspace**
+
+- **`core/checkout_manager.py`**: aggiunto `_set_readonly()` e `_set_writable()` (helper statici con `stat.S_IWRITE`).
+- `_copy_archive_to_workspace()`: ogni copia da archivio → workspace è ora **sola lettura** per default.
+  Questo vale per: consultazione, componenti ASM, copia mentre documento in checkout altrui.
+- `checkout()`: dopo la copia rende il file **scrivibile** — solo il proprietario del lock può modificarlo.
+- `checkin()` / `undo_checkout()` / `remove_from_workspace()`: `_set_writable()` chiamato prima di `unlink()`
+  (su Windows un file readonly non può essere eliminato).
+
+**Regola di sola lettura nella workspace:**
+
+| Situazione | File in WS | Scrivibile |
+|---|---|---|
+| Checkout mio | ✅ | ✅ |
+| Consultazione | ✅ | ❌ |
+| Componente ASM (copia) | ✅ | ❌ |
+| Checkout altrui (copia archivio) | ✅ | ❌ |
+| Rilasciato / Obsoleto (copia archivio) | ✅ | ❌ |
+
+---
+
+### v2.9.0
+**Distribuzione portabile – primo avvio con cartella dati separata**
+
+- **`config.py`**: `local_config.json` non è più nella cartella sorgenti — viene cercato nella
+  cartella dati locali indicata in `.pdm_datadir`. Fallback a `APP_DIR` per compatibilità.
+  Migrazione automatica `_init_workspace` → profilo al primo salvataggio.
+- **`ui/first_run_dialog.py`** (NUOVO): dialog al primo avvio che chiede (1) cartella dati locali
+  e (2) workspace SolidWorks. Scrive `.pdm_datadir` e inizializza `local_config.json`.
+- **`main.py`**: check presenza `.pdm_datadir` all'avvio; se assente mostra `FirstRunDialog`.
+- **`make_dist.py`** (NUOVO): script che crea `dist/PDM-SW-2/` escludendo `.venv/`,
+  `local_config.json`, `.pdm_datadir` e file runtime. Opzione `--zip` per archivio compresso.
+- **`install.bat`** / **`start.bat`** (NUOVI): script per installazione e avvio su nuovo PC.
+- **`.gitignore`** (NUOVO): esclude file locali e di runtime dal controllo versione.
+
+---
 
 ### v2.8.1
 **Bugfix: dialog "Genera Codice" non si apriva premendo il pulsante**

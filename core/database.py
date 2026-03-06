@@ -287,6 +287,7 @@ CREATE INDEX IF NOT EXISTS idx_hcnt_type     ON hierarchical_counters(counter_ty
                 checkout_md5    TEXT,
                 checkout_size   INTEGER,
                 checkout_mtime  REAL,
+                pdf_path        TEXT,                   -- PDF generato al checkin
                 UNIQUE(code, revision, doc_type)
             )
         """
@@ -296,7 +297,8 @@ CREATE INDEX IF NOT EXISTS idx_hcnt_type     ON hierarchical_counters(counter_ty
                        state, file_name, file_ext, archive_path, thumbnail,
                        created_by, created_at, modified_by, modified_at,
                        is_locked, locked_by, locked_at, locked_ws,
-                       machine_id, group_id, doc_level, parent_doc_id"""
+                       machine_id, group_id, doc_level, parent_doc_id,
+                       checkout_md5, checkout_size, checkout_mtime, pdf_path"""
 
         with self.write_lock():
             with self.connection() as conn:
@@ -441,6 +443,8 @@ CREATE INDEX IF NOT EXISTS idx_hcnt_type     ON hierarchical_counters(counter_ty
             ("checkout_md5",     "TEXT"),
             ("checkout_size",    "INTEGER"),
             ("checkout_mtime",   "REAL"),
+            # PDF generato al checkin
+            ("pdf_path",         "TEXT"),
         ]
         # Migrazioni checkout_log
         checkout_log_cols = [

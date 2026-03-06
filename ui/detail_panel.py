@@ -7,9 +7,10 @@ from pathlib import Path
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QTabWidget, QTableWidget, QTableWidgetItem, QHeaderView,
-    QGroupBox, QFormLayout, QMessageBox, QSizePolicy
+    QGroupBox, QFormLayout, QMessageBox, QSizePolicy,
+    QStackedWidget, QCheckBox
 )
-from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtCore import Qt, QSize, pyqtSignal
 from PyQt6.QtGui import QPixmap, QFont
 
 from ui.session import session
@@ -31,11 +32,20 @@ class DetailPanel(QWidget):
     Pannello laterale readonly per anteprima rapida di un documento.
     Mostra thumbnail (con fallback icona), info generali, proprietà,
     BOM e storico. Include bottone per apertura in eDrawings.
+    Supporta anche la modalità «nodo codice» con pulsanti di creazione.
     """
+
+    # Segnali emessi dai bottoni di creazione (archive-first)
+    create_in_sw_requested   = pyqtSignal(int)  # doc_id PRT/ASM senza file
+    create_from_file_requested = pyqtSignal(int)  # doc_id PRT/ASM senza file
+    add_drw_requested        = pyqtSignal(int)  # parent PRT/ASM doc_id
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._current_doc_id = None
+        self._current_doc_id: int | None = None
+        self._current_code:   str | None = None
+        self._code_action_doc_id:    int | None = None  # PRT/ASM senza file
+        self._code_prt_asm_for_drw:  int | None = None  # PRT/ASM con file (per DRW)
         self._build_ui()
         self.clear()
 
@@ -43,7 +53,16 @@ class DetailPanel(QWidget):
     #  Costruzione UI
     # ------------------------------------------------------------------
     def _build_ui(self):
-        layout = QVBoxLayout(self)
+        main_layout = QVBoxLayout(self)
+        main_layout.setSpacing(0)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.stack = QStackedWidget()
+        main_layout.addWidget(self.stack)
+
+        # ── Pagina 0: modalità documento ──────────────────────────────
+        doc_page = QWidget()
+        layout = QVBoxLayout(doc_page)
         layout.setSpacing(6)
         layout.setContentsMargins(8, 8, 8, 8)
 
@@ -104,6 +123,11 @@ class DetailPanel(QWidget):
         self.tabs.addTab(self._build_properties_tab(), "Proprietà SW")
         self.tabs.addTab(self._build_bom_tab(), "Struttura")
         self.tabs.addTab(self._build_history_tab(), "Storico")
+
+        self.stack.addWidget(doc_page)
+
+        # ── Pagina 1: modalità codice ─────────────────────────────────
+        self.stack.addWidget(self._build_code_panel())
 
     # ---- Tab Generale ----
     def _build_general_tab(self) -> QWidget:
@@ -188,6 +212,8 @@ class DetailPanel(QWidget):
     def clear(self):
         """Svuota il pannello (nessun documento selezionato)."""
         self._current_doc_id = None
+        self._current_code   = None
+        self.stack.setCurrentIndex(0)
         self.lbl_thumb.setText("📄")
         self.lbl_thumb.setStyleSheet(
             "background-color: #181825; border: 1px solid #313244; "
@@ -220,6 +246,7 @@ class DetailPanel(QWidget):
             return
 
         self._current_doc_id = doc_id
+        self.stack.setCurrentIndex(0)
 
         # ---- Thumbnail ----
         self._load_thumbnail(doc)
@@ -306,6 +333,148 @@ class DetailPanel(QWidget):
             self.tbl_history.setItem(i, 2, QTableWidgetItem(r.get("from_state", "")))
             self.tbl_history.setItem(i, 3, QTableWidgetItem(r.get("to_state", "")))
             self.tbl_history.setItem(i, 4, QTableWidgetItem(r.get("user_name", "")))
+
+    # ------------------------------------------------------------------
+    #  Pannello modalità codice
+    # ------------------------------------------------------------------
+    def _build_code_panel(self) -> QWidget:
+        """Pannello visualizzato quando è selezionato un nodo codice."""
+        w = QWidget()
+        layout = QVBoxLayout(w)
+        layout.setSpacing(10)
+        layout.setContentsMargins(8, 8, 8, 8)
+
+        # Header: icona + codice + titolo
+        hdr = QHBoxLayout()
+        lbl_icon = QLabel("📁")
+        lbl_icon.setStyleSheet("font-size: 40px;")
+        lbl_icon.setFixedWidth(56)
+        hdr.addWidget(lbl_icon)
+
+        code_info = QVBoxLayout()
+        self.lbl_code_str = QLabel()
+        self.lbl_code_str.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        self.lbl_code_str.setStyleSheet("color: #89b4fa;")
+        code_info.addWidget(self.lbl_code_str)
+
+        self.lbl_code_title = QLabel()
+        self.lbl_code_title.setStyleSheet("color: #a6adc8; font-size: 12px;")
+        self.lbl_code_title.setWordWrap(True)
+        code_info.addWidget(self.lbl_code_title)
+        code_info.addStretch()
+        hdr.addLayout(code_info, 1)
+        layout.addLayout(hdr)
+
+        # File in archivio
+        grp_files = QGroupBox("File in archivio")
+        files_layout = QVBoxLayout(grp_files)
+        self.lbl_prt_status = QLabel()
+        self.lbl_asm_status = QLabel()
+        self.lbl_drw_status = QLabel()
+        for lbl in (self.lbl_prt_status, self.lbl_asm_status, self.lbl_drw_status):
+            lbl.setStyleSheet("font-size: 13px; padding: 2px;")
+            files_layout.addWidget(lbl)
+        layout.addWidget(grp_files)
+
+        # Azioni
+        self.grp_actions = QGroupBox("Azioni")
+        act_layout = QVBoxLayout(self.grp_actions)
+
+        self.btn_create_sw = QPushButton("🔨  Crea in SW")
+        self.btn_create_sw.setObjectName("btn_primary")
+        self.btn_create_sw.clicked.connect(self._on_create_in_sw)
+        act_layout.addWidget(self.btn_create_sw)
+
+        self.btn_create_file = QPushButton("📂  Crea da file")
+        self.btn_create_file.clicked.connect(self._on_create_from_file)
+        act_layout.addWidget(self.btn_create_file)
+
+        self.btn_add_drw = QPushButton("📐  Aggiungi DRW")
+        self.btn_add_drw.clicked.connect(self._on_add_drw)
+        act_layout.addWidget(self.btn_add_drw)
+
+        self.chk_checkout = QCheckBox("Metti in checkout dopo la creazione")
+        act_layout.addWidget(self.chk_checkout)
+
+        layout.addWidget(self.grp_actions)
+        layout.addStretch()
+        return w
+
+    def load_code(self, code: str, docs: list[dict]):
+        """Carica e mostra le informazioni del nodo codice (modalità codice)."""
+        self._current_doc_id = None
+        self._current_code = code
+        self.stack.setCurrentIndex(1)
+
+        # Header
+        self.lbl_code_str.setText(code)
+        rep = max(docs, key=lambda d: d["revision"]) if docs else None
+        self.lbl_code_title.setText(rep.get("title", "") if rep else "")
+
+        # Status per tipo
+        prt = next((d for d in docs if d["doc_type"] == "Parte"),   None)
+        asm = next((d for d in docs if d["doc_type"] == "Assieme"), None)
+        drw = next((d for d in docs if d["doc_type"] == "Disegno"), None)
+
+        def _status_text(doc) -> tuple[str, str]:
+            if not doc:
+                return "", ""
+            icon = TYPE_ICON.get(doc["doc_type"], "")
+            rev  = doc["revision"]
+            if doc.get("archive_path"):
+                return (f"{icon}  {doc['doc_type']}  Rev.{rev}  ✅",
+                        "color: #a6e3a1;")
+            if doc["is_locked"]:
+                return (f"{icon}  {doc['doc_type']}  Rev.{rev}  🔒 In checkout",
+                        "color: #fab387;")
+            return (f"{icon}  {doc['doc_type']}  Rev.{rev}  ❌ Non archiviato",
+                    "color: #f38ba8;")
+
+        for doc, lbl in (
+            (prt, self.lbl_prt_status),
+            (asm, self.lbl_asm_status),
+            (drw, self.lbl_drw_status),
+        ):
+            text, style = _status_text(doc)
+            lbl.setText(text)
+            lbl.setStyleSheet(f"font-size: 13px; padding: 2px; {style}")
+            lbl.setVisible(bool(text))
+
+        # Calcola candidati azioni
+        prt_asm_no_file = [
+            d for d in docs
+            if d["doc_type"] in ("Parte", "Assieme")
+            and not d.get("archive_path") and not d["is_locked"]
+        ]
+        prt_asm_with_file = [
+            d for d in docs
+            if d["doc_type"] in ("Parte", "Assieme") and d.get("archive_path")
+        ]
+        drw_with_file = [
+            d for d in docs
+            if d["doc_type"] == "Disegno" and d.get("archive_path")
+        ]
+
+        self._code_action_doc_id   = prt_asm_no_file[0]["id"]   if prt_asm_no_file   else None
+        self._code_prt_asm_for_drw = prt_asm_with_file[0]["id"] if prt_asm_with_file else None
+
+        need_drw = bool(prt_asm_with_file) and not bool(drw_with_file)
+        self.btn_create_sw.setVisible(bool(prt_asm_no_file))
+        self.btn_create_file.setVisible(bool(prt_asm_no_file))
+        self.btn_add_drw.setVisible(need_drw)
+        self.grp_actions.setVisible(bool(prt_asm_no_file) or need_drw)
+
+    def _on_create_in_sw(self):
+        if self._code_action_doc_id:
+            self.create_in_sw_requested.emit(self._code_action_doc_id)
+
+    def _on_create_from_file(self):
+        if self._code_action_doc_id:
+            self.create_from_file_requested.emit(self._code_action_doc_id)
+
+    def _on_add_drw(self):
+        if self._code_prt_asm_for_drw:
+            self.add_drw_requested.emit(self._code_prt_asm_for_drw)
 
     # ------------------------------------------------------------------
     #  Thumbnail

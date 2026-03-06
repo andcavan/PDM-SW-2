@@ -428,8 +428,9 @@ class FileManager:
             "Disegno": "sw_template_drw",
         }
         tpl_key  = key_map.get(doc["doc_type"], "")
-        tpl_path = Path(cfg.get(tpl_key, "") or "")
-        if not tpl_path.exists():
+        tpl_str  = cfg.get(tpl_key, "") or ""
+        tpl_path = Path(tpl_str) if tpl_str else None
+        if not tpl_path or not tpl_path.is_file():
             raise FileNotFoundError(
                 f"Template non configurato per '{doc['doc_type']}'.\n"
                 "Configurarlo in Strumenti \u2192 Configurazione SolidWorks."
@@ -448,6 +449,61 @@ class FileManager:
                 self.get_or_create_drw_document(document_id)
 
         return dest, drw_dest
+
+    def create_to_archive(self, document_id: int,
+                          source_path: "Path | None" = None) -> Path:
+        """
+        Archive-first: copia template SW (o file esterno) direttamente in archivio.
+        source_path=None  →  usa il template SW configurato.
+        source_path=<Path> →  importa il file indicato.
+        Ritorna il path del file archiviato.
+        """
+        from config import load_local_config
+        cfg = load_local_config()
+        doc = self.get_document(document_id)
+        if not doc:
+            raise ValueError("Documento non trovato")
+
+        sw_ext   = EXT_FOR_TYPE.get(doc["doc_type"], ".SLDPRT")
+        arch_dir = self.sp.archive_path(doc["code"], doc["revision"])
+        arch_dir.mkdir(parents=True, exist_ok=True)
+        dest = arch_dir / (doc["code"] + sw_ext)
+
+        if source_path is not None:
+            source_path = Path(source_path)
+            if not source_path.exists():
+                raise FileNotFoundError(f"File non trovato: {source_path}")
+            ext = source_path.suffix.upper()
+            if ext != sw_ext:
+                raise ValueError(
+                    f"Il file selezionato ({ext}) non corrisponde "
+                    f"al tipo documento '{doc['doc_type']}' (atteso {sw_ext})."
+                )
+            shutil.copy2(source_path, dest)
+        else:
+            key_map = {
+                "Parte":   "sw_template_prt",
+                "Assieme": "sw_template_asm",
+                "Disegno": "sw_template_drw",
+            }
+            tpl_str  = cfg.get(key_map.get(doc["doc_type"], ""), "") or ""
+            tpl_path = Path(tpl_str) if tpl_str else None
+            if not tpl_path or not tpl_path.is_file():
+                raise FileNotFoundError(
+                    f"Template non configurato per '{doc['doc_type']}'.\n"
+                    "Configurarlo in Strumenti \u2192 Configurazione SolidWorks."
+                )
+            shutil.copy2(tpl_path, dest)
+
+        rel_path = str(dest.relative_to(self.sp.root))
+        self.db.execute(
+            """UPDATE documents
+               SET file_name=?, file_ext=?, archive_path=?,
+                   modified_by=?, modified_at=datetime('now')
+               WHERE id=?""",
+            (dest.name, sw_ext, rel_path, self.cu["id"], document_id),
+        )
+        return dest
 
     def update_document(self, document_id: int, title: str,
                         description: str) -> bool:

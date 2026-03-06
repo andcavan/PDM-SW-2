@@ -8,9 +8,11 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QAction
+from pathlib import Path
 
 from config import WORKFLOW_STATES
 from core.checkout_manager import READONLY_STATES
+from core.file_manager import EXT_FOR_TYPE
 from ui.session import session
 from ui.styles import TYPE_ICON
 
@@ -123,6 +125,11 @@ class ArchiveView(QWidget):
         self.detail_panel = DetailPanel()
         self.splitter.addWidget(self.detail_panel)
 
+        # Connetti segnali creazione archive-first
+        self.detail_panel.create_in_sw_requested.connect(self._action_create_in_sw)
+        self.detail_panel.create_from_file_requested.connect(self._action_create_from_file)
+        self.detail_panel.add_drw_requested.connect(self._action_add_drw)
+
         # Proporzioni iniziali 65/35
         self.splitter.setStretchFactor(0, 65)
         self.splitter.setStretchFactor(1, 35)
@@ -153,21 +160,23 @@ class ArchiveView(QWidget):
         self.tree.clear()
 
         for code in sorted(groups.keys()):
-            children = groups[code]
+            all_docs = groups[code]
             parent_item = QTreeWidgetItem(self.tree)
             parent_item.setText(COL_CODE, code)
-            parent_item.setFlags(
-                parent_item.flags() & ~Qt.ItemFlag.ItemIsSelectable
-            )
+            # Nodo codice: selezionabile, memorizza il codice stringa
+            parent_item.setData(COL_CODE, Qt.ItemDataRole.UserRole, f"CODE:{code}")
 
-            # Titolo e stato dal primo figlio (o quello con revisione piu alta)
-            best = self._pick_representative(children)
+            # Titolo dal documento rappresentativo
+            best = self._pick_representative(all_docs)
             parent_item.setText(COL_TITLE, best.get("title") or "")
-            parent_item.setData(COL_CODE, Qt.ItemDataRole.UserRole, None)
 
-            # Separa doc attivi e obsoleti
-            active_docs = [d for d in children if d["state"] != "Obsoleto"]
-            obsolete_docs = [d for d in children if d["state"] == "Obsoleto"]
+            # Figli visibili solo se hanno un file in archivio O sono in checkout
+            visible_docs = [d for d in all_docs
+                            if d.get("archive_path") or d["is_locked"]]
+
+            # Separa doc attivi e obsoleti tra i visibili
+            active_docs   = [d for d in visible_docs if d["state"] != "Obsoleto"]
+            obsolete_docs = [d for d in visible_docs if d["state"] == "Obsoleto"]
 
             # Crea nodi per documenti attivi, tracciando l'ultimo per tipo
             type_items: dict[str, QTreeWidgetItem] = {}
@@ -200,36 +209,40 @@ class ArchiveView(QWidget):
         root = self.tree.invisibleRootItem()
         for i in range(root.childCount()):
             parent = root.child(i)
-            any_visible = False
+            parent.setHidden(False)   # i nodi codice sono sempre visibili
             for j in range(parent.childCount()):
                 child = parent.child(j)
                 if chosen == "Tutti":
                     child.setHidden(False)
-                    any_visible = True
                 else:
-                    # Il testo colonna 0 del figlio contiene l'icona + tipo
                     text = child.text(COL_CODE).strip()
-                    visible = chosen in text
-                    child.setHidden(not visible)
-                    if visible:
-                        any_visible = True
-            parent.setHidden(not any_visible)
+                    child.setHidden(chosen not in text)
 
     # ------------------------------------------------------------------
     #  Double-click
     # ------------------------------------------------------------------
     def _on_selection_changed(self):
         """Aggiorna il pannello dettaglio al cambio selezione."""
-        doc_id = self._selected_doc_id()
-        if doc_id:
-            self.detail_panel.load_document(doc_id)
+        items = self.tree.selectedItems()
+        if not items:
+            self.detail_panel.clear()
+            return
+        item = items[0]
+        val = item.data(COL_CODE, Qt.ItemDataRole.UserRole)
+        if isinstance(val, str) and val.startswith("CODE:"):
+            code = val[5:]
+            all_docs_raw = session.files.search_documents(code=code)
+            all_docs = [d for d in all_docs_raw if d["code"] == code]
+            self.detail_panel.load_code(code, all_docs)
+        elif isinstance(val, int):
+            self.detail_panel.load_document(val)
         else:
             self.detail_panel.clear()
 
     def _on_double_click(self, item: QTreeWidgetItem, column: int):
-        doc_id = item.data(COL_CODE, Qt.ItemDataRole.UserRole)
-        if doc_id:
-            self.document_selected.emit(doc_id)
+        val = item.data(COL_CODE, Qt.ItemDataRole.UserRole)
+        if isinstance(val, int):
+            self.document_selected.emit(val)
 
     # ------------------------------------------------------------------
     #  Helpers
@@ -273,8 +286,8 @@ class ArchiveView(QWidget):
         if not items:
             return None
         item = items[0]
-        doc_id = item.data(COL_CODE, Qt.ItemDataRole.UserRole)
-        return doc_id
+        val = item.data(COL_CODE, Qt.ItemDataRole.UserRole)
+        return val if isinstance(val, int) else None
 
     def _selected_doc(self) -> dict | None:
         doc_id = self._selected_doc_id()
@@ -522,3 +535,83 @@ class ArchiveView(QWidget):
         dlg = DocumentDialog(doc_id, parent=self)
         if dlg.exec():
             self.refresh()
+
+    # ------------------------------------------------------------------
+    #  Azioni creazione archive-first (attivate da segnali DetailPanel)
+    # ------------------------------------------------------------------
+    def _action_create_in_sw(self, doc_id: int):
+        """Crea il template SW direttamente in archivio; optional checkout."""
+        also_checkout = self.detail_panel.chk_checkout.isChecked()
+        try:
+            dest = session.files.create_to_archive(doc_id)
+            if also_checkout:
+                session.checkout.checkout(doc_id)
+                session.files.open_from_workspace(doc_id)
+            msg = f"File creato in archivio:\n{dest.name}"
+            if also_checkout:
+                msg += "\n\nFile aperto in SolidWorks."
+            QMessageBox.information(self, "File creato", msg)
+            self.refresh()
+        except FileNotFoundError as e:
+            r = QMessageBox.question(
+                self, "Template non configurato",
+                f"{e}\n\nAprire la configurazione SolidWorks ora?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            )
+            if r == QMessageBox.StandardButton.Yes:
+                from ui.sw_config_dialog import SWConfigDialog
+                dlg = SWConfigDialog(parent=self)
+                dlg.exec()
+        except Exception as e:
+            QMessageBox.critical(self, "Errore", str(e))
+
+    def _action_create_from_file(self, doc_id: int):
+        """Importa un file esterno direttamente in archivio."""
+        doc = session.files.get_document(doc_id)
+        if not doc:
+            return
+        sw_ext = EXT_FOR_TYPE.get(doc["doc_type"], ".SLDPRT")
+        path, _ = QFileDialog.getOpenFileName(
+            self, f"Seleziona file {doc['doc_type']}",
+            "", f"File SolidWorks (*{sw_ext} *{sw_ext.lower()})"
+        )
+        if not path:
+            return
+        try:
+            dest = session.files.create_to_archive(doc_id, source_path=Path(path))
+            also_checkout = self.detail_panel.chk_checkout.isChecked()
+            if also_checkout:
+                session.checkout.checkout(doc_id)
+            QMessageBox.information(
+                self, "File importato",
+                f"File importato in archivio:\n{dest.name}"
+            )
+            self.refresh()
+        except Exception as e:
+            QMessageBox.critical(self, "Errore", str(e))
+
+    def _action_add_drw(self, parent_doc_id: int):
+        """Crea il disegno DRW in archivio partendo dal template."""
+        try:
+            drw_id = session.files.get_or_create_drw_document(parent_doc_id)
+            dest = session.files.create_to_archive(drw_id)
+            also_checkout = self.detail_panel.chk_checkout.isChecked()
+            if also_checkout:
+                session.checkout.checkout(drw_id)
+            QMessageBox.information(
+                self, "DRW creato",
+                f"Disegno creato in archivio:\n{dest.name}"
+            )
+            self.refresh()
+        except FileNotFoundError as e:
+            r = QMessageBox.question(
+                self, "Template non configurato",
+                f"{e}\n\nAprire la configurazione SolidWorks ora?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            )
+            if r == QMessageBox.StandardButton.Yes:
+                from ui.sw_config_dialog import SWConfigDialog
+                dlg = SWConfigDialog(parent=self)
+                dlg.exec()
+        except Exception as e:
+            QMessageBox.critical(self, "Errore", str(e))

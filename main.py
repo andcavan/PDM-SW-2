@@ -13,7 +13,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
 from config import (
-    APP_NAME, load_local_config,
+    APP_NAME, DATA_DIR_FILE, load_local_config,
     get_profile_names, get_active_profile_name, set_active_profile,
 )
 from ui.styles import DARK_THEME
@@ -29,6 +29,15 @@ def main():
     # Font globale
     font = QFont("Segoe UI", 10)
     app.setFont(font)
+
+    # ----------------------------------------------------------------
+    # 0) Primo avvio: scegli cartella dati locali e workspace SW
+    # ----------------------------------------------------------------
+    if not DATA_DIR_FILE.exists():
+        from ui.first_run_dialog import FirstRunDialog
+        dlg = FirstRunDialog()
+        if dlg.exec() != dlg.DialogCode.Accepted:
+            sys.exit(0)
 
     # ----------------------------------------------------------------
     # 1) Selezione profilo

@@ -30,6 +30,24 @@ class CheckoutManager:
     #  Utility
     # ==================================================================
     @staticmethod
+    def _set_readonly(path: Path):
+        """Imposta il file come sola lettura (tutti i permessi di scrittura rimossi)."""
+        import stat
+        try:
+            path.chmod(path.stat().st_mode & ~(stat.S_IWRITE | stat.S_IWGRP | stat.S_IWOTH))
+        except OSError:
+            pass
+
+    @staticmethod
+    def _set_writable(path: Path):
+        """Rimuove la sola lettura dal file (necessario su Windows prima di unlink/modifica)."""
+        import stat
+        try:
+            path.chmod(path.stat().st_mode | stat.S_IWRITE)
+        except OSError:
+            pass
+
+    @staticmethod
     def _md5(filepath: Path) -> str:
         """Calcola MD5 di un file."""
         h = hashlib.md5()
@@ -94,8 +112,10 @@ class CheckoutManager:
         self._validate_state_for_edit(doc)
         self._check_not_locked(doc)
 
-        # Copia file in workspace
+        # Copia file in workspace (arriva come sola lettura da _copy_archive_to_workspace)
         dest = self._copy_archive_to_workspace(doc)
+        # Il file è mio checkout: rendo scrivibile
+        self._set_writable(dest)
 
         # Snapshot dell'archivio
         archive_file = self._archive_file_path(doc)
@@ -237,6 +257,7 @@ class CheckoutManager:
             # Eliminazione dalla workspace
             if delete_from_workspace:
                 try:
+                    self._set_writable(ws_file)  # Windows: necessario prima di unlink
                     ws_file.unlink()
                 except OSError:
                     pass
@@ -332,6 +353,7 @@ class CheckoutManager:
             ws_file = self._ws_file_path(doc)
             if ws_file.exists():
                 try:
+                    self._set_writable(ws_file)  # Windows: necessario prima di unlink
                     ws_file.unlink()
                 except OSError:
                     pass
@@ -410,7 +432,9 @@ class CheckoutManager:
             )
         if delete_file and wf.get("workspace_path"):
             try:
-                Path(wf["workspace_path"]).unlink()
+                p = Path(wf["workspace_path"])
+                self._set_writable(p)  # Windows: necessario prima di unlink
+                p.unlink()
             except OSError:
                 pass
         self._unregister_workspace_file(document_id, uid)
@@ -472,7 +496,13 @@ class CheckoutManager:
 
         archive_file = self._archive_file_path(doc)
         if archive_file and archive_file.exists():
+            # Se il file esiste già in WS assicuriamoci che sia scrivibile prima di sovrascriverlo
+            if dest.exists():
+                self._set_writable(dest)
             shutil.copy2(archive_file, dest)
+            # Il file in workspace è SEMPRE sola lettura di default;
+            # sarà reso scrivibile solo da checkout() per il proprietario del lock.
+            self._set_readonly(dest)
         elif doc.get("archive_path"):
             # archive_path registrato ma file fisico mancante
             raise FileNotFoundError(
