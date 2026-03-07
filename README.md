@@ -1,6 +1,6 @@
 # PDM-SW – Sistema PDM per SolidWorks
 
-> **Versione 2.10.0** – Pannello dettaglio nodo-codice con preview thumbnail e azioni WS/SW
+> **Versione 2.10.19** - Fix alias duplicati e sync bidirezionale title/description
 
 Sistema PDM (Product Data Management) leggero, senza server, per la gestione di documenti SolidWorks in ambiente di rete con architettura peer‑to‑peer.
 
@@ -21,7 +21,7 @@ Sistema PDM (Product Data Management) leggero, senza server, per la gestione di 
 
 ```
 python make_dist.py           # crea dist/PDM-SW-2/
-python make_dist.py --zip     # crea anche dist/PDM-SW-2_v2.10.0.zip
+python make_dist.py --zip     # crea anche dist/PDM-SW-2_v2.10.19.zip
 python make_dist.py --clean   # pulisce dist/ prima di procedere
 ```
 
@@ -29,6 +29,147 @@ python make_dist.py --clean   # pulisce dist/ prima di procedere
 
 ## Changelog
 
+### v2.10.19
+**Fix: alias duplicati e mancato aggiornamento title/description**
+
+- **`core/properties_manager.py`** - `_pick_first_prop_value` ora ignora i match vuoti e continua sul prossimo alias disponibile.
+- **`core/properties_manager.py`** - nuova normalizzazione alias in import (`Title/Titolo`, `Description/Descrizione`, `Author/Autore`) per evitare doppioni in `document_properties`.
+- **`core/properties_manager.py`** - default mapping `title` e `description` impostati su `Bidirezionale` (oltre a `revision`) per rendere effettivo il sync PDM->SW anche su questi campi.
+- **`ui/sw_config_dialog.py`** - default UI allineati su `Bidirezionale` per `Titolo` e `Descrizione`.
+- **`config.py`** - versione applicazione aggiornata a `2.10.19`.
+
+### v2.10.18
+**Fix proprieta non movimentate (SW<->PDM)**
+
+- **`core/properties_manager.py`** - `_read_custom_props` reso compatibile con varianti COM dove `Count`/`GetNames` sono metodi o tuple; evita salti silenziosi che portavano a importazioni vuote.
+- **`core/properties_manager.py`** - `write_to_sw_file` migliorato con fallback su documento aperto per nome file, scrittura `Set2`/`Add3`/`Add2` e salvataggio `Save3` con fallback `Save`.
+- **`macros/sw_bridge.py`** - `action_export_props` ora usa la sync mapping `sync_pdm_to_sw` (campi PDM fondamentali) e poi esporta le custom properties.
+- **`config.py`** - versione applicazione aggiornata a `2.10.18`.
+
+### v2.10.17
+**Fix sincronizzazione proprieta e aggiornamento campi PDM**
+
+- **`core/properties_manager.py`** - matching nomi proprieta reso robusto (ignora spazi/simboli) per intercettare varianti reali dei nomi SW.
+- **`core/properties_manager.py`** - lettura SW arricchita con `SummaryInfo` (`Title`, `Subject`, `Comments`, `Author`, `CreatedDate`, `SaveDate`) e fallback `Description` da `Subject/Comments`.
+- **`ui/document_dialog.py`** - `Importa da SW` ora ricarica sempre il documento e segnala correttamente quando il mapping aggiorna `title/description` anche senza custom properties.
+- **`macros/sw_bridge.py`** - `import_props` non segnala piu errore se non ci sono custom properties ma il mapping ha aggiornato i campi PDM.
+- **`ui/sw_config_dialog.py`** - alias default mapping allineati ai nuovi fallback (`Subject`, `Comments`, `Author`, `Date`).
+- **`config.py`** - versione applicazione aggiornata a `2.10.17`.
+
+### v2.10.16
+**Mappature proprieta estese: codice, stato, creato da, data**
+
+- **`ui/sw_config_dialog.py`** - tab **`Mappature proprieta`** estesa con i campi PDM `code`, `state`, `created_by`, `created_at`, mostrando esplicitamente il nome proprieta PDM in riga.
+- **`core/properties_manager.py`** - mapping normalizzato esteso ai nuovi campi e sync PDM->SW aggiornata per esportare `code`, `state`, `created_by` (nome utente) e `created_at`.
+- **`config.py`** - versione applicazione aggiornata a `2.10.16`.
+
+### v2.10.15
+**Mappature proprieta PDM <-> SolidWorks + sync centralizzata**
+
+- **`ui/sw_config_dialog.py`** - aggiunta tab **`Mappature proprieta`** in Configurazione SolidWorks per mappare i campi PDM fondamentali (`revision`, `title`, `description`) con i nomi proprieta SolidWorks, direzione sync e flag `Forza PDM`.
+- **`config.py`** - aggiunta chiave profilo `sw_property_mapping` (mappature diverse per ambiente/profilo).
+- **`core/properties_manager.py`** - introdotti metodi centralizzati `get_property_mapping`, `resolve_property_owner_doc`, `sync_sw_to_pdm`, `sync_pdm_to_sw`.
+- **`core/properties_manager.py`** - regola DRW: i campi fondamentali PDM usano come owner il PRT/ASM padre (quando disponibile); le custom del DRW restano importate in `Proprieta SW` del documento.
+- **`ui/document_dialog.py`** - `_import_props_from_sw` ora usa la sync centralizzata invece del salvataggio raw.
+- **`macros/sw_bridge.py`** - pre-checkin aggiornato: import SW->PDM + enforce revisione PDM->SW prima dell'archiviazione.
+
+### v2.10.14
+**Nuova tab dedicata ai non codificati**
+
+- **`ui/main_window.py`** - aggiunta terza tab **`🗂️ Non codificati`** oltre a Archivio CAD e Workspace.
+- **`ui/archive_view.py`** - refactor con modalita `view_mode`: la tab Archivio CAD mostra solo codificati, la nuova tab mostra solo non codificati.
+- **`ui/main_window.py`** - toolbar (Checkout/Check-in/Workflow) abilitata anche quando è attiva la tab Non codificati.
+
+### v2.10.13
+**Archivio CAD: separazione record non codificati**
+
+- **`ui/archive_view.py`** - `refresh`: i documenti non codificati non vengono piu mostrati nei nodi codice dell'Archivio CAD principale.
+- **`ui/archive_view.py`** - aggiunta cartella top-level **"📁 Non codificati"** con elenco dedicato dei record non codificati.
+- **`ui/archive_view.py`** - conteggio in footer aggiornato con metrica separata `Non codificati: N`.
+
+### v2.10.12
+**Visualizzazione BOM gerarchica**
+
+- **`ui/document_dialog.py`** - `_refresh_bom`: la BOM viene mostrata in ordine gerarchico DFS con indentazione dei sottoassiemi/sottocomponenti.
+- **`ui/document_dialog.py`** - `_del_component`: rimozione corretta della relazione selezionata anche quando la riga appartiene a un livello annidato (usa `parent_id, child_id` della riga).
+- **`ui/detail_panel.py`** - tab Struttura aggiornata con vista gerarchica read-only coerente col dialog documento.
+
+### v2.10.11
+**Fix import ASM annullata su riferimenti non codificati**
+
+- **`ui/asm_import_wizard.py`** - `_validate_asm_references`: la validazione hard ora controlla solo riferimenti che richiedono rinomina file (componenti codificati), evitando false anomalie sui non codificati.
+- **`ui/asm_import_wizard.py`** - `_fix_asm_references`: il replace forzato dei riferimenti viene applicato solo ai file effettivamente rinominati.
+- Risolto il caso mostrato in UI: import non più annullata quando restano riferimenti ai componenti non codificati.
+
+### v2.10.10
+**Import struttura ASM: BOM completa anche per non codificati**
+
+- **`ui/asm_import_wizard.py`** - aggiunto `_ensure_bom_document_map`: prima del link BOM, ogni nodo dell'ASM viene mappato a un documento PDM (riuso se esiste, creazione automatica documento non codificato se assente).
+- **`ui/asm_import_wizard.py`** - `_import`: la creazione relazioni BOM ora include tutto il contenuto dell'assieme, anche i componenti non selezionati per codifica.
+- **`ui/asm_import_wizard.py`** - messaggio finale arricchito con conteggi: non codificati creati/riusati nel DB.
+
+### v2.10.9
+**Fix import token `SW-*` non espressi come `$PRP`**
+
+- **`core/properties_manager.py`** - `_read_prop_value`: aggiunto tentativo primario con `Get6/Get5` byref per ottenere il valore valutato reale in modo generico (copre i token SW nella maggior parte dei casi).
+- **`core/properties_manager.py`** - aggiunti `_parse_sw_token_expression` e `_resolve_sw_token_expression` per risolvere token `SW-*` grezzi (es. `"SW-Mass@..."`) quando restano non valutati.
+- **`core/properties_manager.py`** - supporto esplicito a `SW-Mass`, `SW-Volume`, `SW-Density`, `SW-SurfaceArea` via `CreateMassProperty()` come fallback.
+
+### v2.10.8
+**Fix import proprieta linkata `SW-File Name`**
+
+- **`core/properties_manager.py`** - `_read_summary_info`: aggiunta gestione campi file-based (`SW-File Name` e alias) risolti dal path/titolo del documento SolidWorks, evitando il salvataggio dell'espressione `$PRP:"SW-File Name"`.
+- **`core/properties_manager.py`** - supportata anche variante senza estensione (`File Name without extension`) quando presente nei link.
+
+### v2.10.7
+**Fix esteso import proprieta linkate SolidWorks**
+
+- **`core/properties_manager.py`** - parser link expression generalizzato: supporta `$PRP:"..."`, `$PRPSHEET:"..."`, varianti con apici singoli e target senza apici.
+- **`core/properties_manager.py`** - risoluzione SummaryInfo estesa: supporta alias sia con prefisso `SW-` sia standard (`Author`, `Title`, `Subject`, `Company` tramite custom, ecc.).
+- **`core/properties_manager.py`** - supporto target con suffisso `@config/file` e risoluzione cross-config tramite lookup su più `CustomPropertyManager`.
+
+### v2.10.6
+**Fix import proprieta linkate SolidWorks (`$PRP`)**
+
+- **`core/properties_manager.py`** - aggiunta risoluzione esplicita delle espressioni `$PRP:"..."`/`$PRPSHEET:"..."` durante l'import, con supporto ai campi SummaryInfo (`SW-Author`, `SW-Title`, ecc.) e fallback su custom property target.
+- **`core/properties_manager.py`** - `_read_custom_props`: se il valore letto e una link expression, ora viene risolto al valore finale prima del salvataggio nel DB.
+
+### v2.10.5
+**Fix import custom properties da SolidWorks (valore valutato)**
+
+- **`core/properties_manager.py`** - `_read_custom_props`: la lettura proprieta ora privilegia il valore risolto (evaluated) invece dell'espressione raw (`$PRP:"..."`) quando disponibile.
+- **`core/properties_manager.py`** - aggiunti helper `_read_prop_value`, `_best_value_from_result`, `_is_link_expr` con fallback compatibile tra API COM SW (`Get6`, `Get5`, `Get4`, `Get2`, `Get`).
+
+### v2.10.4
+**Import ASM: copia in workspace anche dei componenti non codificati**
+
+- **`ui/asm_import_wizard.py`** - `_fallback_copy_files`: esteso il fallback (quando Pack and Go non e disponibile) per copiare in workspace anche i file SolidWorks non selezionati per la codifica, mantenendo il nome originale.
+- **`ui/asm_import_wizard.py`** - `_fallback_copy_files`: aggiunti controlli anti-collisione con file codificati e deduplica per evitare sovrascritture/duplicati.
+
+### v2.10.3
+**Fix apertura documento in SolidWorks (no nuova sessione duplicata)**
+
+- **`ui/detail_panel.py`** - `_open_in_solidworks`: sostituita l'apertura diretta via `subprocess` su `SLDWORKS.exe` con apertura COM (`GetActiveObject`/`Dispatch` + `OpenDoc`) per riusare la sessione SW già aperta quando disponibile.
+- **`ui/detail_panel.py`** - `_open_in_solidworks`: mantenuto fallback a eseguibile configurato / `cmd start` solo se COM non disponibile.
+
+### v2.10.2
+**Wizard import ASM: coerenza selezione e preview codici**
+
+- **`ui/asm_import_wizard.py`** - `_is_row_checked` / `_set_row_checked` / `_on_check_changed`: radice ASM resa obbligatoria in ogni scenario (anche con Seleziona tutti / Deseleziona tutti), con ripristino forzato dello stato.
+- **`ui/asm_import_wizard.py`** - `_refresh_preview_codes` + `_update_row_code`: anteprima codici consolidata in modalita sequenziale simulata globale, evitando codici duplicati in tabella durante la selezione.
+- **`ui/asm_import_wizard.py`** - `_apply_global`, `_select_all`, `_deselect_all`: refresh preview unico a fine operazione e mantenimento evidenziazione righe attive con checkbox selezionata.
+
+---
+### v2.10.1
+**Importazione ASM fail-safe (no codici inutilizzabili)**
+
+- **`ui/asm_import_wizard.py`** - `_import`: introdotto flusso fail-safe con rollback completo in caso di errore (file workspace/archivio, documenti DB creati nella sessione e contatori codifica).
+- **`ui/asm_import_wizard.py`** - `_import`: validazione hard dei riferimenti interni ASM prima del commit finale; se resta anche un solo riferimento ai file originali l'import viene annullato.
+- **`ui/asm_import_wizard.py`** - `_import`: archiviazione limitata ai soli documenti creati nell'import corrente (i documenti gia presenti nel PDM non vengono sovrascritti).
+- **`ui/asm_import_wizard.py`** - `_run_pack_and_go`: aggiunto fallback di chiamata COM `GetPackAndGo(status)` per compatibilita con versioni SW in cui il parametro stato e richiesto.
+- **`ui/asm_import_wizard.py`** - `_fix_asm_references`: sostituzione riferimenti tramite `ISldWorks.ReplaceReferencedDocument` con documento ASM chiuso (modalita piu affidabile per COM).
+
+---
 ### v2.10.0
 **Pannello dettaglio nodo-codice rinnovato + fix thumbnail**
 

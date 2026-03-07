@@ -308,9 +308,8 @@ class AsmImportWizard(QDialog):
         for i, node in enumerate(self._nodes):
             self.table.insertRow(i)
             self._set_row(i, node)
-        # Forza aggiornamento codici per tutte le righe dopo la creazione completa
-        for i in range(len(self._nodes)):
-            self._update_row_code(i)
+        # Refresh unico: anteprime sequenziali + evidenziazione righe attive
+        self._refresh_preview_codes()
 
     def _set_row(self, row: int, node: dict):
         depth = node["depth"]
@@ -414,7 +413,7 @@ class AsmImportWizard(QDialog):
             lambda _, r=row: self._update_row_code(r)
         )
 
-        self._update_row_code(row)
+        self._apply_row_checked_style(row, self._is_row_checked(row))
 
     def _fill_group_combo(self, combo: QComboBox, machine_id):
         combo.blockSignals(True)
@@ -427,69 +426,157 @@ class AsmImportWizard(QDialog):
                 combo.addItem("(nessun gruppo)", None)
         combo.blockSignals(False)
 
+    def _apply_row_checked_style(self, row: int, checked: bool):
+        """Evidenzia le righe attive (checkbox selezionata)."""
+        bg_active = QColor("#313244")
+        bg_base = QColor("#181825") if row % 2 == 0 else QColor("#1a1a2e")
+        bg = bg_active if checked else bg_base
+
+        for col in range(self.table.columnCount()):
+            item = self.table.item(row, col)
+            if item:
+                item.setBackground(bg)
+
+        for col in (_COL_INC, _COL_MAC, _COL_GRP, _COL_LVL):
+            w = self.table.cellWidget(row, col)
+            if w:
+                w.setStyleSheet(f"background-color: {bg.name()};")
+
+    def _peek_counter_value(self, counter_type: str, machine_id, group_id) -> int:
+        row = self.db.fetchone(
+            """SELECT last_value
+               FROM hierarchical_counters
+               WHERE counter_type=? AND machine_id IS ? AND group_id IS ?""",
+            (counter_type, machine_id, group_id),
+        )
+        return int(row["last_value"]) if row else 0
+
+    def _refresh_preview_codes(self):
+        """
+        Ricalcola tutte le preview in modo sequenziale simulato.
+        Le righe selezionate mostrano codici progressivi univoci.
+        """
+        counter_state: dict[tuple[str, int, Optional[int]], int] = {}
+        machine_code_cache: dict[int, str] = {}
+        group_code_cache: dict[int, str] = {}
+
+        for row in range(self.table.rowCount()):
+            item = self.table.item(row, _COL_CODE)
+            if not item:
+                continue
+
+            checked = self._is_row_checked(row)
+            self._apply_row_checked_style(row, checked)
+
+            node = self._nodes[row] if row < len(self._nodes) else None
+            if node and node.get("_existing_id"):
+                existing = self.db.fetchone(
+                    "SELECT code FROM documents WHERE id=?", (node["_existing_id"],)
+                )
+                item.setText(existing["code"] if existing else "gia nel PDM")
+                item.setForeground(QColor("#a6e3a1"))
+                continue
+
+            if not checked:
+                item.setText("—")
+                item.setForeground(QColor("#6c7086"))
+                continue
+
+            cmb_mac = self.table.cellWidget(row, _COL_MAC)
+            cmb_grp = self.table.cellWidget(row, _COL_GRP)
+            cmb_lvl = self.table.cellWidget(row, _COL_LVL)
+            if not (cmb_mac and cmb_grp and cmb_lvl):
+                item.setText("—")
+                item.setForeground(QColor("#6c7086"))
+                continue
+
+            mid = cmb_mac.currentData()
+            gid = cmb_grp.currentData()
+            lvl_idx = cmb_lvl.currentIndex()
+            subtype = _LEVEL_OPTIONS[lvl_idx][1] if 0 <= lvl_idx < len(_LEVEL_OPTIONS) else "PRT"
+            key = self._counter_key_for_row(subtype, mid, gid)
+
+            if not mid or not key:
+                item.setText("ERR: selezione")
+                item.setForeground(QColor("#f38ba8"))
+                continue
+
+            counter_type, key_mid, key_gid = key
+            state_key = (counter_type, key_mid, key_gid)
+            cur = counter_state.get(state_key)
+            if cur is None:
+                cur = self._peek_counter_value(counter_type, key_mid, key_gid)
+
+            if counter_type == "SUBGROUP":
+                nxt = 9999 if cur == 0 else cur - 1
+            else:
+                nxt = cur + 1
+            counter_state[state_key] = nxt
+
+            try:
+                if key_mid not in machine_code_cache:
+                    m = self.coding.get_machine(key_mid)
+                    if not m:
+                        raise ValueError("macchina non trovata")
+                    machine_code_cache[key_mid] = m["code"]
+                m_code = machine_code_cache[key_mid]
+
+                if subtype == "ASM_MACH":
+                    code_text = f"{m_code}_V{nxt:03d}"
+                else:
+                    if key_gid is None:
+                        raise ValueError("gruppo mancante")
+                    if key_gid not in group_code_cache:
+                        g = self.coding.get_group(key_gid)
+                        if not g:
+                            raise ValueError("gruppo non trovato")
+                        group_code_cache[key_gid] = g["code"]
+                    g_code = group_code_cache[key_gid]
+
+                    if subtype == "ASM_GRP":
+                        code_text = f"{m_code}_{g_code}-V{nxt:03d}"
+                    else:
+                        code_text = f"{m_code}_{g_code}-{nxt:04d}"
+
+                        if subtype == "PRT" and nxt > 8999:
+                            raise ValueError("PART esaurito")
+                        if subtype == "ASM_SUB" and nxt < 9000:
+                            raise ValueError("SUBGROUP esaurito")
+
+                item.setText(code_text)
+                item.setForeground(QColor("#89b4fa"))
+            except Exception as e:
+                item.setText(f"ERR: {e}")
+                item.setForeground(QColor("#f38ba8"))
+
     # ------------------------------------------------------------------
     # Segnali riga
     # ------------------------------------------------------------------
     def _on_check_changed(self, row: int, state: int):
+        if row < len(self._nodes) and self._nodes[row].get("depth", 1) == 0:
+            self._set_row_checked(row, True, emit=False)
+            self._refresh_preview_codes()
+            return
+
         checked = (state == Qt.CheckState.Checked.value)
         for col in (_COL_MAC, _COL_GRP, _COL_LVL):
             w = self.table.cellWidget(row, col)
             if w:
                 w.setEnabled(checked)
+        self._apply_row_checked_style(row, checked)
+        self._refresh_preview_codes()
 
     def _on_row_machine_changed(self, row: int):
         cmb_mac = self.table.cellWidget(row, _COL_MAC)
         cmb_grp = self.table.cellWidget(row, _COL_GRP)
         if cmb_mac and cmb_grp:
             self._fill_group_combo(cmb_grp, cmb_mac.currentData())
-        self._update_row_code(row)
+        self._refresh_preview_codes()
 
     def _update_row_code(self, row: int):
-        """Aggiorna l'anteprima del codice nella colonna _COL_CODE per la riga `row`."""
-        node = self._nodes[row] if row < len(self._nodes) else None
-        if node and node.get("_existing_id"):
-            # Già in PDM: mostra il codice esistente
-            existing = self.db.fetchone(
-                "SELECT code FROM documents WHERE id=?", (node["_existing_id"],)
-            )
-            code_text = existing["code"] if existing else "già nel PDM"
-            item = self.table.item(row, _COL_CODE)
-            if item:
-                item.setText(code_text)
-                item.setForeground(QColor("#a6e3a1"))
-            return
-
-        cmb_mac = self.table.cellWidget(row, _COL_MAC)
-        cmb_grp = self.table.cellWidget(row, _COL_GRP)
-        cmb_lvl = self.table.cellWidget(row, _COL_LVL)
-        if not (cmb_mac and cmb_grp and cmb_lvl):
-            return
-
-        mid = cmb_mac.currentData()
-        gid = cmb_grp.currentData()
-        lvl_idx = cmb_lvl.currentIndex()
-        if lvl_idx < 0 or lvl_idx >= len(_LEVEL_OPTIONS):
-            return
-        _, subtype, level = _LEVEL_OPTIONS[lvl_idx]
-
-        item = self.table.item(row, _COL_CODE)
-        if not item:
-            return
-
-        if not mid:
-            item.setText("—")
-            return
-
-        try:
-            preview = self.coding.preview_code(
-                level, "ASM" if "ASM" in subtype else "PRT",
-                mid, gid if level > 0 else None,
-            )
-            item.setText(preview)
-            item.setForeground(QColor("#89b4fa"))
-        except Exception as e:
-            item.setText(f"ERR: {e}")
-            item.setForeground(QColor("#f38ba8"))
+        # Le preview dipendono dai contatori simulati e dall'ordine righe:
+        # aggiorniamo sempre l'intera tabella.
+        self._refresh_preview_codes()
 
     # ------------------------------------------------------------------
     # Azioni globali
@@ -529,21 +616,25 @@ class AsmImportWizard(QDialog):
             cmb_lvl.blockSignals(True)
             cmb_lvl.setCurrentIndex(g_lvl)
             cmb_lvl.blockSignals(False)
-            # Aggiorna anteprima
-            self._update_row_code(row)
+
+        self._refresh_preview_codes()
 
     def _select_all(self):
         for row in range(self.table.rowCount()):
-            self._set_row_checked(row, True)
+            self._set_row_checked(row, True, emit=False)
+        self._refresh_preview_codes()
 
     def _deselect_all(self):
         for row in range(self.table.rowCount()):
-            self._set_row_checked(row, False)
+            self._set_row_checked(row, False, emit=False)
+        self._refresh_preview_codes()
 
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
     def _is_row_checked(self, row: int) -> bool:
+        if 0 <= row < len(self._nodes) and self._nodes[row].get("depth", 1) == 0:
+            return True
         w = self.table.cellWidget(row, _COL_INC)
         if w:
             chk = w.findChild(QCheckBox)
@@ -551,12 +642,24 @@ class AsmImportWizard(QDialog):
                 return chk.isChecked()
         return False
 
-    def _set_row_checked(self, row: int, checked: bool):
+    def _set_row_checked(self, row: int, checked: bool, emit: bool = True):
+        if 0 <= row < len(self._nodes) and self._nodes[row].get("depth", 1) == 0:
+            checked = True
         w = self.table.cellWidget(row, _COL_INC)
         if w:
             chk = w.findChild(QCheckBox)
             if chk:
-                chk.setChecked(checked)
+                if emit:
+                    chk.setChecked(checked)
+                else:
+                    chk.blockSignals(True)
+                    chk.setChecked(checked)
+                    chk.blockSignals(False)
+                    for col in (_COL_MAC, _COL_GRP, _COL_LVL):
+                        cw = self.table.cellWidget(row, col)
+                        if cw:
+                            cw.setEnabled(checked)
+                    self._apply_row_checked_style(row, checked)
 
     def _check_existing(self, node: dict) -> Optional[dict]:
         """Cerca nel DB un documento con lo stesso stem del file."""
@@ -577,8 +680,234 @@ class AsmImportWizard(QDialog):
     # ------------------------------------------------------------------
     # IMPORTAZIONE
     # ------------------------------------------------------------------
+    def _counter_key_for_row(self, subtype: str, machine_id, group_id):
+        if not machine_id:
+            return None
+        if subtype == "ASM_MACH":
+            return ("VERSION", machine_id, None)
+        if group_id is None:
+            return None
+        if subtype == "ASM_GRP":
+            return ("VERSION", machine_id, group_id)
+        if subtype == "ASM_SUB":
+            return ("SUBGROUP", machine_id, group_id)
+        return ("PART", machine_id, group_id)
+
+    def _snapshot_counters(self, rows_to_import: list[dict]) -> dict:
+        """Snapshot dei contatori usati dall'import corrente."""
+        keys: set = set()
+        for item in rows_to_import:
+            if item.get("existing_id"):
+                continue
+            key = self._counter_key_for_row(
+                item.get("subtype", ""),
+                item.get("machine_id"),
+                item.get("group_id"),
+            )
+            if key:
+                keys.add(key)
+
+        snap: dict = {}
+        for counter_type, machine_id, group_id in keys:
+            row = self.db.fetchone(
+                """SELECT id, last_value
+                   FROM hierarchical_counters
+                   WHERE counter_type=? AND machine_id IS ? AND group_id IS ?""",
+                (counter_type, machine_id, group_id),
+            )
+            snap[(counter_type, machine_id, group_id)] = {
+                "exists": bool(row),
+                "value": int(row["last_value"]) if row else 0,
+            }
+        return snap
+
+    def _rollback_failed_import(self,
+                                created_doc_ids: list[int],
+                                counter_snapshot: dict,
+                                ws_cleanup: list[Path],
+                                archive_cleanup: list[Path]) -> list[str]:
+        """Rollback best-effort di file, documenti e contatori."""
+        notes: list[str] = []
+        rb_errors: list[str] = []
+
+        removed_ws = 0
+        for fp in ws_cleanup:
+            try:
+                if fp.exists():
+                    fp.unlink()
+                    removed_ws += 1
+            except Exception as e:
+                rb_errors.append(f"workspace {fp.name}: {e}")
+        if removed_ws:
+            notes.append(f"- File workspace rimossi: {removed_ws}")
+
+        removed_arch = 0
+        for fp in archive_cleanup:
+            try:
+                if fp.exists():
+                    fp.unlink()
+                    removed_arch += 1
+            except Exception as e:
+                rb_errors.append(f"archivio {fp.name}: {e}")
+        if removed_arch:
+            notes.append(f"- File archivio rimossi: {removed_arch}")
+
+        if created_doc_ids:
+            placeholders = ",".join("?" for _ in created_doc_ids)
+            p1 = tuple(created_doc_ids)
+            p2 = tuple(created_doc_ids) + tuple(created_doc_ids)
+
+            try:
+                self.db.execute(
+                    f"""DELETE FROM asm_components
+                        WHERE parent_id IN ({placeholders})
+                           OR child_id  IN ({placeholders})""",
+                    p2,
+                )
+            except Exception as e:
+                rb_errors.append(f"asm_components: {e}")
+
+            for table in (
+                "document_properties",
+                "document_versions",
+                "checkout_log",
+                "workspace_files",
+                "workflow_history",
+            ):
+                try:
+                    self.db.execute(
+                        f"DELETE FROM {table} WHERE document_id IN ({placeholders})",
+                        p1,
+                    )
+                except Exception as e:
+                    rb_errors.append(f"{table}: {e}")
+
+            try:
+                self.db.execute(
+                    f"DELETE FROM documents WHERE id IN ({placeholders})",
+                    p1,
+                )
+                notes.append(f"- Documenti DB eliminati: {len(created_doc_ids)}")
+            except Exception as e:
+                rb_errors.append(f"documents: {e}")
+
+        restored = 0
+        for (counter_type, machine_id, group_id), row in counter_snapshot.items():
+            try:
+                if row.get("exists"):
+                    self.coding.reset_counter(
+                        counter_type, machine_id, group_id, int(row.get("value", 0))
+                    )
+                else:
+                    self.db.execute(
+                        """DELETE FROM hierarchical_counters
+                           WHERE counter_type=? AND machine_id IS ? AND group_id IS ?""",
+                        (counter_type, machine_id, group_id),
+                    )
+                restored += 1
+            except Exception as e:
+                rb_errors.append(f"counter {counter_type}/{machine_id}/{group_id}: {e}")
+        if restored:
+            notes.append(f"- Contatori ripristinati: {restored}")
+
+        if rb_errors:
+            notes.append("- Errori rollback: " + "; ".join(rb_errors[:6]))
+        return notes
+
+    def _validate_asm_references(self, ws_root: Path,
+                                 path_to_code: dict[str, tuple]) -> list[str]:
+        """
+        Verifica hard: nessun ASM copiato deve referenziare i path originali
+        mappati in questa importazione.
+        """
+        orig_to_new: dict[str, str] = {}
+        for orig_upper, (code, _doc_id, ext) in path_to_code.items():
+            orig_to_new[orig_upper] = str(ws_root / (code + ext)).replace("/", "\\")
+
+        # Validazione hard solo per i componenti rinominati (codificati).
+        required_refs: set[str] = set()
+        for orig_upper, new_fp in orig_to_new.items():
+            old_name = Path(orig_upper).name.upper()
+            new_name = Path(new_fp).name.upper()
+            if old_name != new_name:
+                required_refs.add(orig_upper)
+
+        try:
+            import win32com.client as win32
+            import pythoncom
+            sw = win32.GetActiveObject("SldWorks.Application")
+        except Exception as e:
+            raise RuntimeError(f"Validazione riferimenti non disponibile: {e}")
+
+        unresolved: list[str] = []
+        seen_unresolved: set = set()
+
+        for _orig_upper, (code, _doc_id, ext) in path_to_code.items():
+            if ext.upper() != ".SLDASM":
+                continue
+            asm_ws = ws_root / (code + ext)
+            if not asm_ws.exists():
+                unresolved.append(f"{asm_ws.name}: file ASM non presente in workspace")
+                continue
+
+            asm_str = str(asm_ws).replace("/", "\\")
+            asm_model = None
+            opened_here = False
+            try:
+                try:
+                    asm_model = sw.GetOpenDocumentByName(asm_str)
+                except Exception:
+                    asm_model = None
+
+                if asm_model is None:
+                    errors_v = win32.VARIANT(pythoncom.VT_BYREF | pythoncom.VT_I4, 0)
+                    warnings_v = win32.VARIANT(pythoncom.VT_BYREF | pythoncom.VT_I4, 0)
+                    asm_model = sw.OpenDoc6(asm_str, 2, 1, "", errors_v, warnings_v)
+                    if asm_model is None:
+                        unresolved.append(f"{asm_ws.name}: impossibile aprire ASM per validazione")
+                        continue
+                    opened_here = True
+
+                try:
+                    raw = asm_model.GetComponents(False)
+                    comps = list(raw) if raw is not None else []
+                except Exception:
+                    comps = []
+
+                for comp in comps:
+                    try:
+                        fp = comp.GetPathName
+                        if callable(fp):
+                            fp = fp()
+                        fp = str(fp or "").strip()
+                    except Exception:
+                        fp = ""
+                    if not fp:
+                        continue
+                    fp_upper = fp.upper()
+                    if fp_upper in required_refs:
+                        key = f"{asm_ws.name}|{fp_upper}"
+                        if key in seen_unresolved:
+                            continue
+                        seen_unresolved.add(key)
+                        unresolved.append(
+                            f"{asm_ws.name}: riferimento non aggiornato -> {Path(fp).name}"
+                        )
+            finally:
+                if opened_here and asm_model:
+                    try:
+                        title = asm_model.GetTitle()
+                        if callable(title):
+                            title = title()
+                        if title:
+                            sw.CloseDoc(title)
+                    except Exception:
+                        pass
+
+        return unresolved
+
     def _import(self):
-        """Orchestrate l'intera operazione di importazione."""
+        """Orchestra l'importazione in modalita fail-safe (rollback completo)."""
         # 1) Raccogli righe selezionate con codice proposto
         rows_to_import: list[dict] = []
         for row in range(self.table.rowCount()):
@@ -587,12 +916,10 @@ class AsmImportWizard(QDialog):
             node = self._nodes[row]
             is_root = (node.get("depth", 1) == 0)
 
-            # Se già in PDM usa il doc_id esistente (no nuova creazione)
             existing_id = node.get("_existing_id")
             code_item = self.table.item(row, _COL_CODE)
             proposed_code = code_item.text() if code_item else ""
 
-            # Ricalcola se ancora "—" (può accadere se la tabella non era visibile durante il populate)
             if proposed_code in ("—", "") and not existing_id:
                 self._update_row_code(row)
                 proposed_code = code_item.text() if code_item else ""
@@ -606,7 +933,7 @@ class AsmImportWizard(QDialog):
                             "Verificare che la macchina sia selezionata nella prima riga."
                         )
                         return
-                    continue  # salta componenti senza codice
+                    continue
 
             cmb_mac = self.table.cellWidget(row, _COL_MAC)
             cmb_grp = self.table.cellWidget(row, _COL_GRP)
@@ -619,14 +946,14 @@ class AsmImportWizard(QDialog):
             doc_level = _LEVEL_OPTIONS[lvl_idx][2] if 0 <= lvl_idx < len(_LEVEL_OPTIONS) else 2
 
             rows_to_import.append({
-                "row":          row,
-                "node":         node,
-                "existing_id":  existing_id,
+                "row": row,
+                "node": node,
+                "existing_id": existing_id,
                 "proposed_code": proposed_code,
-                "machine_id":   mid,
-                "group_id":     gid,
-                "subtype":      subtype,
-                "doc_level":    doc_level,
+                "machine_id": mid,
+                "group_id": gid,
+                "subtype": subtype,
+                "doc_level": doc_level,
             })
 
         if not rows_to_import:
@@ -637,7 +964,6 @@ class AsmImportWizard(QDialog):
             )
             return
 
-        # Chiedi workspace di destinazione
         from config import load_local_config
         cfg = load_local_config()
         ws_root_str = cfg.get("sw_workspace", "")
@@ -649,55 +975,61 @@ class AsmImportWizard(QDialog):
             return
         ws_root = Path(ws_root_str)
 
-        # 2) Genera codici reali e crea documenti nel DB
         progress = QProgressDialog(
-            "Creazione documenti nel DB…", "Annulla", 0, len(rows_to_import) * 3, self
+            "Creazione documenti nel DB...", "Annulla", 0, len(rows_to_import) * 4, self
         )
         progress.setWindowTitle("Importazione ASM")
         progress.setMinimumDuration(0)
         progress.setWindowModality(Qt.WindowModality.WindowModal)
         progress.setValue(0)
 
+        counter_snapshot = self._snapshot_counters(rows_to_import)
+        created_doc_ids: list[int] = []
+        created_doc_id_set: set[int] = set()
+        ws_cleanup: list[Path] = []
+        archive_cleanup: list[Path] = []
+
         step = 0
-        # Mappa path_originale_upper → (new_code, doc_id, ext)
         path_to_code: dict[str, tuple[str, int, str]] = {}
-        # Mappa stem_upper → new_code (per Pack and Go rename)
         stem_to_code: dict[str, str] = {}
 
         created = 0
-        errors  = []
+        errors = []
+        pgo_ok = False
+        pgo_error = ""
+        pgo_count = 0
+        fixed_refs = 0
+        archived = 0
+        bom_reused_uncoded = 0
+        bom_created_uncoded = 0
 
-        for item in rows_to_import:
-            if progress.wasCanceled():
-                break
-            step += 1
-            progress.setValue(step)
+        try:
+            for item in rows_to_import:
+                if progress.wasCanceled():
+                    raise RuntimeError("Importazione annullata dall'utente.")
+                step += 1
+                progress.setValue(step)
 
-            node       = item["node"]
-            existing_id = item["existing_id"]
-            subtype    = item["subtype"]
-            mid        = item["machine_id"]
-            gid        = item["group_id"]
-            doc_level  = item["doc_level"]
-            orig_path  = node["path"]
-            ext        = Path(orig_path).suffix if orig_path else ".SLDPRT"
-            from config import SW_EXTENSIONS
-            doc_type_from_ext = SW_EXTENSIONS.get(ext.upper(), "Parte")
+                node = item["node"]
+                existing_id = item["existing_id"]
+                subtype = item["subtype"]
+                mid = item["machine_id"]
+                gid = item["group_id"]
+                doc_level = item["doc_level"]
+                orig_path = node["path"]
+                ext = Path(orig_path).suffix if orig_path else ".SLDPRT"
 
-            if existing_id:
-                # Usa documento già esistente
-                existing_doc = self.db.fetchone(
-                    "SELECT code, file_ext FROM documents WHERE id=?", (existing_id,)
-                )
-                if existing_doc:
-                    code = existing_doc["code"]
-                    real_ext = existing_doc.get("file_ext") or ext
-                    path_to_code[orig_path.upper()] = (code, existing_id, real_ext)
-                    stem_to_code[Path(orig_path).stem.upper()] = code
-                continue
+                if existing_id:
+                    existing_doc = self.db.fetchone(
+                        "SELECT code, file_ext FROM documents WHERE id=?", (existing_id,)
+                    )
+                    if existing_doc:
+                        code = existing_doc["code"]
+                        real_ext = existing_doc.get("file_ext") or ext
+                        path_to_code[orig_path.upper()] = (code, existing_id, real_ext)
+                        stem_to_code[Path(orig_path).stem.upper()] = code
+                    continue
 
-            # Genera codice reale
-            try:
                 if subtype == "ASM_MACH":
                     code = self.coding.next_code_liv0(mid)
                     doc_type = "Assieme"
@@ -712,13 +1044,10 @@ class AsmImportWizard(QDialog):
                     code = self.coding.next_code_liv2_part(mid, gid)
                     doc_type = "Parte"
 
-                # Il tipo reale è dettato dall'estensione del file
                 if ext.upper() == ".SLDASM":
                     doc_type = "Assieme"
                 elif ext.upper() == ".SLDDRW":
                     doc_type = "Disegno"
-                else:
-                    doc_type = doc_type  # già corretto
 
                 stem = Path(orig_path).stem if orig_path else node["name"]
                 doc_id = self.files.create_document(
@@ -726,71 +1055,93 @@ class AsmImportWizard(QDialog):
                     title=stem,
                     machine_id=mid, group_id=gid, doc_level=doc_level,
                 )
+                created_doc_ids.append(doc_id)
+                created_doc_id_set.add(doc_id)
                 path_to_code[orig_path.upper()] = (code, doc_id, ext)
                 stem_to_code[Path(orig_path).stem.upper()] = code
                 created += 1
 
-                # Aggiorna la tabella con il codice reale
                 code_item = self.table.item(item["row"], _COL_CODE)
                 if code_item:
                     code_item.setText(code)
 
-            except Exception as e:
-                errors.append(f"{node['name']}: {e}")
-                logging.error("Errore creazione doc %s: %s", node["name"], e, exc_info=True)
+            if not path_to_code:
+                raise RuntimeError("Nessun percorso valido da importare.")
 
-        if progress.wasCanceled():
-            QMessageBox.warning(self, "Annullato", "Importazione annullata dall'utente.")
-            return
+            seen_ws: set = set()
+            for _k, (code, _doc_id, ext) in path_to_code.items():
+                fp = ws_root / (code + ext)
+                key = str(fp).upper()
+                if key in seen_ws:
+                    continue
+                seen_ws.add(key)
+                if not fp.exists():
+                    ws_cleanup.append(fp)
 
-        # 3) Pack and Go: copia workspace con rinomina e aggiornamento riferimenti
-        progress.setLabelText("Copia struttura in workspace (Pack and Go)…")
-        pgo_ok    = False
-        pgo_error = ""
-        pgo_count = 0
-
-        try:
-            pgo_count = self._run_pack_and_go(ws_root, stem_to_code)
-            pgo_ok = True
-            logging.info("Pack and Go OK: %d file copiati", pgo_count)
-        except Exception as e:
-            pgo_error = str(e)
-            logging.error("Pack and Go fallito: %s", e, exc_info=True)
-
-        # Fallback: se Pack and Go non disponibile, copia diretta (senza aggiorn. riferimenti)
-        if not pgo_ok:
-            progress.setLabelText("Copia diretta file in workspace (fallback)…")
-            fallback_count = self._fallback_copy_files(ws_root, path_to_code)
-            logging.info("Fallback copia diretta: %d file copiati", fallback_count)
-            pgo_count = fallback_count
-            # Anche con fallback procediamo ad archiviare ciò che c'è in workspace
-
-        step = len(rows_to_import) * 2
-        progress.setValue(step)
-
-        # 3b) Fix riferimenti interni ASM (safety net: funziona sia dopo Pack&Go riuscito
-        #     che dopo fallback; se i riferimenti sono già corretti non modifica nulla)
-        progress.setLabelText("Aggiornamento riferimenti interni ASM…")
-        fixed_refs = self._fix_asm_references(ws_root, path_to_code)
-        if fixed_refs:
-            logging.info("Riferimenti interni aggiornati in %d assieme/i", fixed_refs)
-
-        # 4) Archivia i file presenti nella workspace (indipendente da Pack and Go)
-        progress.setLabelText("Archiviazione file nel PDM…")
-        archived = 0
-
-        for k, (code, doc_id, ext) in path_to_code.items():
-            if progress.wasCanceled():
-                break
-            ws_file = ws_root / (code + ext)
-            if not ws_file.exists():
-                logging.warning("File workspace non trovato, skip archiviazione: %s", ws_file)
-                continue
+            progress.setLabelText("Copia struttura in workspace (Pack and Go)...")
             try:
+                pgo_count = self._run_pack_and_go(ws_root, stem_to_code)
+                pgo_ok = True
+                logging.info("Pack and Go OK: %d file copiati", pgo_count)
+            except Exception as e:
+                pgo_error = str(e)
+                logging.error("Pack and Go fallito: %s", e, exc_info=True)
+
+            if not pgo_ok:
+                progress.setLabelText("Copia diretta file in workspace (fallback)...")
+                fallback_count, fallback_created = self._fallback_copy_files(ws_root, path_to_code)
+                for fp in fallback_created:
+                    if fp not in ws_cleanup:
+                        ws_cleanup.append(fp)
+                logging.info("Fallback copia diretta: %d file copiati", fallback_count)
+                pgo_count = fallback_count
+
+            step = len(rows_to_import) * 2
+            progress.setValue(step)
+
+            if pgo_count <= 0:
+                raise RuntimeError("Nessun file copiato in workspace. Importazione interrotta.")
+
+            # Completa mappatura documenti per l'intera struttura ASM:
+            # anche i nodi non codificati vengono collegati in BOM.
+            bom_reused_uncoded, bom_created_uncoded = self._ensure_bom_document_map(
+                path_to_code, created_doc_ids, created_doc_id_set
+            )
+
+            progress.setLabelText("Aggiornamento riferimenti interni ASM...")
+            fixed_refs = self._fix_asm_references(ws_root, path_to_code)
+            if fixed_refs:
+                logging.info("Riferimenti interni aggiornati in %d assieme/i", fixed_refs)
+
+            progress.setLabelText("Validazione riferimenti ASM...")
+            unresolved = self._validate_asm_references(ws_root, path_to_code)
+            if unresolved:
+                preview = "\n".join(unresolved[:12])
+                raise RuntimeError(
+                    "Riferimenti interni ASM non coerenti dopo copia/rinomina.\n"
+                    f"{preview}"
+                )
+
+            progress.setLabelText("Archiviazione file nel PDM...")
+            for _k, (code, doc_id, ext) in path_to_code.items():
+                if progress.wasCanceled():
+                    raise RuntimeError("Importazione annullata dall'utente.")
+                if doc_id not in created_doc_id_set:
+                    continue
+
+                ws_file = ws_root / (code + ext)
+                if not ws_file.exists():
+                    raise RuntimeError(f"File workspace mancante: {ws_file.name}")
+
                 arch_dir = self.sp.archive_path(code, "00")
                 arch_dir.mkdir(parents=True, exist_ok=True)
                 arch_file = arch_dir / ws_file.name
+                arch_preexisting = arch_file.exists()
+
                 shutil.copy2(str(ws_file), str(arch_file))
+                if not arch_preexisting:
+                    archive_cleanup.append(arch_file)
+
                 rel_path = str(arch_file.relative_to(self.sp.root))
                 self.db.execute(
                     """UPDATE documents
@@ -800,23 +1151,37 @@ class AsmImportWizard(QDialog):
                     (arch_file.name, ext, rel_path, doc_id),
                 )
                 archived += 1
-            except Exception as e:
-                errors.append(f"Archiviazione {code}: {e}")
-                logging.error("Archiviazione %s: %s", code, e)
 
-        # 5) Collega BOM (relazioni padre-figlio)
-        self._link_bom(path_to_code)
+            self._link_bom(path_to_code)
 
-        step = len(rows_to_import) * 3
+        except Exception as e:
+            logging.error("Importazione ASM fallita: %s", e, exc_info=True)
+            rb_notes = self._rollback_failed_import(
+                created_doc_ids, counter_snapshot, ws_cleanup, archive_cleanup
+            )
+            progress.close()
+            msg = (
+                "Importazione annullata: operazione non valida o incompleta.\n\n"
+                f"Motivo:\n{e}\n\n"
+                "Rollback eseguito."
+            )
+            if rb_notes:
+                msg += "\n" + "\n".join(rb_notes)
+            QMessageBox.critical(self, "Importazione annullata", msg)
+            return
+
+        step = len(rows_to_import) * 4
         progress.setValue(step)
         progress.close()
 
-        # 6) Riepilogo
-        ref_note = "" if pgo_ok else "\n⚠ Pack and Go non disponibile: file copiati senza aggiornamento riferimenti interni ASM."
+        ref_note = "" if pgo_ok else "\nNota: usato fallback copia diretta + fix riferimenti."
         msg = (
             f"Importazione completata.\n\n"
             f"Documenti creati nel DB:    {created}\n"
+            f"Non codificati creati DB:   {bom_created_uncoded}\n"
+            f"Non codificati riusati DB:  {bom_reused_uncoded}\n"
             f"File copiati in workspace:  {pgo_count}\n"
+            f"ASM con fix riferimenti:    {fixed_refs}\n"
             f"File archiviati nel PDM:    {archived}\n"
             f"\nWorkspace:  {ws_root}"
             f"{ref_note}"
@@ -828,13 +1193,13 @@ class AsmImportWizard(QDialog):
 
         QMessageBox.information(self, "Importazione completata", msg)
         self.accept()
-
     # ------------------------------------------------------------------
     def _fallback_copy_files(self, ws_root: Path,
-                              path_to_code: dict[str, tuple]) -> int:
+                              path_to_code: dict[str, tuple]) -> tuple[int, list[Path]]:
         """
         Fallback se Pack and Go non è disponibile:
-        copia ogni file originale nella workspace rinominandolo col codice PDM.
+        copia ogni file selezionato nella workspace rinominandolo col codice PDM
+        e copia anche i file non selezionati con nome originale.
         Per il documento attivo in SolidWorks (ASM principale, che può essere
         locked in lettura), usa SaveAs3(..., 0, 2) = salva copia senza cambiare
         il percorso attivo in SW.
@@ -842,6 +1207,7 @@ class AsmImportWizard(QDialog):
         """
         ws_root.mkdir(parents=True, exist_ok=True)
         count = 0
+        created_paths: list[Path] = []
 
         # Ottieni istanza SW e percorso documento attivo per il fallback SaveAs3
         sw_app          = None
@@ -857,7 +1223,13 @@ class AsmImportWizard(QDialog):
         except Exception:
             pass
 
-        for orig_path_upper, (code, doc_id, ext) in path_to_code.items():
+        mapped_destinations: set[str] = {
+            str(ws_root / (code + ext)).upper()
+            for _orig, (code, _doc_id, ext) in path_to_code.items()
+        }
+
+        # 1) Copia dei file selezionati (rinominati con codice PDM)
+        for orig_path_upper, (code, _doc_id, ext) in path_to_code.items():
             # Recupera il percorso originale dal nodo
             orig_path = None
             for node in self._nodes:
@@ -869,6 +1241,7 @@ class AsmImportWizard(QDialog):
 
             src  = Path(orig_path)
             dest = ws_root / (code + ext)
+            dest_preexists = dest.exists()
             copied = False
 
             # Tentativo 1: copia diretta con shutil
@@ -897,10 +1270,58 @@ class AsmImportWizard(QDialog):
 
             if copied:
                 count += 1
+                if not dest_preexists and dest.exists():
+                    created_paths.append(dest)
             else:
                 logging.warning("Fallback: impossibile copiare %s", src.name)
 
-        return count
+        # 2) Copia file NON selezionati (nome originale, senza codifica)
+        copied_unselected: set[str] = set()
+        selected_keys = set(path_to_code.keys())
+        for node in self._nodes:
+            orig_path = node.get("path")
+            if not orig_path:
+                continue
+
+            orig_upper = orig_path.upper()
+            if orig_upper in selected_keys:
+                continue
+
+            src = Path(orig_path)
+            if not src.exists():
+                logging.warning("Fallback non selezionati: file sorgente non trovato: %s", src)
+                continue
+
+            dest = ws_root / src.name
+            dest_upper = str(dest).upper()
+
+            # Evita di sovrascrivere file codificati della selezione
+            if dest_upper in mapped_destinations:
+                logging.warning(
+                    "Fallback non selezionati: skip %s (collisione con file codificato)",
+                    src.name,
+                )
+                continue
+
+            # Evita copie duplicate quando più nodi puntano allo stesso nome file
+            if dest_upper in copied_unselected:
+                continue
+
+            try:
+                if not dest.exists():
+                    shutil.copy2(str(src), str(dest))
+                    created_paths.append(dest)
+                copied_unselected.add(dest_upper)
+                count += 1
+                logging.info("Fallback non selezionati copy2: %s → %s", src.name, dest.name)
+            except Exception as e:
+                logging.warning(
+                    "Fallback non selezionati: impossibile copiare %s: %s",
+                    src.name,
+                    e,
+                )
+
+        return count, created_paths
 
     # ------------------------------------------------------------------
     def _run_pack_and_go(self, ws_root: Path, stem_to_code: dict[str, str]) -> int:
@@ -927,8 +1348,16 @@ class AsmImportWizard(QDialog):
         pgo = None
         try:
             pgo = model.Extension.GetPackAndGo()
-        except Exception as e:
-            raise RuntimeError(f"Pack and Go non disponibile: {e}")
+        except Exception as e_noarg:
+            try:
+                status_v = win32.VARIANT(pythoncom.VT_BYREF | pythoncom.VT_I4, 0)
+                pgo = model.Extension.GetPackAndGo(status_v)
+                logging.info("GetPackAndGo(status) OK: %s", status_v)
+            except Exception as e_witharg:
+                raise RuntimeError(
+                    f"Pack and Go non disponibile: {e_witharg} "
+                    f"(fallback no-arg: {e_noarg})"
+                )
 
         if pgo is None:
             raise RuntimeError("GetPackAndGo() ha restituito None.")
@@ -1018,19 +1447,27 @@ class AsmImportWizard(QDialog):
     def _fix_asm_references(self, ws_root: Path,
                              path_to_code: dict[str, tuple]) -> int:
         """
-        Post-processing di sicurezza: apre ogni SLDASM copiato nella workspace
-        e sostituisce i riferimenti ancora puntati ai file originali (non codificati)
-        con i nuovi percorsi codificati tramite ReplaceReferencedDocument.
-        Viene chiamato sempre dopo Pack&Go o fallback per garantire riferimenti corretti.
+        Post-processing di sicurezza: sostituisce i riferimenti ancora puntati ai
+        file originali con i nuovi percorsi codificati.
+        Usa ISldWorks.ReplaceReferencedDocument sul documento ASM chiuso.
         Ritorna il numero di assieme modificati.
         """
-        # Mappa orig_path_upper → new_full_path
+        # Mappa orig_path_upper -> new_full_path
         orig_to_new: dict[str, str] = {}
-        for orig_upper, (code, doc_id, ext) in path_to_code.items():
+        for orig_upper, (code, _doc_id, ext) in path_to_code.items():
             new_path = str(ws_root / (code + ext)).replace("/", "\\")
             orig_to_new[orig_upper] = new_path
 
-        # Mappa per recuperare path originale con case corretto dai nodi
+        # Da aggiornare obbligatoriamente solo i riferimenti che cambiano nome file.
+        # Per i non codificati (stesso basename) non forziamo il replace hard.
+        orig_to_new_required: dict[str, str] = {}
+        for orig_upper, new_fp in orig_to_new.items():
+            old_name = Path(orig_upper).name.upper()
+            new_name = Path(new_fp).name.upper()
+            if old_name != new_name:
+                orig_to_new_required[orig_upper] = new_fp
+
+        # Mappa per recuperare path originale con case corretto
         orig_case: dict[str, str] = {}
         for node in self._nodes:
             if node.get("path"):
@@ -1038,13 +1475,12 @@ class AsmImportWizard(QDialog):
 
         try:
             import win32com.client as win32
-            import pythoncom
             sw = win32.GetActiveObject("SldWorks.Application")
         except Exception:
             return 0
 
         modified = 0
-        for orig_upper, (code, doc_id, ext) in path_to_code.items():
+        for _orig_upper, (code, _doc_id, ext) in path_to_code.items():
             if ext.upper() != ".SLDASM":
                 continue
             asm_ws = ws_root / (code + ext)
@@ -1052,84 +1488,51 @@ class AsmImportWizard(QDialog):
                 continue
 
             asm_str = str(asm_ws).replace("/", "\\")
-            opened_here = False
-            asm_model = None
             try:
-                # Se già aperto in SW (es. è la radice ancora attiva) non riaprire
+                # ReplaceReferencedDocument richiede il documento referencing chiuso
                 try:
                     asm_model = sw.GetOpenDocumentByName(asm_str)
                 except Exception:
                     asm_model = None
-
-                if asm_model is None:
-                    errors_v   = win32.VARIANT(pythoncom.VT_BYREF | pythoncom.VT_I4, 0)
-                    warnings_v = win32.VARIANT(pythoncom.VT_BYREF | pythoncom.VT_I4, 0)
-                    # swDocASSEMBLY=2, swOpenDocOptions_Silent=1
-                    asm_model = sw.OpenDoc6(asm_str, 2, 1, "", errors_v, warnings_v)
-                    if asm_model is None:
-                        continue
-                    opened_here = True
-
-                # Scorri tutti i componenti
-                try:
-                    raw = asm_model.GetComponents(False)
-                    comps = list(raw) if raw is not None else []
-                except Exception:
-                    comps = []
-
-                changed = False
-                seen: set = set()
-                for comp in comps:
-                    try:
-                        v = comp.GetPathName
-                        if callable(v):
-                            v = v()
-                        fp = str(v or "").strip()
-                        if not fp:
-                            continue
-                        fp_upper = fp.upper()
-                        if fp_upper in seen:
-                            continue
-                        seen.add(fp_upper)
-                        if fp_upper in orig_to_new:
-                            new_fp = orig_to_new[fp_upper]
-                            # Sostituisci solo se punta ancora al file originale
-                            # (path diverso dalla destinazione) e il nuovo file esiste
-                            if fp_upper != new_fp.upper() and Path(new_fp).exists():
-                                ok = asm_model.Extension.ReplaceReferencedDocument(fp, new_fp)
-                                if ok:
-                                    changed = True
-                                    logging.info("ReplaceRef OK: %s → %s",
-                                                 Path(fp).name, Path(new_fp).name)
-                                else:
-                                    logging.warning("ReplaceRef fallito: %s → %s",
-                                                    Path(fp).name, Path(new_fp).name)
-                    except Exception as e_comp:
-                        logging.warning("Errore componente in fix_refs: %s", e_comp)
-
-                if changed:
-                    try:
-                        asm_model.Save3(1, 0, 0)
-                        modified += 1
-                        logging.info("ASM salvato dopo fix riferimenti: %s", asm_ws.name)
-                    except Exception as e_save:
-                        logging.warning("Salvataggio ASM fallito: %s", e_save)
-
-            except Exception as e_asm:
-                logging.warning("Fix riferimenti ASM %s: %s", asm_ws.name, e_asm)
-            finally:
-                if opened_here and asm_model:
+                if asm_model is not None:
                     try:
                         title = asm_model.GetTitle()
                         if callable(title):
                             title = title()
                         if title:
                             sw.CloseDoc(title)
-                    except Exception:
-                        pass
+                    except Exception as e_close:
+                        logging.warning("CloseDoc prima di ReplaceRef (%s): %s", asm_ws.name, e_close)
+
+                changed = False
+                for orig_upper, new_fp in orig_to_new_required.items():
+                    if orig_upper == new_fp.upper():
+                        continue
+                    if not Path(new_fp).exists():
+                        continue
+
+                    old_fp = orig_case.get(orig_upper, orig_upper)
+                    try:
+                        ok = sw.ReplaceReferencedDocument(asm_str, old_fp, new_fp)
+                        if ok:
+                            changed = True
+                            logging.info(
+                                "ReplaceRef OK: %s -> %s (%s)",
+                                Path(old_fp).name, Path(new_fp).name, asm_ws.name
+                            )
+                    except Exception as e_rep:
+                        logging.warning(
+                            "ReplaceRef errore %s -> %s su %s: %s",
+                            Path(old_fp).name, Path(new_fp).name, asm_ws.name, e_rep
+                        )
+
+                if changed:
+                    modified += 1
+
+            except Exception as e_asm:
+                logging.warning("Fix riferimenti ASM %s: %s", asm_ws.name, e_asm)
 
         return modified
-
     # ------------------------------------------------------------------
     def _link_bom(self, path_to_code: dict[str, tuple[str, int, str]]):
         """Aggiunge le relazioni BOM padre-figlio per i componenti importati."""
@@ -1151,3 +1554,69 @@ class AsmImportWizard(QDialog):
                 )
             except Exception as e:
                 logging.warning("Link BOM %s → %s: %s", parent_id, child_id, e)
+
+    def _ensure_bom_document_map(self,
+                                 path_to_code: dict[str, tuple[str, int, str]],
+                                 created_doc_ids: list[int],
+                                 created_doc_id_set: set[int]) -> tuple[int, int]:
+        """
+        Garantisce che ogni nodo dell'ASM abbia un documento PDM associato.
+        - Se il nodo e gia mappato: nessuna azione.
+        - Se esiste gia un documento con stesso code/doc_type: riusa.
+        - Altrimenti crea un documento non codificato (code=stem originale, rev=00).
+        Ritorna (riusati, creati).
+        """
+        reused = 0
+        created = 0
+
+        from config import SW_EXTENSIONS
+
+        for node in self._nodes:
+            p = node.get("path")
+            if not p:
+                continue
+
+            key = str(p).upper()
+            if key in path_to_code:
+                continue
+
+            fp = Path(p)
+            code = fp.stem
+            ext = fp.suffix if fp.suffix else ".SLDPRT"
+            doc_type = SW_EXTENSIONS.get(ext.upper(), "")
+            if not doc_type:
+                doc_type = "Assieme" if node.get("type") == "ASM" else "Parte"
+
+            existing = self.db.fetchone(
+                "SELECT id, code, file_ext FROM documents "
+                "WHERE code=? AND doc_type=? AND state != 'Obsoleto' "
+                "ORDER BY revision DESC",
+                (code, doc_type),
+            )
+            if existing:
+                path_to_code[key] = (
+                    existing["code"],
+                    existing["id"],
+                    existing.get("file_ext") or ext,
+                )
+                reused += 1
+                continue
+
+            # Crea documento non codificato per consentire il linking BOM completo.
+            doc_id = self.files.create_document(
+                code=code,
+                revision="00",
+                doc_type=doc_type,
+                title=code,
+                description="Creato automaticamente da import ASM (non codificato).",
+                machine_id=None,
+                group_id=None,
+                doc_level=2,
+            )
+            created_doc_ids.append(doc_id)
+            created_doc_id_set.add(doc_id)
+            path_to_code[key] = (code, doc_id, ext)
+            created += 1
+
+        return reused, created
+

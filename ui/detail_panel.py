@@ -310,11 +310,25 @@ class DetailPanel(QWidget):
 
         # ---- Tab BOM ----
         self.tbl_bom.setRowCount(0)
-        comps = session.asm.get_components(doc_id)
-        for c in comps:
+        def _collect(parent_id: int, depth: int = 0, visited=None):
+            if visited is None:
+                visited = set()
+            if parent_id in visited:
+                return []
+            visited.add(parent_id)
+            rows = []
+            for comp in session.asm.get_components(parent_id):
+                rows.append((depth, comp))
+                if comp.get("doc_type") == "Assieme":
+                    rows.extend(_collect(comp["child_id"], depth + 1, visited))
+            return rows
+
+        comps = _collect(doc_id)
+        for depth, c in comps:
             row = self.tbl_bom.rowCount()
             self.tbl_bom.insertRow(row)
-            self.tbl_bom.setItem(row, 0, QTableWidgetItem(c["code"]))
+            indent = ("  " * depth) + ("└─ " if depth > 0 else "")
+            self.tbl_bom.setItem(row, 0, QTableWidgetItem(indent + c["code"]))
             self.tbl_bom.setItem(row, 1, QTableWidgetItem(c["revision"]))
             self.tbl_bom.setItem(
                 row, 2, QTableWidgetItem(
@@ -527,7 +541,8 @@ class DetailPanel(QWidget):
             in_ws = self._is_in_workspace(drw)
             self.btn_drw_export_ws.setVisible(has_archive and not in_ws)
             self.btn_drw_open_sw.setVisible(has_archive or in_ws)
-            self.btn_add_drw.setVisible(False)
+            # Mostra "Aggiungi DRW" anche se il record esiste ma non ha file
+            self.btn_add_drw.setVisible(not has_archive and not drw["is_locked"])
             self.grp_drw_preview.setVisible(True)
         else:
             self._code_drw_doc = None
@@ -661,16 +676,29 @@ class DetailPanel(QWidget):
                 "Il file non è disponibile nell'archivio né nella workspace."
             )
             return
+
+        doc_type_map = {"Parte": 1, "Assieme": 2, "Disegno": 3}
+        type_id = doc_type_map.get(doc.get("doc_type", "Parte"), 1)
         try:
-            from ui.sw_config_dialog import SWConfigDialog
-            sw_exe = SWConfigDialog.get_solidworks_exe()
-            if sw_exe and Path(str(sw_exe)).exists():
-                subprocess.Popen([str(sw_exe), str(target)])
-            else:
-                # Apertura shell di fallback
-                subprocess.Popen(["cmd", "/c", "start", "", str(target)])
+            import win32com.client
+            try:
+                sw = win32com.client.GetActiveObject("SldWorks.Application")
+            except Exception:
+                sw = win32com.client.Dispatch("SldWorks.Application")
+            sw.Visible = True
+            sw.OpenDoc(str(target).replace("/", "\\"), type_id)
+            return
         except Exception as e:
-            QMessageBox.critical(self, "Errore apertura SolidWorks", str(e))
+            try:
+                from ui.sw_config_dialog import SWConfigDialog
+                sw_exe = SWConfigDialog.get_solidworks_exe()
+                if sw_exe and Path(str(sw_exe)).exists():
+                    subprocess.Popen([str(sw_exe), str(target)])
+                else:
+                    # Apertura shell di fallback
+                    subprocess.Popen(["cmd", "/c", "start", "", str(target)])
+            except Exception:
+                QMessageBox.critical(self, "Errore apertura SolidWorks", str(e))
 
     # ------------------------------------------------------------------
     #  Thumbnail

@@ -22,6 +22,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"{APP_NAME}  v{APP_VERSION}")
         self.setMinimumSize(1100, 700)
         self._archive_view: ArchiveView | None = None
+        self._uncoded_view: ArchiveView | None = None
         self._workspace_view: WorkspaceView | None = None
         self._build_ui()
         self._build_menu()
@@ -59,6 +60,8 @@ class MainWindow(QMainWindow):
         s.setValue("activeTab",   self.tabs.currentIndex())
         if self._archive_view:
             self._archive_view.save_layout()
+        if self._uncoded_view:
+            self._uncoded_view.save_layout()
         if self._workspace_view:
             self._workspace_view.save_layout()
         super().closeEvent(event)
@@ -75,12 +78,15 @@ class MainWindow(QMainWindow):
         self.tabs = QTabWidget()
         self.tabs.setTabPosition(QTabWidget.TabPosition.West)
 
-        self._archive_view   = ArchiveView()
+        self._archive_view   = ArchiveView(view_mode="archive")
+        self._uncoded_view   = ArchiveView(view_mode="uncoded")
         self._workspace_view = WorkspaceView()
 
         self._archive_view.document_selected.connect(self._open_document)
+        self._uncoded_view.document_selected.connect(self._open_document)
 
         self.tabs.addTab(self._archive_view,   "🗄️  Archivio CAD")
+        self.tabs.addTab(self._uncoded_view,   "🗂️  Non codificati")
         self.tabs.addTab(self._workspace_view, "📁  Workspace")
 
         layout.addWidget(self.tabs)
@@ -271,29 +277,41 @@ class MainWindow(QMainWindow):
         self._refresh_all()
 
     # ------------------------------------------------------------------
+    def _active_archive_like_view(self) -> ArchiveView | None:
+        """Ritorna la vista archivio attiva (Archivio CAD o Non codificati)."""
+        w = self.tabs.currentWidget()
+        if w is self._archive_view:
+            return self._archive_view
+        if w is self._uncoded_view:
+            return self._uncoded_view
+        return None
+
     def _toolbar_checkout(self):
-        if self.tabs.currentIndex() == 0:
-            doc_id = self._archive_view._selected_doc_id()
+        view = self._active_archive_like_view()
+        if view:
+            doc_id = view._selected_doc_id()
             if not doc_id:
                 QMessageBox.information(
                     self, "Info", "Selezionare un documento nell'archivio"
                 )
                 return
-            self._archive_view._action_checkout(doc_id)
+            view._action_checkout(doc_id)
 
     def _toolbar_checkin(self):
-        if self.tabs.currentIndex() == 0:
-            doc_id = self._archive_view._selected_doc_id()
+        view = self._active_archive_like_view()
+        if view:
+            doc_id = view._selected_doc_id()
             if not doc_id:
                 QMessageBox.information(
                     self, "Info", "Selezionare un documento nell'archivio"
                 )
                 return
-            self._archive_view._action_checkin(doc_id)
+            view._action_checkin(doc_id)
 
     def _toolbar_workflow(self):
-        if self.tabs.currentIndex() == 0:
-            doc_id = self._archive_view._selected_doc_id()
+        view = self._active_archive_like_view()
+        if view:
+            doc_id = view._selected_doc_id()
             if not doc_id:
                 QMessageBox.information(
                     self, "Info", "Selezionare un documento nell'archivio"
@@ -308,6 +326,8 @@ class MainWindow(QMainWindow):
     def _refresh_all(self):
         if self._archive_view:
             self._archive_view.refresh()
+        if self._uncoded_view:
+            self._uncoded_view.refresh()
         if self._workspace_view:
             self._workspace_view.refresh()
 

@@ -651,12 +651,13 @@ class DocumentDialog(QDialog):
     def _refresh_bom(self):
         if not hasattr(self, "tbl_bom"):
             return
-        comps = session.asm.get_components(self.document_id)
+        comps = self._collect_bom_rows(self.document_id)
         self.tbl_bom.setRowCount(0)
-        for c in comps:
+        for depth, c in comps:
             row = self.tbl_bom.rowCount()
             self.tbl_bom.insertRow(row)
-            self.tbl_bom.setItem(row, 0, QTableWidgetItem(c["code"]))
+            indent = ("  " * depth) + ("└─ " if depth > 0 else "")
+            self.tbl_bom.setItem(row, 0, QTableWidgetItem(indent + c["code"]))
             self.tbl_bom.setItem(row, 1, QTableWidgetItem(c["revision"]))
             self.tbl_bom.setItem(
                 row, 2, QTableWidgetItem(
@@ -665,7 +666,28 @@ class DocumentDialog(QDialog):
             )
             self.tbl_bom.setItem(row, 3, QTableWidgetItem(c["title"]))
             self.tbl_bom.setItem(row, 4, QTableWidgetItem(str(c["quantity"])))
-            self.tbl_bom.item(row, 4).setData(Qt.ItemDataRole.UserRole, c["child_id"])
+            self.tbl_bom.item(row, 4).setData(
+                Qt.ItemDataRole.UserRole,
+                (c["parent_id"], c["child_id"]),
+            )
+
+    def _collect_bom_rows(self, parent_id: int,
+                          depth: int = 0,
+                          visited: Optional[set] = None) -> list[tuple[int, dict]]:
+        """Raccoglie la BOM gerarchica in ordine DFS: (depth, componente)."""
+        if visited is None:
+            visited = set()
+        if parent_id in visited:
+            return []
+        visited.add(parent_id)
+
+        rows: list[tuple[int, dict]] = []
+        comps = session.asm.get_components(parent_id)
+        for c in comps:
+            rows.append((depth, c))
+            if c.get("doc_type") == "Assieme":
+                rows.extend(self._collect_bom_rows(c["child_id"], depth + 1, visited))
+        return rows
 
     def _refresh_history(self):
         if not hasattr(self, "tbl_history"):
@@ -728,31 +750,41 @@ class DocumentDialog(QDialog):
             archive_path = session.checkout.sp.root / doc["archive_path"]
 
         try:
-            # Legge proprietà da SolidWorks cercando prima il doc aperto per nome
-            props = session.properties.read_from_sw_file(
+            # Import centralizzato: salva custom e applica mapping PDM<->SW.
+            sync = session.properties.sync_sw_to_pdm(
+                self.document_id,
                 archive_path or Path(doc["file_name"]),
                 file_name=doc["file_name"],
             )
 
-            # Controlla errore COM
-            err = props.pop("_error", None)
-            if err:
+            if not sync.get("ok"):
                 QMessageBox.warning(
                     self, "Errore lettura SolidWorks",
-                    f"Impossibile leggere le proprietà da SolidWorks:\n\n{err}\n\n"
+                    f"Impossibile leggere le proprietà da SolidWorks:\n\n{sync.get('error', '')}\n\n"
                     "Assicurarsi che il file sia aperto in SolidWorks.",
                 )
                 return
 
-            if not props:
+            imported_count = int(sync.get("imported_count", 0))
+            updated_owner = bool(sync.get("updated_owner", False))
+
+            # Ricarica sempre il documento: titolo/descrizione potrebbero essere stati
+            # aggiornati dal mapping anche senza custom properties salvate.
+            self._load_document()
+
+            if imported_count <= 0:
+                if updated_owner:
+                    QMessageBox.information(
+                        self, "Importazione completata",
+                        "Nessuna proprietà custom trovata nel file SolidWorks,\n"
+                        "ma i campi PDM mappati (es. titolo/descrizione) sono stati aggiornati.",
+                    )
+                    return
                 QMessageBox.information(
                     self, "Nessuna proprietà",
                     "Nessuna proprietà custom trovata nel file SolidWorks.",
                 )
                 return
-
-            # Salva direttamente nel DB
-            session.properties.save_properties(self.document_id, props)
 
             # Aggiorna tabella: pulisci e ricarica dal DB
             self.tbl_props.setRowCount(0)
@@ -765,7 +797,7 @@ class DocumentDialog(QDialog):
 
             QMessageBox.information(
                 self, "Importazione completata",
-                f"{len(props)} proprietà importate da SolidWorks.",
+                f"{imported_count} proprietà importate da SolidWorks.",
             )
         except Exception as e:
             QMessageBox.critical(self, "Errore", str(e))
@@ -1125,8 +1157,12 @@ class DocumentDialog(QDialog):
             return
         child_id = self.tbl_bom.item(row, 4)
         if child_id:
-            cid = child_id.data(Qt.ItemDataRole.UserRole)
-            session.asm.remove_component(self.document_id, cid)
+            rel = child_id.data(Qt.ItemDataRole.UserRole)
+            if isinstance(rel, tuple) and len(rel) == 2:
+                pid, cid = rel
+            else:
+                pid, cid = self.document_id, rel
+            session.asm.remove_component(pid, cid)
             self._refresh_bom()
 
     def _import_asm_from_sw(self):

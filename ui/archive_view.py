@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QPushButton, QComboBox, QTreeWidget, QTreeWidgetItem,
     QHeaderView, QMenu, QMessageBox, QFileDialog, QSplitter
 )
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt, QSettings, pyqtSignal
 from PyQt6.QtGui import QColor, QAction
 from pathlib import Path
 
@@ -37,8 +37,9 @@ class ArchiveView(QWidget):
 
     document_selected = pyqtSignal(int)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, view_mode: str = "archive"):
         super().__init__(parent)
+        self.view_mode = view_mode  # "archive" | "uncoded"
         self._build_ui()
 
     # ------------------------------------------------------------------
@@ -175,6 +176,10 @@ class ArchiveView(QWidget):
             state = ""
 
         docs = session.files.search_documents(text=text, state=state)
+        if self.view_mode == "uncoded":
+            docs = [d for d in docs if self._is_non_coded(d)]
+        else:
+            docs = [d for d in docs if not self._is_non_coded(d)]
 
         # Ricorda quali codici erano espansi e la selezione corrente
         expanded_codes: set[str] = set()
@@ -232,9 +237,10 @@ class ArchiveView(QWidget):
             parent_item.setExpanded(code in expanded_codes)   # ripristina stato o lascia compresso
 
         total = sum(len(v) for v in groups.values())
-        self.lbl_count.setText(
-            f"{total} documenti in {len(groups)} codici"
-        )
+        if self.view_mode == "uncoded":
+            self.lbl_count.setText(f"{total} documenti non codificati in {len(groups)} codici")
+        else:
+            self.lbl_count.setText(f"{total} documenti in {len(groups)} codici")
 
         # Applica filtro tipo corrente
         self._apply_type_filter()
@@ -310,6 +316,12 @@ class ArchiveView(QWidget):
             self.detail_panel.load_document(val)
         else:
             self.detail_panel.clear()
+
+    @staticmethod
+    def _is_non_coded(doc: dict) -> bool:
+        """Rileva documenti non codificati creati dall'import ASM."""
+        desc = str(doc.get("description") or "").lower()
+        return "non codificato" in desc
 
     def _on_double_click(self, item: QTreeWidgetItem, column: int):
         val = item.data(COL_CODE, Qt.ItemDataRole.UserRole)

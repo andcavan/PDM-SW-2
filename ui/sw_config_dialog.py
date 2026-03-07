@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QGroupBox, QFormLayout, QFileDialog,
     QMessageBox, QTabWidget, QWidget, QTextEdit, QCheckBox,
-    QRadioButton, QButtonGroup
+    QRadioButton, QButtonGroup, QComboBox
 )
 from PyQt6.QtCore import Qt
 
@@ -27,6 +27,17 @@ CFG_REG_FILE   = "sw_reg_file"
 CFG_WORKSPACE  = "sw_workspace"
 CFG_SW_EXE     = "sw_exe_path"
 CFG_EDRAW_EXE  = "edrawings_exe_path"
+CFG_PROP_MAP   = "sw_property_mapping"
+
+PDM_MAPPING_FIELDS = [
+    ("revision", "revision", "Revisione", True),
+    ("title", "title", "Titolo", False),
+    ("description", "description", "Descrizione", False),
+    ("code", "code", "Codice", True),
+    ("state", "state", "Stato", True),
+    ("created_by", "created_by", "Creato da", True),
+    ("created_at", "created_at", "Data", True),
+]
 
 
 class SWConfigDialog(QDialog):
@@ -57,6 +68,7 @@ class SWConfigDialog(QDialog):
         self.tabs = QTabWidget()
         self.tabs.addTab(self._build_templates_tab(), "Template")
         self.tabs.addTab(self._build_sw_tab(),        "SolidWorks")
+        self.tabs.addTab(self._build_mapping_tab(),   "Mappature proprieta")
         self.tabs.addTab(self._build_workspace_tab(), "Workspace locale")
         layout.addWidget(self.tabs)
 
@@ -261,6 +273,50 @@ class SWConfigDialog(QDialog):
         layout.addStretch()
         return w
 
+    # ------------------------------------------------------------------
+    def _build_mapping_tab(self) -> QWidget:
+        w = QWidget()
+        layout = QVBoxLayout(w)
+
+        grp = QGroupBox("Mappature PDM <-> SolidWorks")
+        form = QFormLayout(grp)
+
+        self._map_rows: dict[str, dict] = {}
+        for key, pdm_name, label, force_default in PDM_MAPPING_FIELDS:
+            row = QHBoxLayout()
+            txt_names = QLineEdit()
+            txt_names.setPlaceholderText("es. Revision, Rev")
+
+            cmb_mode = QComboBox()
+            cmb_mode.addItems(["SW->PDM", "PDM->SW", "Bidirezionale"])
+
+            chk_force = QCheckBox("Forza PDM")
+            chk_force.setChecked(force_default)
+
+            row.addWidget(txt_names, stretch=4)
+            row.addWidget(cmb_mode, stretch=2)
+            row.addWidget(chk_force, stretch=1)
+            form.addRow(f"{label} (PDM: {pdm_name}):", row)
+
+            self._map_rows[key] = {
+                "names": txt_names,
+                "mode": cmb_mode,
+                "force": chk_force,
+            }
+
+        note = QLabel(
+            "Inserire uno o piu nomi proprieta SW separati da virgola (ordine di priorita).\n"
+            "Campi suggeriti in sola propagazione PDM->SW: codice, stato, creato da, data.\n"
+            "Regola consigliata: Revisione in PDM->SW con Forza PDM attivo."
+        )
+        note.setWordWrap(True)
+        note.setObjectName("subtitle_label")
+
+        layout.addWidget(grp)
+        layout.addWidget(note)
+        layout.addStretch()
+        return w
+
     # ==================================================================
     # Helpers UI
     # ==================================================================
@@ -302,6 +358,7 @@ class SWConfigDialog(QDialog):
         self.txt_workspace.setText(self._cfg.get(CFG_WORKSPACE, ""))
         self.txt_sw_exe.setText(self._cfg.get(CFG_SW_EXE, ""))
         self.txt_edraw_exe.setText(self._cfg.get(CFG_EDRAW_EXE, ""))
+        self._load_property_mapping()
 
     def _save(self):
         self._cfg[CFG_TPL_PRT]    = self.txt_tpl_prt.text().strip()
@@ -311,8 +368,92 @@ class SWConfigDialog(QDialog):
         self._cfg[CFG_WORKSPACE]  = self.txt_workspace.text().strip()
         self._cfg[CFG_SW_EXE]     = self.txt_sw_exe.text().strip()
         self._cfg[CFG_EDRAW_EXE]  = self.txt_edraw_exe.text().strip()
+        self._cfg[CFG_PROP_MAP]   = self._collect_property_mapping()
         save_local_config(self._cfg)
         QMessageBox.information(self, "OK", "Configurazione SolidWorks salvata")
+
+    def _default_property_mapping(self) -> dict:
+        return {
+            "revision": {
+                "sw_names": ["Revision", "Rev"],
+                "mode": "PDM->SW",
+                "force_pdm": True,
+            },
+            "title": {
+                "sw_names": ["Title", "Titolo", "Subject"],
+                "mode": "Bidirezionale",
+                "force_pdm": False,
+            },
+            "description": {
+                "sw_names": ["Description", "Descrizione", "Comments", "Subject"],
+                "mode": "Bidirezionale",
+                "force_pdm": False,
+            },
+            "code": {
+                "sw_names": ["PartNo", "Code", "Codice"],
+                "mode": "PDM->SW",
+                "force_pdm": True,
+            },
+            "state": {
+                "sw_names": ["State", "Stato"],
+                "mode": "PDM->SW",
+                "force_pdm": True,
+            },
+            "created_by": {
+                "sw_names": ["DrawnBy", "CreatedBy", "CreatoDa", "Author"],
+                "mode": "PDM->SW",
+                "force_pdm": True,
+            },
+            "created_at": {
+                "sw_names": ["DrawnDate", "CreatedDate", "DataCreazione", "Date"],
+                "mode": "PDM->SW",
+                "force_pdm": True,
+            },
+        }
+
+    @staticmethod
+    def _split_names(raw: str) -> list[str]:
+        names: list[str] = []
+        for part in str(raw or "").split(","):
+            p = part.strip()
+            if p and p not in names:
+                names.append(p)
+        return names
+
+    def _load_property_mapping(self):
+        mapping = self._cfg.get(CFG_PROP_MAP) or {}
+        default = self._default_property_mapping()
+
+        for key, row in self._map_rows.items():
+            item = mapping.get(key) if isinstance(mapping, dict) else None
+            if not isinstance(item, dict):
+                item = default[key]
+
+            names = item.get("sw_names") or default[key]["sw_names"]
+            if not isinstance(names, list):
+                names = [str(names)] if names else []
+            row["names"].setText(", ".join(str(x).strip() for x in names if str(x).strip()))
+
+            mode = str(item.get("mode") or default[key]["mode"])
+            idx = row["mode"].findText(mode)
+            row["mode"].setCurrentIndex(idx if idx >= 0 else 0)
+
+            force = bool(item.get("force_pdm", default[key]["force_pdm"]))
+            row["force"].setChecked(force)
+
+    def _collect_property_mapping(self) -> dict:
+        mapping: dict = {}
+        default = self._default_property_mapping()
+        for key, row in self._map_rows.items():
+            names = self._split_names(row["names"].text())
+            if not names:
+                names = default[key]["sw_names"]
+            mapping[key] = {
+                "sw_names": names,
+                "mode": row["mode"].currentText(),
+                "force_pdm": row["force"].isChecked(),
+            }
+        return mapping
 
     def _apply_reg(self):
         reg_path = self.txt_reg.text().strip()

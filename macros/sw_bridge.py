@@ -180,21 +180,33 @@ def action_checkin(file_path: str):
     # ------------------------------------------------------------------
     sync_errors = []
 
-    # 1) Importa proprietà dal file
+    # 1) Importa proprieta dal file (custom + mapping SW->PDM)
     try:
         logging.info("Pre-checkin: lettura proprieta' da SW per doc %s", doc["code"])
-        props = pm.read_from_sw_file(Path(file_path), file_name=Path(file_path).name)
-        err = props.pop("_error", None)
-        if err:
-            sync_errors.append(f"Proprieta': {err}")
-        elif props:
-            pm.save_properties(doc["id"], props)
-            logging.info("Pre-checkin: %d proprieta' salvate", len(props))
+        sync_in = pm.sync_sw_to_pdm(doc["id"], Path(file_path), file_name=Path(file_path).name)
+        if not sync_in.get("ok"):
+            sync_errors.append(f"Proprieta': {sync_in.get('error', '')}")
+            props = {}
+        elif int(sync_in.get("imported_count", 0)) > 0:
+            props = dict(sync_in.get("props") or {})
+            logging.info("Pre-checkin: %d proprieta' salvate", int(sync_in.get("imported_count", 0)))
         else:
+            props = {}
             logging.info("Pre-checkin: nessuna proprieta' custom nel file")
     except Exception as e:
         sync_errors.append(f"Proprieta': {e}")
         logging.error("Pre-checkin proprieta' fallito: %s", e, exc_info=True)
+
+    # 1b) Enforce revisione PDM -> SW prima del check-in
+    try:
+        sync_out = pm.sync_pdm_to_sw(doc["id"], Path(file_path), force_revision=True)
+        if not sync_out.get("ok"):
+            sync_errors.append(f"Revisione: {sync_out.get('error', '')}")
+        else:
+            logging.info("Pre-checkin: %d proprieta' forzate da PDM verso SW", int(sync_out.get("written_count", 0)))
+    except Exception as e:
+        sync_errors.append(f"Revisione: {e}")
+        logging.error("Pre-checkin revisione PDM->SW fallito: %s", e, exc_info=True)
 
     # 2) Per gli assiemi, aggiorna la BOM
     if doc["doc_type"] == "Assieme":
@@ -329,24 +341,27 @@ def action_import_props(file_path: str):
     pm = PropertiesManager(db)
     try:
         logging.info("Lettura proprieta da SW: %s", file_path)
-        props = pm.read_from_sw_file(Path(file_path))
-
-        # Controlla errore di lettura
-        err = props.pop("_error", None)
-        if err:
-            write_result(f"Errore lettura proprieta SW:\n{err}", error=True)
+        sync = pm.sync_sw_to_pdm(doc["id"], Path(file_path), file_name=Path(file_path).name)
+        if not sync.get("ok"):
+            write_result(f"Errore lettura proprieta SW:\n{sync.get('error', '')}", error=True)
             return
 
-        if not props:
-            write_result(
-                "Nessuna proprieta' custom trovata nel file SolidWorks.",
-                error=True,
-            )
+        if int(sync.get("imported_count", 0)) <= 0:
+            if bool(sync.get("updated_owner", False)):
+                write_result(
+                    "Nessuna proprieta' custom trovata, ma i campi PDM mappati sono stati aggiornati.",
+                    error=False,
+                )
+            else:
+                write_result(
+                    "Nessuna proprieta' custom trovata nel file SolidWorks.",
+                    error=False,
+                )
             return
 
+        props = dict(sync.get("props") or {})
         logging.info("Proprieta lette: %s", list(props.keys()))
-        pm.save_properties(doc["id"], props)
-        write_result(f"{len(props)} proprieta importate da SolidWorks nel PDM.")
+        write_result(f"{int(sync.get('imported_count', 0))} proprieta importate da SolidWorks nel PDM.")
     except Exception as e:
         logging.error("Errore import_props: %s", e, exc_info=True)
         write_result(str(e), error=True)
@@ -367,13 +382,28 @@ def action_export_props(file_path: str):
 
     pm = PropertiesManager(db)
     try:
-        props = pm.get_properties(doc["id"])
-        if not props:
-            write_result("Nessuna proprieta' nel PDM per questo documento.", error=True)
+        # 1) Sync mapping PDM->SW (revision/title/description/code/state/created_*).
+        sync = pm.sync_pdm_to_sw(doc["id"], Path(file_path), force_revision=True)
+        if not sync.get("ok"):
+            write_result(f"Errore sync PDM->SW:\n{sync.get('error', '')}", error=True)
             return
-        logging.info("Export proprieta verso SW: %s", list(props.keys()))
-        pm.write_to_sw_file(Path(file_path), props)
-        write_result(f"{len(props)} proprieta esportate dal PDM in SolidWorks.")
+
+        written = int(sync.get("written_count", 0))
+
+        # 2) Export custom properties presenti nella tabella PDM.
+        props = pm.get_properties(doc["id"])
+        if props:
+            logging.info("Export custom proprieta verso SW: %s", list(props.keys()))
+            pm.write_to_sw_file(Path(file_path), props)
+
+        if written <= 0 and not props:
+            write_result("Nessuna proprieta' da esportare verso SolidWorks.", error=False)
+            return
+
+        msg = f"Sync mapping PDM->SW completata ({written} campi)."
+        if props:
+            msg += f"\nCustom properties esportate: {len(props)}."
+        write_result(msg, error=False)
     except Exception as e:
         logging.error("Errore export_props: %s", e, exc_info=True)
         write_result(str(e), error=True)

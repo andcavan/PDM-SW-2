@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 
 APP_NAME    = "PDM-SW"
-APP_VERSION = "2.10.0"
+APP_VERSION = "2.10.19"
 
 # Cartella locale dell'applicazione (stessa posizione di questo file)
 APP_DIR = Path(__file__).parent.resolve()
@@ -35,6 +35,7 @@ PROFILE_KEYS = frozenset({
     "sw_exe_path", "edrawings_exe_path",
     "sw_template_prt", "sw_template_asm", "sw_template_drw",
     "sw_reg_file", "sw_workspace",
+    "sw_property_mapping",
 })
 
 
