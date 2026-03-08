@@ -243,7 +243,8 @@ class PropertiesManager:
         """
         Importa proprieta da SW nel DB:
         - salva sempre tutte le custom in document_properties del documento corrente
-        - aggiorna title/description dell'owner PDM secondo mappatura
+        - aggiorna title/description su TUTTI i documenti con lo stesso codice
+          (titolo e descrizione sono condivisi a livello di codice)
         - non aggiorna la revisione da SW (source of truth: PDM)
         """
         props = self.read_from_sw_file(file_path, file_name=file_name)
@@ -258,7 +259,7 @@ class PropertiesManager:
         mapping = self.get_property_mapping()
         owner_id = self.resolve_property_owner_doc(document_id)
         owner = self.db.fetchone(
-            "SELECT id, title, description FROM documents WHERE id=?",
+            "SELECT id, code, title, description FROM documents WHERE id=?",
             (owner_id,),
         )
 
@@ -280,9 +281,12 @@ class PropertiesManager:
         updated_owner = False
         if owner and (str(new_title or "") != str(owner.get("title") or "") or
                       str(new_desc or "") != str(owner.get("description") or "")):
+            # Aggiorna title/description su tutti i documenti con lo stesso codice
+            code = owner.get("code", "")
             self.db.execute(
-                "UPDATE documents SET title=?, description=?, modified_at=datetime('now') WHERE id=?",
-                (str(new_title or ""), str(new_desc or ""), owner_id),
+                "UPDATE documents SET title=?, description=?, modified_at=datetime('now') "
+                "WHERE code=?",
+                (str(new_title or ""), str(new_desc or ""), code),
             )
             updated_owner = True
 
@@ -1000,22 +1004,26 @@ class PropertiesManager:
                 if not n:
                     continue
                 v = str(value or "")
-                # Prima prova Set2 su proprieta esistente.
-                # Set2 ritorna swCustomInfoSetResult_e (0=OK), NON lancia eccezione
-                # se la proprieta non esiste: bisogna controllare il valore di ritorno.
+                # Set2(FieldName, OverrideConfiguration, FieldValue) → swCustomInfoSetResult_e
+                # 0=OK, 1=NotPresent (property doesn't exist yet)
+                # Se la proprieta non esiste, Set2 ritorna 1 e occorre Add3.
+                set_ok = False
                 try:
-                    ret = mgr.Set2(n, v)
+                    ret = mgr.Set2(n, False, v)
                     if ret == 0:  # swCustomInfoSetResult_OK
-                        continue
+                        set_ok = True
                 except Exception:
                     pass
-                # Poi Add3 per nuova proprieta (o aggiornamento se Set2 ha fallito).
-                try:
-                    # swCustomInfoText=30, swCustomPropertyReplaceValue=2
-                    mgr.Add3(n, 30, v, 2)
-                except Exception:
-                    # Fallback legacy
-                    mgr.Add2(n, 30, v)
+                if not set_ok:
+                    # Add3(FieldName, FieldType, FieldValue, OverrideLinkToProperty)
+                    # swCustomInfoText=30, swCustomPropertyReplaceValue=2 → crea o aggiorna
+                    try:
+                        mgr.Add3(n, 30, v, 2)
+                    except Exception:
+                        try:
+                            mgr.Add2(n, 30, v)
+                        except Exception:
+                            pass
 
             try:
                 model.Save3(1, 0, 0)
@@ -1028,6 +1036,29 @@ class PropertiesManager:
                     sw.CloseDoc(model.GetTitle())
                 except Exception:
                     pass
+
+    def sync_bidirectional(self, document_id: int, file_path: Path,
+                           file_name: str | None = None) -> dict:
+        """
+        Aggiorna le proprietà in entrambe le direzioni secondo la mappatura:
+        1. SW→PDM: legge le custom props dal file SW e salva nel DB
+        2. PDM→SW: scrive i campi PDM nel file SW (per DRW usa i campi del padre PRT/ASM)
+        I DRW sono supportati: importano le proprie custom props e ricevono i campi del padre.
+        """
+        # 1) SW → PDM: importa tutte le custom props del file (anche DRW)
+        r_import = self.sync_sw_to_pdm(document_id, file_path, file_name=file_name)
+
+        # 2) PDM → SW: per DRW, resolve_property_owner_doc restituisce il padre
+        r_export = self.sync_pdm_to_sw(document_id, file_path)
+
+        return {
+            "ok": r_import.get("ok", False) or r_export.get("ok", False),
+            "error": " | ".join(filter(None, [r_import.get("error"), r_export.get("error")])),
+            "imported_count": r_import.get("imported_count", 0),
+            "written_count": r_export.get("written_count", 0),
+            "updated_owner": r_import.get("updated_owner", False),
+            "owner_id": r_import.get("owner_id") or r_export.get("owner_id"),
+        }
 
     # ------------------------------------------------------------------
     # Export Excel

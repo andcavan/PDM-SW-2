@@ -3682,3 +3682,4 @@ RuntimeError: Pack and Go non disponibile: (-2147352571, 'Incompatibilità tra ti
 2026-03-08 16:37:54 [DEBUG] Attempting to release lock 2009660344144 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
 2026-03-08 16:37:54 [DEBUG] Lock 2009660344144 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
 2026-03-08 16:40:17 [INFO] pdm_panel avviato  |  file=C:\Users\prog3\Desktop\APP MECCANICA\_ws2\AAA_0100-0037.SLDDRW
+2026-03-08 22:22:55 [INFO] pdm_panel avviato  |  file=

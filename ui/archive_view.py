@@ -21,10 +21,11 @@ from ui.styles import TYPE_ICON
 COL_CODE   = 0
 COL_REV    = 1
 COL_TITLE  = 2
-COL_STATE  = 3
-COL_LOCK   = 4
-COL_AUTHOR = 5
-COL_DATE   = 6
+COL_DESC   = 3
+COL_STATE  = 4
+COL_LOCK   = 5
+COL_AUTHOR = 6
+COL_DATE   = 7
 
 
 class ArchiveView(QWidget):
@@ -105,19 +106,22 @@ class ArchiveView(QWidget):
         # Tree widget
         self.tree = QTreeWidget()
         self.tree.setHeaderLabels([
-            "Codice", "Rev.", "Titolo", "Stato",
+            "Codice", "Rev.", "Titolo", "Descrizione", "Stato",
             "Checkout", "Creato da", "Data mod."
         ])
         hdr = self.tree.header()
         hdr.setSectionResizeMode(COL_CODE,   QHeaderView.ResizeMode.ResizeToContents)
         hdr.setSectionResizeMode(COL_REV,    QHeaderView.ResizeMode.ResizeToContents)
         hdr.setSectionResizeMode(COL_TITLE,  QHeaderView.ResizeMode.Stretch)
+        hdr.setSectionResizeMode(COL_DESC,   QHeaderView.ResizeMode.Stretch)
         hdr.setSectionResizeMode(COL_STATE,  QHeaderView.ResizeMode.ResizeToContents)
         hdr.setSectionResizeMode(COL_LOCK,   QHeaderView.ResizeMode.ResizeToContents)
         hdr.setSectionResizeMode(COL_AUTHOR, QHeaderView.ResizeMode.ResizeToContents)
         hdr.setSectionResizeMode(COL_DATE,   QHeaderView.ResizeMode.ResizeToContents)
 
         self.tree.setSelectionBehavior(QTreeWidget.SelectionBehavior.SelectRows)
+        self.tree.setSortingEnabled(True)
+        self.tree.sortByColumn(COL_CODE, Qt.SortOrder.AscendingOrder)
         self.tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.tree.customContextMenuRequested.connect(self._context_menu)
         self.tree.setRootIsDecorated(True)
@@ -210,9 +214,10 @@ class ArchiveView(QWidget):
             # Nodo codice: selezionabile, memorizza il codice stringa
             parent_item.setData(COL_CODE, Qt.ItemDataRole.UserRole, f"CODE:{code}")
 
-            # Titolo dal documento rappresentativo
+            # Titolo e descrizione dal documento rappresentativo
             best = self._pick_representative(all_docs)
             parent_item.setText(COL_TITLE, best.get("title") or "")
+            parent_item.setText(COL_DESC,  best.get("description") or "")
 
             # Figli visibili solo se hanno un file in archivio O sono in checkout
             visible_docs = [d for d in all_docs
@@ -346,6 +351,7 @@ class ArchiveView(QWidget):
         child.setText(COL_CODE, f"  {icon}  {doc['doc_type']}")
         child.setText(COL_REV, doc["revision"])
         child.setText(COL_TITLE, doc.get("title") or "")
+        child.setText(COL_DESC, doc.get("description") or "")
 
         st = doc["state"]
         child.setText(COL_STATE, st)

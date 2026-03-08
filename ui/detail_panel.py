@@ -193,6 +193,24 @@ class DetailPanel(QWidget):
     def _build_properties_tab(self) -> QWidget:
         w = QWidget()
         layout = QVBoxLayout(w)
+
+        btn_row = QHBoxLayout()
+        btn_sync = QPushButton("🔄  Aggiorna Proprietà")
+        btn_sync.setToolTip(
+            "Sincronizza PDM ↔ SW secondo la mappatura e importa tutte le proprietà SW nel PDM"
+        )
+        btn_sync.clicked.connect(self._on_sync_props)
+        btn_import = QPushButton("⬇️  Importa da SW")
+        btn_import.setToolTip("Importa le proprietà dal file SW nel PDM (segue la mappatura)")
+        btn_import.clicked.connect(self._on_import_from_sw)
+        btn_export = QPushButton("⬆️  Esporta in SW")
+        btn_export.setToolTip("Esporta le proprietà PDM nel file SW (segue la mappatura)")
+        btn_export.clicked.connect(self._on_export_to_sw)
+        for b in (btn_sync, btn_import, btn_export):
+            btn_row.addWidget(b)
+        btn_row.addStretch()
+        layout.addLayout(btn_row)
+
         self.tbl_props = QTableWidget(0, 2)
         self.tbl_props.setHorizontalHeaderLabels(["Proprietà", "Valore"])
         self.tbl_props.horizontalHeader().setSectionResizeMode(
@@ -441,6 +459,11 @@ class DetailPanel(QWidget):
         self.lbl_prt_info.setWordWrap(True)
         prt_btns.addWidget(self.lbl_prt_info)
 
+        self.lbl_prt_checkout = QLabel()
+        self.lbl_prt_checkout.setStyleSheet("font-size: 11px;")
+        self.lbl_prt_checkout.setWordWrap(True)
+        prt_btns.addWidget(self.lbl_prt_checkout)
+
         self.btn_prt_export_ws = QPushButton("📤  Esporta in WS")
         self.btn_prt_export_ws.setToolTip("Copia il file dall'archivio nella workspace locale")
         self.btn_prt_export_ws.clicked.connect(self._on_prt_export_ws)
@@ -449,6 +472,15 @@ class DetailPanel(QWidget):
         self.btn_prt_open_sw = QPushButton("🔨  Apri in SolidWorks")
         self.btn_prt_open_sw.clicked.connect(self._on_prt_open_sw)
         prt_btns.addWidget(self.btn_prt_open_sw)
+
+        self.btn_create_sw = QPushButton("🔨  Crea in SW")
+        self.btn_create_sw.setObjectName("btn_primary")
+        self.btn_create_sw.clicked.connect(self._on_create_in_sw)
+        prt_btns.addWidget(self.btn_create_sw)
+
+        self.btn_create_file = QPushButton("📂  Crea da file")
+        self.btn_create_file.clicked.connect(self._on_create_from_file)
+        prt_btns.addWidget(self.btn_create_file)
 
         prt_btns.addStretch()
         prt_h.addLayout(prt_btns, 1)
@@ -474,6 +506,11 @@ class DetailPanel(QWidget):
         self.lbl_drw_info.setWordWrap(True)
         drw_btns.addWidget(self.lbl_drw_info)
 
+        self.lbl_drw_checkout = QLabel()
+        self.lbl_drw_checkout.setStyleSheet("font-size: 11px;")
+        self.lbl_drw_checkout.setWordWrap(True)
+        drw_btns.addWidget(self.lbl_drw_checkout)
+
         self.btn_drw_export_ws = QPushButton("📤  Esporta in WS")
         self.btn_drw_export_ws.setToolTip("Copia il disegno dall'archivio nella workspace locale")
         self.btn_drw_export_ws.clicked.connect(self._on_drw_export_ws)
@@ -496,20 +533,6 @@ class DetailPanel(QWidget):
         drw_h.addLayout(drw_btns, 1)
         layout.addWidget(self.grp_drw_preview)
 
-        # ---- Azioni creazione (quando non c'è ancora il file PRT/ASM) ----
-        self.grp_actions = QGroupBox("Azioni")
-        act_layout = QVBoxLayout(self.grp_actions)
-
-        self.btn_create_sw = QPushButton("🔨  Crea in SW")
-        self.btn_create_sw.setObjectName("btn_primary")
-        self.btn_create_sw.clicked.connect(self._on_create_in_sw)
-        act_layout.addWidget(self.btn_create_sw)
-
-        self.btn_create_file = QPushButton("📂  Crea da file")
-        self.btn_create_file.clicked.connect(self._on_create_from_file)
-        act_layout.addWidget(self.btn_create_file)
-
-        layout.addWidget(self.grp_actions)
         layout.addStretch()
         return w
 
@@ -535,52 +558,85 @@ class DetailPanel(QWidget):
             self._load_thumb_to(prt_asm, self.lbl_prt_thumb)
             icon = TYPE_ICON.get(prt_asm["doc_type"], "")
             rev  = prt_asm["revision"]
-            if prt_asm.get("archive_path"):
+            has_archive = bool(prt_asm.get("archive_path"))
+            in_ws = self._is_in_workspace(prt_asm)
+            if has_archive:
                 info       = f"{icon} Rev.{rev}  ✅  {prt_asm.get('state', '')}"
                 info_style = "color: #a6e3a1; font-size: 12px;"
             elif prt_asm["is_locked"]:
-                info       = f"{icon} Rev.{rev}  🔒 In checkout"
-                info_style = "color: #fab387; font-size: 12px;"
+                info       = f"{icon} Rev.{rev}  ⚠️  Modello non archiviato"
+                info_style = "color: #f38ba8; font-size: 12px;"
             else:
-                info       = f"{icon} Rev.{rev}  ❌ Non archiviato"
+                info       = f"{icon} Rev.{rev}  ⚠️  Modello non archiviato"
                 info_style = "color: #f38ba8; font-size: 12px;"
             self.lbl_prt_info.setText(info)
             self.lbl_prt_info.setStyleSheet(info_style)
-            has_archive = bool(prt_asm.get("archive_path"))
-            in_ws = self._is_in_workspace(prt_asm)
+            if prt_asm["is_locked"]:
+                locked_name = prt_asm.get("locked_by_name", "sconosciuto")
+                locked_ws   = prt_asm.get("locked_ws", "")
+                co_txt   = f"🔒 In checkout: {locked_name}"
+                if locked_ws:
+                    co_txt += f"  ({locked_ws})"
+                co_style = "color: #fab387;"
+            elif has_archive:
+                co_txt   = "✅ Disponibile"
+                co_style = "color: #a6e3a1;"
+            else:
+                co_txt   = ""
+                co_style = ""
+            self.lbl_prt_checkout.setText(co_txt)
+            self.lbl_prt_checkout.setStyleSheet(f"font-size: 11px; {co_style}")
             self.btn_prt_export_ws.setVisible(has_archive and not in_ws)
             self.btn_prt_open_sw.setVisible(has_archive or in_ws)
-            self.grp_prt_preview.setVisible(True)
+            no_file = not has_archive and not prt_asm["is_locked"]
+            self.btn_create_sw.setVisible(no_file)
+            self.btn_create_file.setVisible(no_file)
         else:
             self._code_prt_doc = None
-            self.grp_prt_preview.setVisible(False)
+            self.lbl_prt_info.setText("⚠️  Modello non presente")
+            self.lbl_prt_info.setStyleSheet("color: #585b70; font-size: 12px;")
+            self.lbl_prt_checkout.setText("")
+            self.btn_prt_export_ws.setVisible(False)
+            self.btn_prt_open_sw.setVisible(False)
+            self.btn_create_sw.setVisible(True)
+            self.btn_create_file.setVisible(True)
+        self.grp_prt_preview.setVisible(True)
 
         # ---- Card DRW ----
-        prt_asm_archived = bool(prt_asm and prt_asm.get("archive_path"))
         if drw:
             self._code_drw_doc = drw
             self._load_thumb_to(drw, self.lbl_drw_thumb)
             rev = drw["revision"]
-            if drw.get("archive_path"):
+            has_archive = bool(drw.get("archive_path"))
+            in_ws = self._is_in_workspace(drw)
+            if has_archive:
                 info       = f"📐 Rev.{rev}  ✅  {drw.get('state', '')}"
                 info_style = "color: #a6e3a1; font-size: 12px;"
-            elif drw["is_locked"]:
-                info       = f"📐 Rev.{rev}  🔒 In checkout"
-                info_style = "color: #fab387; font-size: 12px;"
             else:
-                info       = f"📐 Rev.{rev}  ❌ Non archiviato"
+                info       = f"📐 Rev.{rev}  ⚠️  Disegno non archiviato"
                 info_style = "color: #f38ba8; font-size: 12px;"
             self.lbl_drw_info.setText(info)
             self.lbl_drw_info.setStyleSheet(info_style)
-            has_archive = bool(drw.get("archive_path"))
-            in_ws = self._is_in_workspace(drw)
+            if drw["is_locked"]:
+                locked_name = drw.get("locked_by_name", "sconosciuto")
+                locked_ws   = drw.get("locked_ws", "")
+                co_txt   = f"🔒 In checkout: {locked_name}"
+                if locked_ws:
+                    co_txt += f"  ({locked_ws})"
+                co_style = "color: #fab387;"
+            elif has_archive:
+                co_txt   = "✅ Disponibile"
+                co_style = "color: #a6e3a1;"
+            else:
+                co_txt   = ""
+                co_style = ""
+            self.lbl_drw_checkout.setText(co_txt)
+            self.lbl_drw_checkout.setStyleSheet(f"font-size: 11px; {co_style}")
             self.btn_drw_export_ws.setVisible(has_archive and not in_ws)
             self.btn_drw_open_sw.setVisible(has_archive or in_ws)
-            # Mostra "Aggiungi DRW" e "Crea DRW da file" quando non c'è ancora il file
             can_create_drw = not has_archive and not drw["is_locked"]
             self.btn_add_drw.setVisible(can_create_drw)
             self.btn_create_drw_from_file.setVisible(can_create_drw)
-            self.grp_drw_preview.setVisible(True)
         else:
             self._code_drw_doc = None
             self.lbl_drw_thumb.setPixmap(QPixmap())
@@ -589,17 +645,16 @@ class DetailPanel(QWidget):
                 "background-color: #181825; border: 1px solid #313244; "
                 "border-radius: 6px; font-size: 40px; color: #585b70;"
             )
-            self.lbl_drw_info.setText(
-                "Disegno non ancora creato" if prt_asm_archived else "Nessun disegno"
-            )
+            self.lbl_drw_info.setText("⚠️  Disegno non presente")
             self.lbl_drw_info.setStyleSheet("color: #585b70; font-size: 12px;")
+            self.lbl_drw_checkout.setText("")
             self.btn_drw_export_ws.setVisible(False)
             self.btn_drw_open_sw.setVisible(False)
-            self.btn_add_drw.setVisible(prt_asm_archived)
-            self.btn_create_drw_from_file.setVisible(prt_asm_archived)
-            self.grp_drw_preview.setVisible(prt_asm_archived)
+            self.btn_add_drw.setVisible(True)
+            self.btn_create_drw_from_file.setVisible(True)
+        self.grp_drw_preview.setVisible(True)
 
-        # ---- Azioni creazione ----
+        # ---- Riferimenti per handlers ----
         prt_asm_no_file = [
             d for d in docs
             if d["doc_type"] in ("Parte", "Assieme")
@@ -611,9 +666,6 @@ class DetailPanel(QWidget):
         ]
         self._code_action_doc_id   = prt_asm_no_file[0]["id"]   if prt_asm_no_file   else None
         self._code_prt_asm_for_drw = prt_asm_with_file[0]["id"] if prt_asm_with_file else None
-        self.btn_create_sw.setVisible(bool(prt_asm_no_file))
-        self.btn_create_file.setVisible(bool(prt_asm_no_file))
-        self.grp_actions.setVisible(bool(prt_asm_no_file))
 
     def _on_create_in_sw(self):
         if self._code_action_doc_id:
@@ -818,6 +870,138 @@ class DetailPanel(QWidget):
             return None
         thumb_file = session.sp.thumbnails / f"{code}_{rev}.png"
         return thumb_file
+
+    # ------------------------------------------------------------------
+    #  Sync proprietà SW ↔ PDM
+    # ------------------------------------------------------------------
+    def _get_sw_file_for_sync(self) -> "Path | None":
+        """
+        Restituisce il path del file SW del documento corrente.
+        Cerca prima nella workspace, poi nell'archivio.
+        Funziona per PRT, ASM e DRW (ognuno cerca il proprio file).
+        """
+        doc_id = self._current_doc_id
+        if not doc_id or not session.is_connected:
+            return None
+
+        doc = session.files.get_document(doc_id)
+        if not doc:
+            return None
+
+        from config import load_local_config
+        from core.file_manager import EXT_FOR_TYPE
+        ws = load_local_config().get("sw_workspace", "")
+        ext = EXT_FOR_TYPE.get(doc.get("doc_type", ""), ".SLDPRT")
+
+        # 1) Workspace
+        if ws:
+            ws_file = Path(ws) / (doc["code"] + ext)
+            if ws_file.exists():
+                return ws_file
+
+        # 2) Archivio
+        if session.sp and doc.get("archive_path"):
+            arch = session.sp.root / doc["archive_path"]
+            if arch.exists():
+                return arch
+
+        return None
+
+    def _refresh_props_table(self):
+        """Ricarica la tabella proprietà e, se in modalità documento, ricarica il pannello."""
+        if not self._current_doc_id:
+            return
+        self.tbl_props.setRowCount(0)
+        props = session.properties.get_properties(self._current_doc_id)
+        for name, value in props.items():
+            row = self.tbl_props.rowCount()
+            self.tbl_props.insertRow(row)
+            self.tbl_props.setItem(row, 0, QTableWidgetItem(name))
+            self.tbl_props.setItem(row, 1, QTableWidgetItem(value))
+
+    def _on_sync_props(self):
+        """Aggiorna Proprietà: sincronizza PDM ↔ SW secondo la mappatura."""
+        doc_id = self._current_doc_id
+        if not doc_id:
+            return
+        file_path = self._get_sw_file_for_sync()
+        if not file_path:
+            QMessageBox.warning(
+                self, "File non trovato",
+                "Nessun file SW disponibile per la sincronizzazione.\n"
+                "Aprire il file in SolidWorks o esportarlo nella workspace."
+            )
+            return
+        try:
+            result = session.properties.sync_bidirectional(doc_id, file_path)
+            if not result.get("ok") and result.get("error"):
+                QMessageBox.warning(self, "Sincronizzazione", result["error"])
+                return
+            self._refresh_props_table()
+            msg = (
+                f"Sincronizzazione completata.\n"
+                f"Proprietà importate da SW: {result.get('imported_count', 0)}\n"
+                f"Proprietà scritte in SW: {result.get('written_count', 0)}"
+            )
+            if result.get("updated_owner"):
+                msg += "\nTitolo/descrizione aggiornati nel PDM."
+            QMessageBox.information(self, "Aggiorna Proprietà", msg)
+        except Exception as e:
+            QMessageBox.critical(self, "Errore sincronizzazione", str(e))
+
+    def _on_import_from_sw(self):
+        """Importa da SW: legge le proprietà dal file SW e le salva nel PDM."""
+        doc_id = self._current_doc_id
+        if not doc_id:
+            return
+        file_path = self._get_sw_file_for_sync()
+        if not file_path:
+            QMessageBox.warning(
+                self, "File non trovato",
+                "Nessun file SW disponibile per l'importazione.\n"
+                "Aprire il file in SolidWorks o esportarlo nella workspace."
+            )
+            return
+        try:
+            result = session.properties.sync_sw_to_pdm(doc_id, file_path)
+            if not result.get("ok"):
+                QMessageBox.warning(self, "Importazione", result.get("error", "Errore sconosciuto"))
+                return
+            self._refresh_props_table()
+            msg = (
+                f"Importazione completata.\n"
+                f"Proprietà importate: {result.get('imported_count', 0)}"
+            )
+            if result.get("updated_owner"):
+                msg += "\nTitolo/descrizione aggiornati nel PDM."
+            QMessageBox.information(self, "Importa da SW", msg)
+        except Exception as e:
+            QMessageBox.critical(self, "Errore importazione", str(e))
+
+    def _on_export_to_sw(self):
+        """Esporta in SW: scrive i campi PDM nel file SW secondo la mappatura.
+        Per i DRW scrive i campi del documento padre (PRT/ASM) nel file DRW."""
+        doc_id = self._current_doc_id
+        if not doc_id:
+            return
+
+        file_path = self._get_sw_file_for_sync()
+        if not file_path:
+            QMessageBox.warning(
+                self, "File non trovato",
+                "Nessun file SW disponibile per l'esportazione.\n"
+                "Il file deve essere aperto in SolidWorks o presente nella workspace."
+            )
+            return
+        try:
+            result = session.properties.sync_pdm_to_sw(doc_id, file_path)
+            if not result.get("ok"):
+                QMessageBox.warning(self, "Esportazione", result.get("error", "Errore sconosciuto"))
+                return
+            msg = f"Esportazione completata.\nProprietà scritte in SW: {result.get('written_count', 0)}"
+            QMessageBox.information(self, "Esporta in SW", msg)
+        except Exception as e:
+            QMessageBox.critical(self, "Errore esportazione", str(e))
 
     # ------------------------------------------------------------------
     #  eDrawings

@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QComboBox, QTextEdit, QGroupBox, QFormLayout,
     QTabWidget, QWidget, QTableWidget, QTableWidgetItem,
-    QMessageBox, QFileDialog, QHeaderView
+    QMessageBox, QFileDialog, QHeaderView, QRadioButton, QButtonGroup
 )
 from PyQt6.QtCore import Qt
 
@@ -79,19 +79,29 @@ class DocumentDialog(QDialog):
             self.cmb_machine.currentIndexChanged.connect(self._on_machine_changed)
             form.addRow("Macchina:", self.cmb_machine)
 
-            self.cmb_level = QComboBox()
-            self.cmb_level.addItem("LIV0 – Macchina (ASM)",   0)
-            self.cmb_level.addItem("LIV1 – Gruppo   (ASM)",   1)
-            self.cmb_level.addItem("LIV2 – Parte    (PRT)",   2)
-            self.cmb_level.addItem("LIV2 – Sottogruppo (ASM)", 3)
-            self.cmb_level.currentIndexChanged.connect(self._on_level_changed)
-            form.addRow("Livello:", self.cmb_level)
-
             self.cmb_group = QComboBox()
             self.cmb_group.setMinimumWidth(180)
             self.cmb_group.currentIndexChanged.connect(self._update_code_preview)
-            self._lbl_group = form.labelForField(self.cmb_group) if False else QLabel("Gruppo:")
             form.addRow("Gruppo:", self.cmb_group)
+
+            # Radio buttons livello
+            self._level_btn_group = QButtonGroup(self)
+            level_widget = QWidget()
+            level_layout = QVBoxLayout(level_widget)
+            level_layout.setContentsMargins(0, 0, 0, 0)
+            level_layout.setSpacing(4)
+            for _label, _data in [
+                ("LIV0  Macchina (ASM)", 0),
+                ("LIV1  Gruppo (ASM)", 1),
+                ("LIV2  Sottogruppo (ASM)", 3),
+                ("LIV2  Parte (PRT)", 2),
+            ]:
+                rb = QRadioButton(_label)
+                self._level_btn_group.addButton(rb, _data)
+                level_layout.addWidget(rb)
+            self._level_btn_group.button(0).setChecked(True)
+            self._level_btn_group.idClicked.connect(self._on_level_changed)
+            form.addRow("Livello:", level_widget)
 
             # Anteprima codice auto
             self.lbl_code_preview = QLabel("—")
@@ -99,6 +109,23 @@ class DocumentDialog(QDialog):
                 "color:#89b4fa;font-weight:bold;font-size:14px;"
             )
             form.addRow("Codice generato:", self.lbl_code_preview)
+
+            # Radio buttons modalità creazione
+            self._creation_mode_group = QButtonGroup(self)
+            mode_widget = QWidget()
+            mode_layout = QVBoxLayout(mode_widget)
+            mode_layout.setContentsMargins(0, 0, 0, 0)
+            mode_layout.setSpacing(4)
+            for _mlabel, _mid in [
+                ("Crea solo codice", 0),
+                ("Crea documento (ASM/PRT)", 1),
+                ("Crea documenti (ASM/PRT e DRW)", 2),
+            ]:
+                rb = QRadioButton(_mlabel)
+                self._creation_mode_group.addButton(rb, _mid)
+                mode_layout.addWidget(rb)
+            self._creation_mode_group.button(1).setChecked(True)
+            form.addRow("Crea:", mode_widget)
 
             # Tipo nascosto (usato internamente)
             self.cmb_type = QComboBox()  # stub per compat.
@@ -315,7 +342,7 @@ class DocumentDialog(QDialog):
         self._update_code_preview()
 
     def _on_level_changed(self):
-        level = self.cmb_level.currentData()
+        level = self._level_btn_group.checkedId()
         # Nascondi gruppo solo per LIV0 (macchina)
         self.cmb_group.setVisible(level != 0)
         self._update_code_preview()
@@ -325,7 +352,7 @@ class DocumentDialog(QDialog):
             return
         machine_id = self.cmb_machine.currentData()
         group_id   = self.cmb_group.currentData()
-        level_data = self.cmb_level.currentData()
+        level_data = self._level_btn_group.checkedId()
         level_map  = {0: (0, "ASM"), 1: (1, "ASM"), 2: (2, "PRT"), 3: (2, "ASM")}
         level, subtype = level_map.get(level_data, (2, "PRT"))
         if not machine_id:
@@ -351,7 +378,7 @@ class DocumentDialog(QDialog):
         desc       = self.txt_desc.toPlainText().strip()
         machine_id = self.cmb_machine.currentData()
         group_id   = self.cmb_group.currentData()
-        level_data = self.cmb_level.currentData()
+        level_data = self._level_btn_group.checkedId()
 
         if not title:
             QMessageBox.warning(self, "Errore", "Il titolo è obbligatorio")
@@ -403,44 +430,90 @@ class DocumentDialog(QDialog):
         self.document_id = doc_id
         self.is_new = False
 
-        # Offri creazione file da template in SolidWorks
+        creation_mode = self._creation_mode_group.checkedId()  # 0=solo codice, 1=doc, 2=doc+drw
+
+        if creation_mode == 0:
+            # Solo codice: nessun file SW
+            QMessageBox.information(
+                self, "Documento Creato",
+                f"Codice registrato:\n{code}  rev.{revision}  [{doc_type}]"
+            )
+            self.accept()
+            return
+
+        # Modalità 1 o 2: crea file SW da template
         from config import load_local_config
         from core.file_manager import EXT_FOR_TYPE, _sw_open_and_saveas
-        cfg = load_local_config()
+        cfg     = load_local_config()
         ws_root = cfg.get("sw_workspace", "")
         key_map = {"Parte": "sw_template_prt", "Assieme": "sw_template_asm", "Disegno": "sw_template_drw"}
         tpl_path = cfg.get(key_map.get(doc_type, ""), "")
+        sw_ok = False
+
         if ws_root and tpl_path and Path(ws_root).is_dir() and Path(tpl_path).exists():
-            r = QMessageBox.question(
-                self, "Crea file in SolidWorks?",
-                f"Documento creato: <b>{code}  rev.{revision}</b><br><br>"
-                "Aprire il template in SolidWorks e creare il file?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.Yes,
-            )
-            if r == QMessageBox.StandardButton.Yes:
+            if creation_mode == 1:
+                # Chiedi conferma
+                r = QMessageBox.question(
+                    self, "Crea file in SolidWorks?",
+                    f"Documento creato: <b>{code}  rev.{revision}</b><br><br>"
+                    "Aprire il template in SolidWorks e creare il file?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.Yes,
+                )
+                do_sw = (r == QMessageBox.StandardButton.Yes)
+            else:
+                do_sw = True  # modalità 2: crea sempre
+
+            if do_sw:
                 try:
                     ext = EXT_FOR_TYPE.get(doc_type, ".SLDPRT")
                     ws_file = Path(ws_root) / f"{code}{ext}"
                     _sw_open_and_saveas(Path(tpl_path), ws_file, doc_type, is_template=True)
                     session.checkout.checkout_new_from_workspace(doc_id, ws_file)
-                    QMessageBox.information(
-                        self, "Documento Creato",
-                        f"Documento creato e in checkout:\n{code}  rev.{revision}  [{doc_type}]\n\n"
-                        f"File aperto in SolidWorks dalla workspace:\n{ws_file}"
-                    )
+                    # Esporta le proprietà PDM nel file appena creato
+                    try:
+                        session.properties.sync_pdm_to_sw(doc_id, ws_file)
+                    except Exception:
+                        pass  # non bloccante
+                    sw_ok = True
                 except Exception as fe:
                     QMessageBox.warning(self, "File non creato",
                                         f"Documento registrato ma file non creato in SW:\n{fe}")
-                    QMessageBox.information(self, "Documento Creato",
-                                            f"Documento creato:\n{code}  rev.{revision}  [{doc_type}]")
-            else:
-                QMessageBox.information(self, "Documento Creato",
-                                        f"Documento creato:\n{code}  rev.{revision}  [{doc_type}]")
+
+        # Modalità 2: crea anche DRW
+        drw_msg = ""
+        if creation_mode == 2 and sw_ok:
+            drw_tpl_path = cfg.get("sw_template_drw", "")
+            if ws_root and drw_tpl_path and Path(drw_tpl_path).exists():
+                try:
+                    drw_id = session.files.get_or_create_drw_document(doc_id)
+                    drw_ext = EXT_FOR_TYPE.get("Disegno", ".SLDDRW")
+                    drw_ws_file = Path(ws_root) / f"{code}{drw_ext}"
+                    _sw_open_and_saveas(Path(drw_tpl_path), drw_ws_file, "Disegno", is_template=True)
+                    session.checkout.checkout_new_from_workspace(drw_id, drw_ws_file)
+                    # Esporta le proprietà PDM (del padre PRT/ASM) nel file DRW
+                    try:
+                        session.properties.sync_pdm_to_sw(drw_id, drw_ws_file)
+                    except Exception:
+                        pass  # non bloccante
+                    drw_msg = f"\n\nDRW creato e in checkout:\n{drw_ws_file}"
+                except Exception as fe:
+                    QMessageBox.warning(self, "DRW non creato",
+                                        f"Documento DRW registrato ma file non creato in SW:\n{fe}")
+
+        if sw_ok:
+            sw_ext = EXT_FOR_TYPE.get(doc_type, ".SLDPRT")
+            ws_file_path = Path(ws_root) / f"{code}{sw_ext}"
+            QMessageBox.information(
+                self, "Documento Creato",
+                f"Documento creato e in checkout:\n{code}  rev.{revision}  [{doc_type}]"
+                f"\n\nFile aperto in SolidWorks dalla workspace:\n{ws_file_path}"
+                + drw_msg
+            )
         else:
             QMessageBox.information(
                 self, "Documento Creato",
-                f"Documento creato:\n{code}  rev.{revision}  [{doc_type}]"
+                f"Documento creato:\n{code}  rev.{revision}  [{doc_type}]" + drw_msg
             )
         self.accept()
 

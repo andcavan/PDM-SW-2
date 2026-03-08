@@ -344,6 +344,17 @@ class CheckinDialog(QDialog):
         except Exception as e:
             QMessageBox.critical(self, "Errore check-in", str(e))
 
+    def _sync_sw_to_pdm_before_checkin(self, document_id: int):
+        """Importa le proprietà SW nel PDM dal file in workspace prima dell'archiviazione."""
+        try:
+            ws_file = session.checkout._ws_file_path(
+                session.files.get_document(document_id)
+            )
+            if ws_file and ws_file.exists():
+                session.properties.sync_sw_to_pdm(document_id, ws_file)
+        except Exception as e:
+            logging.warning("Sync SW→PDM pre-checkin fallita per doc %s: %s", document_id, e)
+
     def _do_checkin_single(self, notes: str, delete_ws: bool):
         mod_info = getattr(self, "_single_mod_info", {})
         archive = True
@@ -355,6 +366,10 @@ class CheckinDialog(QDialog):
                 archive = True
             else:
                 archive = False
+
+        # Importa proprietà SW nel PDM prima di archiviare
+        if archive:
+            self._sync_sw_to_pdm_before_checkin(self.document_id)
 
         result = session.checkout.checkin(
             self.document_id,
@@ -427,6 +442,8 @@ class CheckinDialog(QDialog):
         errors = []
         for doc_id in checked_ids:
             try:
+                # Importa proprietà SW nel PDM prima di archiviare
+                self._sync_sw_to_pdm_before_checkin(doc_id)
                 r = session.checkout.checkin(
                     doc_id,
                     archive_file=True,
