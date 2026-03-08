@@ -84,7 +84,7 @@ def load_session():
     if not user_row:
         raise ValueError("Nessun utente trovato nel database PDM.")
 
-    logging.info("Sessione OK  user=%s (id=%s)", user_row.get("name"), user_row.get("id"))
+    logging.info("Sessione OK  user=%s (id=%s)", user_row.get("username"), user_row.get("id"))
     return db, sp, user_row
 
 
@@ -389,20 +389,26 @@ def action_export_props(file_path: str):
             return
 
         written = int(sync.get("written_count", 0))
+        mapped_keys = set((sync.get("props") or {}).keys())
 
-        # 2) Export custom properties presenti nella tabella PDM.
-        props = pm.get_properties(doc["id"])
-        if props:
-            logging.info("Export custom proprieta verso SW: %s", list(props.keys()))
-            pm.write_to_sw_file(Path(file_path), props)
+        # 2) Export custom properties presenti nella tabella PDM,
+        #    escludendo le chiavi già scritte dalla mappatura per evitare
+        #    una seconda scrittura (e secondo Save) sugli stessi campi.
+        all_props = pm.get_properties(doc["id"])
+        extra_props = {k: v for k, v in all_props.items() if k not in mapped_keys}
+        if extra_props:
+            logging.info("Export custom proprieta verso SW: %s", list(extra_props.keys()))
+            pm.write_to_sw_file(Path(file_path), extra_props)
 
-        if written <= 0 and not props:
+        if written <= 0 and not all_props:
             write_result("Nessuna proprieta' da esportare verso SolidWorks.", error=False)
             return
 
         msg = f"Sync mapping PDM->SW completata ({written} campi)."
-        if props:
-            msg += f"\nCustom properties esportate: {len(props)}."
+        if extra_props:
+            msg += f"\nCustom properties aggiuntive esportate: {len(extra_props)}."
+        elif all_props:
+            msg += f"\nCustom properties gia' coperte dalla mappatura: {len(all_props)}."
         write_result(msg, error=False)
     except Exception as e:
         logging.error("Errore export_props: %s", e, exc_info=True)

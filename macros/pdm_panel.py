@@ -887,22 +887,25 @@ class PDMPanel(QDialog):
         if not self.doc or not self.props:
             return
         try:
-            raw = self.props.read_from_sw_file(Path(self.file_path))
-            err = raw.pop("_error", None)
-            if err:
-                QMessageBox.warning(self, "Proprietà", f"Errore lettura SW:\n{err}")
+            fp = Path(self.file_path)
+            sync = self.props.sync_sw_to_pdm(
+                self.doc["id"], fp, file_name=fp.name
+            )
+            if not sync.get("ok"):
+                QMessageBox.warning(self, "Proprietà", f"Errore lettura SW:\n{sync.get('error', '')}")
                 return
-            if not raw:
+            imported = int(sync.get("imported_count", 0))
+            updated = bool(sync.get("updated_owner", False))
+            if imported <= 0 and not updated:
                 QMessageBox.information(
                     self, "Proprietà",
                     "Nessuna proprietà custom trovata nel file SolidWorks."
                 )
                 return
-            self.props.save_properties(self.doc["id"], raw)
-            QMessageBox.information(
-                self, "Proprietà importate",
-                f"{len(raw)} proprietà lette da SolidWorks e salvate nel PDM."
-            )
+            msg = f"{imported} proprietà lette da SolidWorks e salvate nel PDM."
+            if updated:
+                msg += "\nCampi PDM (titolo/descrizione) aggiornati dalla mappatura."
+            QMessageBox.information(self, "Proprietà importate", msg)
         except Exception as e:
             QMessageBox.critical(self, "Errore", str(e))
 
@@ -910,17 +913,27 @@ class PDMPanel(QDialog):
         if not self.doc or not self.props:
             return
         try:
-            pdm_props = self.props.get_properties(self.doc["id"])
-            if not pdm_props:
+            fp = Path(self.file_path)
+            # 1) Sync campi PDM fondamentali (revisione, codice, stato, autore, data)
+            sync = self.props.sync_pdm_to_sw(self.doc["id"], fp, force_revision=True)
+            if not sync.get("ok"):
+                QMessageBox.warning(self, "Proprietà", f"Errore sync PDM->SW:\n{sync.get('error', '')}")
+                return
+            written = int(sync.get("written_count", 0))
+            # 2) Scrivi anche le custom properties dal DB
+            custom = self.props.get_properties(self.doc["id"])
+            if custom:
+                self.props.write_to_sw_file(fp, custom)
+            total = written + len(custom)
+            if total <= 0:
                 QMessageBox.information(
                     self, "Proprietà",
-                    "Nessuna proprietà nel PDM per questo documento."
+                    "Nessuna proprietà da esportare verso SolidWorks."
                 )
                 return
-            self.props.write_to_sw_file(Path(self.file_path), pdm_props)
             QMessageBox.information(
                 self, "Proprietà esportate",
-                f"{len(pdm_props)} proprietà PDM scritte nel file SolidWorks."
+                f"{written} campi PDM + {len(custom)} custom properties scritti nel file SolidWorks."
             )
         except Exception as e:
             QMessageBox.critical(self, "Errore", str(e))

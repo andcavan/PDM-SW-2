@@ -254,13 +254,16 @@ class CheckoutManager:
                 self._copy_workspace_to_archive(doc, ws_file)
                 result["archived"] = True
 
-            # Eliminazione dalla workspace
+            # Eliminazione dalla workspace o impostazione sola lettura
             if delete_from_workspace:
                 try:
                     self._set_writable(ws_file)  # Windows: necessario prima di unlink
                     ws_file.unlink()
                 except OSError:
                     pass
+            else:
+                # File rimane in workspace ma non è più in checkout: sola lettura
+                self._set_readonly(ws_file)
         elif archive_file:
             # File non trovato in workspace ma si voleva archiviare → errore esplicito
             raise FileNotFoundError(
@@ -370,6 +373,80 @@ class CheckoutManager:
         self._unregister_workspace_file(document_id, doc.get("locked_by", uid))
 
         return True
+
+    # ==================================================================
+    #  CHECKOUT NUOVO DA WORKSPACE (creazione/importazione via SW)
+    # ==================================================================
+    def checkout_new_from_workspace(self, document_id: int, ws_file: Path) -> Path:
+        """
+        Registra un file appena creato/importato via SolidWorks come checked out.
+        Il file in workspace (ws_file) è già pronto (da SaveAs SW).
+        1. Copia ws_file → archivio con nome codice PDM
+        2. Imposta archivio sola lettura
+        3. Aggiorna DB: file_name, archive_path
+        4. Imposta lock checkout (is_locked=1)
+        5. Registra in workspace_files e checkout_log
+        Ritorna il path del file in archivio.
+        """
+        doc = self._get_doc_or_raise(document_id)
+
+        ext = self._ext_for_doc_type(doc["doc_type"])
+        arch_dir = self.sp.archive_path(doc["code"], doc["revision"])
+        arch_dir.mkdir(parents=True, exist_ok=True)
+        arch_file = arch_dir / (doc["code"] + ext)
+
+        if arch_file.exists():
+            self._set_writable(arch_file)
+        shutil.copy2(ws_file, arch_file)
+        self._set_readonly(arch_file)  # archivio sempre sola lettura
+
+        rel_path = str(arch_file.relative_to(self.sp.root))
+        uid = self.current_user["id"]
+
+        # Aggiorna metadati documento
+        self.db.execute(
+            """UPDATE documents
+               SET file_name=?, file_ext=?, archive_path=?,
+                   modified_by=?, modified_at=datetime('now')
+               WHERE id=?""",
+            (arch_file.name, ext, rel_path, uid, document_id),
+        )
+
+        # Snapshot del file archiviato
+        snap = self._file_snapshot(arch_file)
+
+        # Lock checkout
+        self.db.execute(
+            """UPDATE documents
+               SET is_locked=1, locked_by=?, locked_at=datetime('now'),
+                   locked_ws=?, checkout_md5=?, checkout_size=?, checkout_mtime=?
+               WHERE id=?""",
+            (uid, socket.gethostname(),
+             snap["md5"], snap["size"], snap["mtime"], document_id),
+        )
+
+        # Log
+        self.db.execute(
+            """INSERT INTO checkout_log
+               (document_id, user_id, action, workstation, workspace_path,
+                checkout_md5, checkout_size, checkout_mtime)
+               VALUES (?,?,'checkout',?,?,?,?,?)""",
+            (document_id, uid, socket.gethostname(), str(ws_file),
+             snap["md5"], snap["size"], snap["mtime"]),
+        )
+
+        # Registra workspace_files
+        self._register_workspace_file(document_id, uid, "checkout", str(ws_file))
+
+        # Il file workspace deve essere scrivibile (è in checkout)
+        if ws_file.exists():
+            self._set_writable(ws_file)
+
+        return arch_file
+
+    def _ext_for_doc_type(self, doc_type: str) -> str:
+        from core.file_manager import EXT_FOR_TYPE
+        return EXT_FOR_TYPE.get(doc_type, ".SLDPRT")
 
     # ==================================================================
     #  CONSULTAZIONE (copia senza lock)
@@ -520,14 +597,17 @@ class CheckoutManager:
         return dest
 
     def _copy_workspace_to_archive(self, doc: dict, ws_file: Path):
-        """Copia file dalla workspace all'archivio."""
+        """Copia file dalla workspace all'archivio (sola lettura)."""
         archive_dir = self.sp.archive_path(doc["code"], doc["revision"])
         archive_dir.mkdir(parents=True, exist_ok=True)
 
         from core.file_manager import EXT_FOR_TYPE
         ext = EXT_FOR_TYPE.get(doc.get("doc_type", ""), ".SLDPRT")
         dest = archive_dir / (doc["code"] + ext)
+        if dest.exists():
+            self._set_writable(dest)  # Rimuovi sola lettura prima di sovrascrivere
         shutil.copy2(ws_file, dest)
+        self._set_readonly(dest)  # Archivio sempre sola lettura
 
         rel_path = str(dest.relative_to(self.sp.root))
         uid = self.current_user["id"]

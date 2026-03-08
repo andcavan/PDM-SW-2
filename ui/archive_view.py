@@ -143,6 +143,7 @@ class ArchiveView(QWidget):
         self.detail_panel.create_in_sw_requested.connect(self._action_create_in_sw)
         self.detail_panel.create_from_file_requested.connect(self._action_create_from_file)
         self.detail_panel.add_drw_requested.connect(self._action_add_drw)
+        self.detail_panel.create_drw_from_file_requested.connect(self._action_create_drw_from_file)
 
         # Proporzioni iniziali 65/35
         self.splitter.setStretchFactor(0, 65)
@@ -624,36 +625,101 @@ class ArchiveView(QWidget):
     #  Azioni creazione archive-first (attivate da segnali DetailPanel)
     # ------------------------------------------------------------------
     def _action_create_in_sw(self, doc_id: int):
-        """Crea il template SW direttamente in archivio; optional checkout."""
-        also_checkout = self.detail_panel.chk_checkout.isChecked()
-        try:
-            dest = session.files.create_to_archive(doc_id)
-            if also_checkout:
-                session.checkout.checkout(doc_id)
-                session.files.open_from_workspace(doc_id)
-            msg = f"File creato in archivio:\n{dest.name}"
-            if also_checkout:
-                msg += "\n\nFile aperto in SolidWorks."
-            QMessageBox.information(self, "File creato", msg)
-            self.refresh()
-        except FileNotFoundError as e:
+        """Apre il template in SolidWorks, salva come codice PDM, mette in checkout."""
+        from core.file_manager import _sw_open_and_saveas
+        from config import load_local_config
+        from ui.sw_config_dialog import SWConfigDialog
+
+        doc = session.files.get_document(doc_id)
+        if not doc:
+            return
+
+        # Recupera template configurato
+        cfg = load_local_config()
+        key_map = {"Parte": "sw_template_prt", "Assieme": "sw_template_asm",
+                   "Disegno": "sw_template_drw"}
+        tpl_path = cfg.get(key_map.get(doc["doc_type"], ""), "")
+        if not tpl_path or not Path(tpl_path).exists():
             r = QMessageBox.question(
                 self, "Template non configurato",
-                f"{e}\n\nAprire la configurazione SolidWorks ora?",
+                "Nessun template SolidWorks configurato per questo tipo.\n\n"
+                "Aprire la configurazione SolidWorks ora?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             if r == QMessageBox.StandardButton.Yes:
-                from ui.sw_config_dialog import SWConfigDialog
                 dlg = SWConfigDialog(parent=self)
                 dlg.exec()
+            return
+
+        # Workspace
+        ws_root = cfg.get("sw_workspace", "")
+        if not ws_root or not Path(ws_root).is_dir():
+            QMessageBox.warning(
+                self, "Workspace non configurata",
+                "Configurare la workspace in Strumenti → Configurazione SolidWorks."
+            )
+            return
+
+        ext = EXT_FOR_TYPE.get(doc["doc_type"], ".SLDPRT")
+        ws_file = Path(ws_root) / (doc["code"] + ext)
+
+        try:
+            _sw_open_and_saveas(Path(tpl_path), ws_file, doc["doc_type"], is_template=True)
+            session.checkout.checkout_new_from_workspace(doc_id, ws_file)
+            self.refresh()
+            QMessageBox.information(
+                self, "File creato",
+                f"File creato e messo in checkout:\n{ws_file.name}\n\n"
+                "Il file è aperto in SolidWorks dalla workspace."
+            )
+        except Exception as e:
+            QMessageBox.critical(self, "Errore", str(e))
+
+    def _action_create_drw_from_file(self, parent_doc_id: int):
+        """Importa un DRW esistente via SolidWorks (SaveAs con codice PDM) e mette in checkout."""
+        from core.file_manager import _sw_open_and_saveas
+        from config import load_local_config
+
+        cfg = load_local_config()
+        ws_root = cfg.get("sw_workspace", "")
+        if not ws_root or not Path(ws_root).is_dir():
+            QMessageBox.warning(
+                self, "Workspace non configurata",
+                "Configurare la workspace in Strumenti → Configurazione SolidWorks."
+            )
+            return
+
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Seleziona file Disegno",
+            "", "File SolidWorks (*.SLDDRW *.slddrw)"
+        )
+        if not path:
+            return
+
+        try:
+            drw_id = session.files.get_or_create_drw_document(parent_doc_id)
+            doc = session.files.get_document(drw_id)
+            ws_file = Path(ws_root) / (doc["code"] + ".SLDDRW")
+            _sw_open_and_saveas(Path(path), ws_file, "Disegno", is_template=False)
+            session.checkout.checkout_new_from_workspace(drw_id, ws_file)
+            self.refresh()
+            QMessageBox.information(
+                self, "DRW importato",
+                f"Disegno importato e messo in checkout:\n{ws_file.name}\n\n"
+                "Il file è aperto in SolidWorks dalla workspace."
+            )
         except Exception as e:
             QMessageBox.critical(self, "Errore", str(e))
 
     def _action_create_from_file(self, doc_id: int):
-        """Importa un file esterno direttamente in archivio."""
+        """Importa un file esterno via SolidWorks (SaveAs con codice PDM) e mette in checkout."""
+        from core.file_manager import _sw_open_and_saveas
+        from config import load_local_config
+
         doc = session.files.get_document(doc_id)
         if not doc:
             return
+
         sw_ext = EXT_FOR_TYPE.get(doc["doc_type"], ".SLDPRT")
         path, _ = QFileDialog.getOpenFileName(
             self, f"Seleziona file {doc['doc_type']}",
@@ -661,41 +727,69 @@ class ArchiveView(QWidget):
         )
         if not path:
             return
+
+        cfg = load_local_config()
+        ws_root = cfg.get("sw_workspace", "")
+        if not ws_root or not Path(ws_root).is_dir():
+            QMessageBox.warning(
+                self, "Workspace non configurata",
+                "Configurare la workspace in Strumenti → Configurazione SolidWorks."
+            )
+            return
+
+        ext = EXT_FOR_TYPE.get(doc["doc_type"], ".SLDPRT")
+        ws_file = Path(ws_root) / (doc["code"] + ext)
+
         try:
-            dest = session.files.create_to_archive(doc_id, source_path=Path(path))
-            also_checkout = self.detail_panel.chk_checkout.isChecked()
-            if also_checkout:
-                session.checkout.checkout(doc_id)
+            _sw_open_and_saveas(Path(path), ws_file, doc["doc_type"], is_template=False)
+            session.checkout.checkout_new_from_workspace(doc_id, ws_file)
+            self.refresh()
             QMessageBox.information(
                 self, "File importato",
-                f"File importato in archivio:\n{dest.name}"
+                f"File importato e messo in checkout:\n{ws_file.name}\n\n"
+                "Il file è aperto in SolidWorks dalla workspace."
             )
-            self.refresh()
         except Exception as e:
             QMessageBox.critical(self, "Errore", str(e))
 
     def _action_add_drw(self, parent_doc_id: int):
-        """Crea il disegno DRW in archivio partendo dal template."""
-        try:
-            drw_id = session.files.get_or_create_drw_document(parent_doc_id)
-            dest = session.files.create_to_archive(drw_id)
-            also_checkout = self.detail_panel.chk_checkout.isChecked()
-            if also_checkout:
-                session.checkout.checkout(drw_id)
-            QMessageBox.information(
-                self, "DRW creato",
-                f"Disegno creato in archivio:\n{dest.name}"
-            )
-            self.refresh()
-        except FileNotFoundError as e:
+        """Crea il disegno DRW via SolidWorks (SaveAs) e mette in checkout."""
+        from core.file_manager import _sw_open_and_saveas
+        from config import load_local_config
+        from ui.sw_config_dialog import SWConfigDialog
+
+        cfg = load_local_config()
+        tpl_path = cfg.get("sw_template_drw", "")
+        if not tpl_path or not Path(tpl_path).exists():
             r = QMessageBox.question(
                 self, "Template non configurato",
-                f"{e}\n\nAprire la configurazione SolidWorks ora?",
+                "Nessun template DRW configurato.\n\nAprire la configurazione SolidWorks ora?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             if r == QMessageBox.StandardButton.Yes:
-                from ui.sw_config_dialog import SWConfigDialog
                 dlg = SWConfigDialog(parent=self)
                 dlg.exec()
+            return
+
+        ws_root = cfg.get("sw_workspace", "")
+        if not ws_root or not Path(ws_root).is_dir():
+            QMessageBox.warning(
+                self, "Workspace non configurata",
+                "Configurare la workspace in Strumenti → Configurazione SolidWorks."
+            )
+            return
+
+        try:
+            drw_id = session.files.get_or_create_drw_document(parent_doc_id)
+            doc = session.files.get_document(drw_id)
+            ws_file = Path(ws_root) / (doc["code"] + ".SLDDRW")
+            _sw_open_and_saveas(Path(tpl_path), ws_file, "Disegno", is_template=True)
+            session.checkout.checkout_new_from_workspace(drw_id, ws_file)
+            self.refresh()
+            QMessageBox.information(
+                self, "DRW creato",
+                f"Disegno creato e messo in checkout:\n{ws_file.name}\n\n"
+                "Il file è aperto in SolidWorks dalla workspace."
+            )
         except Exception as e:
             QMessageBox.critical(self, "Errore", str(e))

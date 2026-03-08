@@ -44,6 +44,80 @@ EXT_FOR_TYPE: dict[str, str] = {
 }
 
 
+def _sw_open_and_saveas(source_path: Path, dest_path: Path,
+                        doc_type_str: str, is_template: bool = False) -> Path:
+    """
+    Apre source_path in SolidWorks e salva come dest_path (SaveAs).
+
+    - is_template=True  → usa sw.NewDocument() per creare un nuovo documento
+                          da file template (.prtdot/.asmdot/.drwdot).
+    - is_template=False → apre il file esistente (riusa se già aperto in SW,
+                          altrimenti OpenDoc6) e fa SaveAs con il nuovo nome.
+
+    Dopo il SaveAs il documento rimane aperto in SolidWorks con il nuovo nome.
+    Lancia RuntimeError se SolidWorks non è disponibile o SaveAs fallisce.
+    """
+    try:
+        import win32com.client as win32
+        import pythoncom
+    except ImportError:
+        raise RuntimeError(
+            "pywin32 non installato.\n"
+            "Eseguire: pip install pywin32"
+        )
+
+    type_id = _SW_DOC_TYPE_ID.get(doc_type_str, 1)
+
+    try:
+        sw = win32.GetActiveObject("SldWorks.Application")
+    except Exception:
+        try:
+            sw = win32.Dispatch("SldWorks.Application")
+        except Exception:
+            raise RuntimeError(
+                "Impossibile connettersi a SolidWorks.\n"
+                "Assicurarsi che SolidWorks sia installato e in esecuzione."
+            )
+
+    sw.Visible = True
+
+    if is_template:
+        # NewDocument apre un nuovo documento non salvato basato sul template
+        model = sw.NewDocument(str(source_path), 0, 0, 0)
+    else:
+        # Cerca prima tra i documenti già aperti in SolidWorks
+        model = None
+        try:
+            model = sw.GetOpenDocumentByName(str(source_path))
+        except Exception:
+            pass
+        if model is None:
+            arg_err  = win32.VARIANT(pythoncom.VT_BYREF | pythoncom.VT_I4, 0)
+            arg_warn = win32.VARIANT(pythoncom.VT_BYREF | pythoncom.VT_I4, 0)
+            model = sw.OpenDoc6(
+                str(source_path), type_id, 0, "", arg_err, arg_warn
+            )
+
+    if model is None:
+        raise RuntimeError(
+            "Impossibile aprire il file in SolidWorks.\n"
+            f"Sorgente: {source_path.name}\n"
+            "Verificare che SolidWorks sia in esecuzione e il file sia accessibile."
+        )
+
+    dest_path.parent.mkdir(parents=True, exist_ok=True)
+    # SaveAs3(Name, Version=0 (current), Options=1 = swSaveAsOptions_Silent)
+    # Alcune versioni SW restituiscono None anche in caso di successo:
+    # si verifica l'esito controllando se il file esiste su disco.
+    model.SaveAs3(str(dest_path), 0, 1)
+    if not dest_path.exists():
+        raise RuntimeError(
+            f"SolidWorks SaveAs fallito: file non trovato su disco.\n"
+            f"Destinazione: {dest_path}"
+        )
+    return dest_path
+
+
 class FileManager:
     def __init__(self, db: "Database", shared_paths: "SharedPaths",
                  current_user: dict):
@@ -469,6 +543,14 @@ class FileManager:
         arch_dir.mkdir(parents=True, exist_ok=True)
         dest = arch_dir / (doc["code"] + sw_ext)
 
+        # Rimuovi sola lettura prima di sovrascrivere (se già esistente)
+        if dest.exists():
+            import stat as _stat
+            try:
+                dest.chmod(dest.stat().st_mode | _stat.S_IWRITE)
+            except OSError:
+                pass
+
         if source_path is not None:
             source_path = Path(source_path)
             if not source_path.exists():
@@ -494,6 +576,13 @@ class FileManager:
                     "Configurarlo in Strumenti \u2192 Configurazione SolidWorks."
                 )
             shutil.copy2(tpl_path, dest)
+
+        # Archivio sempre sola lettura
+        import stat as _stat
+        try:
+            dest.chmod(dest.stat().st_mode & ~(_stat.S_IWRITE | _stat.S_IWGRP | _stat.S_IWOTH))
+        except OSError:
+            pass
 
         rel_path = str(dest.relative_to(self.sp.root))
         self.db.execute(

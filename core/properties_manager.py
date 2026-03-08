@@ -435,6 +435,7 @@ class PropertiesManager:
                     while doc_iter is not None:
                         try:
                             fp = doc_iter.GetPathName
+                            fp = fp() if callable(fp) else fp
                             if isinstance(fp, str) and fp:
                                 if Path(fp).name.upper() == search_name:
                                     found_path = fp
@@ -443,6 +444,7 @@ class PropertiesManager:
                             pass
                         try:
                             doc_iter = doc_iter.GetNext
+                            doc_iter = doc_iter() if callable(doc_iter) else doc_iter
                             if doc_iter is None or not hasattr(doc_iter, 'GetPathName'):
                                 break
                         except Exception:
@@ -832,6 +834,8 @@ class PropertiesManager:
         config_names = [""]
         try:
             cfgs = model.GetConfigurationNames
+            if callable(cfgs):
+                cfgs = cfgs()
             if cfgs:
                 if isinstance(cfgs, str):
                     config_names.append(cfgs)
@@ -997,12 +1001,15 @@ class PropertiesManager:
                     continue
                 v = str(value or "")
                 # Prima prova Set2 su proprieta esistente.
+                # Set2 ritorna swCustomInfoSetResult_e (0=OK), NON lancia eccezione
+                # se la proprieta non esiste: bisogna controllare il valore di ritorno.
                 try:
-                    mgr.Set2(n, v)
-                    continue
+                    ret = mgr.Set2(n, v)
+                    if ret == 0:  # swCustomInfoSetResult_OK
+                        continue
                 except Exception:
                     pass
-                # Poi Add3 per nuova proprieta.
+                # Poi Add3 per nuova proprieta (o aggiornamento se Set2 ha fallito).
                 try:
                     # swCustomInfoText=30, swCustomPropertyReplaceValue=2
                     mgr.Add3(n, 30, v, 2)

@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QTabWidget, QTableWidget, QTableWidgetItem, QHeaderView,
     QGroupBox, QFormLayout, QMessageBox, QSizePolicy,
-    QStackedWidget, QCheckBox
+    QStackedWidget
 )
 from PyQt6.QtCore import Qt, QSize, pyqtSignal
 from PyQt6.QtGui import QPixmap, QFont
@@ -43,9 +43,10 @@ class DetailPanel(QWidget):
     """
 
     # Segnali emessi dai bottoni di creazione (archive-first)
-    create_in_sw_requested   = pyqtSignal(int)  # doc_id PRT/ASM senza file
-    create_from_file_requested = pyqtSignal(int)  # doc_id PRT/ASM senza file
-    add_drw_requested        = pyqtSignal(int)  # parent PRT/ASM doc_id
+    create_in_sw_requested        = pyqtSignal(int)  # doc_id PRT/ASM senza file
+    create_from_file_requested    = pyqtSignal(int)  # doc_id PRT/ASM senza file
+    add_drw_requested             = pyqtSignal(int)  # parent PRT/ASM doc_id
+    create_drw_from_file_requested = pyqtSignal(int)  # parent PRT/ASM doc_id
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -132,6 +133,22 @@ class DetailPanel(QWidget):
         self.tabs.addTab(self._build_properties_tab(), "Proprietà SW")
         self.tabs.addTab(self._build_bom_tab(), "Struttura")
         self.tabs.addTab(self._build_history_tab(), "Storico")
+
+        # ---- Azioni DRW (visibile solo per PRT/ASM senza disegno archiviato) ----
+        self.grp_doc_drw = QGroupBox("Disegno")
+        doc_drw_row = QHBoxLayout(self.grp_doc_drw)
+        doc_drw_row.setSpacing(6)
+        self.btn_doc_add_drw = QPushButton("📐  Aggiungi DRW")
+        self.btn_doc_add_drw.setToolTip("Crea il disegno da template SolidWorks")
+        self.btn_doc_add_drw.clicked.connect(self._on_doc_add_drw)
+        doc_drw_row.addWidget(self.btn_doc_add_drw)
+        self.btn_doc_create_drw_from_file = QPushButton("📂  Crea DRW da file")
+        self.btn_doc_create_drw_from_file.setToolTip("Importa un disegno esistente via SolidWorks")
+        self.btn_doc_create_drw_from_file.clicked.connect(self._on_doc_create_drw_from_file)
+        doc_drw_row.addWidget(self.btn_doc_create_drw_from_file)
+        doc_drw_row.addStretch()
+        self.grp_doc_drw.setVisible(False)
+        layout.addWidget(self.grp_doc_drw)
 
         self.stack.addWidget(doc_page)
 
@@ -239,6 +256,7 @@ class DetailPanel(QWidget):
         self.lbl_date.setText("—")
         self.lbl_file.setText("—")
         self.btn_edrawings.setEnabled(False)
+        self.grp_doc_drw.setVisible(False)
         self.tbl_props.setRowCount(0)
         self.tbl_bom.setRowCount(0)
         self.tbl_history.setRowCount(0)
@@ -298,6 +316,21 @@ class DetailPanel(QWidget):
 
         # eDrawings: abilitato solo se c'è un file archiviato
         self.btn_edrawings.setEnabled(bool(doc.get("archive_path")))
+
+        # ---- Azioni DRW (visibile per PRT/ASM senza disegno archiviato) ----
+        if doc["doc_type"] in ("Parte", "Assieme") and doc.get("archive_path"):
+            drw_doc = session.db.fetchone(
+                "SELECT id, archive_path, is_locked FROM documents "
+                "WHERE code=? AND doc_type='Disegno' AND state != 'Obsoleto' "
+                "ORDER BY revision DESC",
+                (doc["code"],),
+            ) if session.db else None
+            drw_archived = bool(drw_doc and drw_doc.get("archive_path"))
+            drw_locked = bool(drw_doc and drw_doc["is_locked"])
+            show_drw_btns = not drw_archived and not drw_locked
+            self.grp_doc_drw.setVisible(show_drw_btns)
+        else:
+            self.grp_doc_drw.setVisible(False)
 
         # ---- Tab Proprietà ----
         self.tbl_props.setRowCount(0)
@@ -454,6 +487,11 @@ class DetailPanel(QWidget):
         self.btn_add_drw.clicked.connect(self._on_add_drw)
         drw_btns.addWidget(self.btn_add_drw)
 
+        self.btn_create_drw_from_file = QPushButton("📂  Crea DRW da file")
+        self.btn_create_drw_from_file.setToolTip("Importa un disegno esistente via SolidWorks")
+        self.btn_create_drw_from_file.clicked.connect(self._on_create_drw_from_file)
+        drw_btns.addWidget(self.btn_create_drw_from_file)
+
         drw_btns.addStretch()
         drw_h.addLayout(drw_btns, 1)
         layout.addWidget(self.grp_drw_preview)
@@ -470,9 +508,6 @@ class DetailPanel(QWidget):
         self.btn_create_file = QPushButton("📂  Crea da file")
         self.btn_create_file.clicked.connect(self._on_create_from_file)
         act_layout.addWidget(self.btn_create_file)
-
-        self.chk_checkout = QCheckBox("Metti in checkout dopo la creazione")
-        act_layout.addWidget(self.chk_checkout)
 
         layout.addWidget(self.grp_actions)
         layout.addStretch()
@@ -541,8 +576,10 @@ class DetailPanel(QWidget):
             in_ws = self._is_in_workspace(drw)
             self.btn_drw_export_ws.setVisible(has_archive and not in_ws)
             self.btn_drw_open_sw.setVisible(has_archive or in_ws)
-            # Mostra "Aggiungi DRW" anche se il record esiste ma non ha file
-            self.btn_add_drw.setVisible(not has_archive and not drw["is_locked"])
+            # Mostra "Aggiungi DRW" e "Crea DRW da file" quando non c'è ancora il file
+            can_create_drw = not has_archive and not drw["is_locked"]
+            self.btn_add_drw.setVisible(can_create_drw)
+            self.btn_create_drw_from_file.setVisible(can_create_drw)
             self.grp_drw_preview.setVisible(True)
         else:
             self._code_drw_doc = None
@@ -559,6 +596,7 @@ class DetailPanel(QWidget):
             self.btn_drw_export_ws.setVisible(False)
             self.btn_drw_open_sw.setVisible(False)
             self.btn_add_drw.setVisible(prt_asm_archived)
+            self.btn_create_drw_from_file.setVisible(prt_asm_archived)
             self.grp_drw_preview.setVisible(prt_asm_archived)
 
         # ---- Azioni creazione ----
@@ -588,6 +626,18 @@ class DetailPanel(QWidget):
     def _on_add_drw(self):
         if self._code_prt_asm_for_drw:
             self.add_drw_requested.emit(self._code_prt_asm_for_drw)
+
+    def _on_create_drw_from_file(self):
+        if self._code_prt_asm_for_drw:
+            self.create_drw_from_file_requested.emit(self._code_prt_asm_for_drw)
+
+    def _on_doc_add_drw(self):
+        if self._current_doc_id:
+            self.add_drw_requested.emit(self._current_doc_id)
+
+    def _on_doc_create_drw_from_file(self):
+        if self._current_doc_id:
+            self.create_drw_from_file_requested.emit(self._current_doc_id)
 
     def _on_prt_export_ws(self):
         self._export_doc_to_ws(self._code_prt_doc)

@@ -1123,6 +1123,9 @@ class AsmImportWizard(QDialog):
                 )
 
             progress.setLabelText("Archiviazione file nel PDM...")
+            from core.checkout_manager import CheckoutManager
+            co_mgr = CheckoutManager(self.db, self.sp, self.user)
+
             for _k, (code, doc_id, ext) in path_to_code.items():
                 if progress.wasCanceled():
                     raise RuntimeError("Importazione annullata dall'utente.")
@@ -1133,23 +1136,16 @@ class AsmImportWizard(QDialog):
                 if not ws_file.exists():
                     raise RuntimeError(f"File workspace mancante: {ws_file.name}")
 
+                # Traccia arch_file per cleanup rollback
                 arch_dir = self.sp.archive_path(code, "00")
-                arch_dir.mkdir(parents=True, exist_ok=True)
-                arch_file = arch_dir / ws_file.name
+                arch_file = arch_dir / (code + ext)
                 arch_preexisting = arch_file.exists()
 
-                shutil.copy2(str(ws_file), str(arch_file))
+                # Archivia, aggiorna DB, imposta checkout lock e permessi
+                co_mgr.checkout_new_from_workspace(doc_id, ws_file)
+
                 if not arch_preexisting:
                     archive_cleanup.append(arch_file)
-
-                rel_path = str(arch_file.relative_to(self.sp.root))
-                self.db.execute(
-                    """UPDATE documents
-                       SET file_name=?, file_ext=?, archive_path=?,
-                           modified_at=datetime('now')
-                       WHERE id=?""",
-                    (arch_file.name, ext, rel_path, doc_id),
-                )
                 archived += 1
 
             self._link_bom(path_to_code)

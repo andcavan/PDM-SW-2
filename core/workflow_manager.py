@@ -128,14 +128,29 @@ class WorkflowManager:
                 )
             else:
                 _companion = None
-            if _companion and _companion["state"] != new_state:
-                if not self.can_transition(_companion["state"], new_state):
-                    raise ValueError(
-                        f"Transizione '{current}' \u2192 '{new_state}' bloccata:\n"
-                        f"il companion {_companion['doc_type']} è in stato "
-                        f"'{_companion['state']}' e non può seguire la stessa transizione.\n"
-                        "Allineare prima lo stato del companion."
+            if _companion:
+                # R4a: blocca se il companion è in checkout
+                if _companion.get("is_locked"):
+                    _locker = self.db.fetchone(
+                        "SELECT full_name FROM users WHERE id=?",
+                        (_companion["locked_by"],),
                     )
+                    _lname = _locker["full_name"] if _locker else f"utente {_companion['locked_by']}"
+                    raise PermissionError(
+                        f"Transizione bloccata: il companion {_companion['doc_type']} "
+                        f"({_companion['code']} rev.{_companion['revision']}) "
+                        f"è in checkout da {_lname}.\n"
+                        "Eseguire prima il check-in del companion."
+                    )
+                # R4b: blocca se il companion non può seguire la stessa transizione
+                if _companion["state"] != new_state:
+                    if not self.can_transition(_companion["state"], new_state):
+                        raise ValueError(
+                            f"Transizione '{current}' \u2192 '{new_state}' bloccata:\n"
+                            f"il companion {_companion['doc_type']} è in stato "
+                            f"'{_companion['state']}' e non può seguire la stessa transizione.\n"
+                            "Allineare prima lo stato del companion."
+                        )
 
         # Aggiorna stato documento
         self.db.execute(
@@ -361,18 +376,38 @@ class WorkflowManager:
              f"Revisione {doc['revision']} annullata"),
         )
 
-        # R5: annulla anche il DRW companion della stessa revisione
+        # R5: annulla anche il companion della stessa revisione (bidirezionale)
         if doc["doc_type"] in ("Parte", "Assieme"):
-            drw_companion = self.db.fetchone(
+            _comp_query = (
                 "SELECT * FROM documents WHERE code=? AND doc_type='Disegno' AND revision=?",
                 (doc["code"], doc["revision"]),
             )
-            if drw_companion and drw_companion["state"] not in ("Rilasciato", "Obsoleto"):
-                try:
-                    self.cancel_revision(drw_companion["id"], user_id,
-                                        shared_paths=shared_paths)
-                except Exception:
-                    pass  # DRW già eliminato o non annullabile
+        elif doc["doc_type"] == "Disegno":
+            _comp_query = (
+                "SELECT * FROM documents WHERE code=? "
+                "AND doc_type IN ('Parte','Assieme') AND revision=?",
+                (doc["code"], doc["revision"]),
+            )
+        else:
+            _comp_query = None
+
+        if _comp_query:
+            rev_companion = self.db.fetchone(*_comp_query)
+            if rev_companion and rev_companion["state"] not in ("Rilasciato", "Obsoleto"):
+                if rev_companion.get("is_locked"):
+                    _locker = self.db.fetchone(
+                        "SELECT full_name FROM users WHERE id=?",
+                        (rev_companion["locked_by"],),
+                    )
+                    _lname = _locker["full_name"] if _locker else f"utente {rev_companion['locked_by']}"
+                    raise PermissionError(
+                        f"Impossibile annullare la revisione: il companion "
+                        f"{rev_companion['doc_type']} ({rev_companion['code']}) "
+                        f"è in checkout da {_lname}.\n"
+                        "Eseguire prima il check-in del companion."
+                    )
+                self.cancel_revision(rev_companion["id"], user_id,
+                                     shared_paths=shared_paths)
 
         # Elimina documento
         self.db.execute("DELETE FROM workspace_files WHERE document_id=?", (document_id,))

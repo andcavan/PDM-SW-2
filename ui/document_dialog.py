@@ -403,47 +403,40 @@ class DocumentDialog(QDialog):
         self.document_id = doc_id
         self.is_new = False
 
-        # Offri creazione file da template nella workspace
+        # Offri creazione file da template in SolidWorks
         from config import load_local_config
-        from core.file_manager import EXT_FOR_TYPE
-        import shutil
+        from core.file_manager import EXT_FOR_TYPE, _sw_open_and_saveas
         cfg = load_local_config()
         ws_root = cfg.get("sw_workspace", "")
         key_map = {"Parte": "sw_template_prt", "Assieme": "sw_template_asm", "Disegno": "sw_template_drw"}
         tpl_path = cfg.get(key_map.get(doc_type, ""), "")
         if ws_root and tpl_path and Path(ws_root).is_dir() and Path(tpl_path).exists():
             r = QMessageBox.question(
-                self, "Crea file in workspace?",
+                self, "Crea file in SolidWorks?",
                 f"Documento creato: <b>{code}  rev.{revision}</b><br><br>"
-                "Creare subito il file nella workspace da template?",
+                "Aprire il template in SolidWorks e creare il file?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.Yes,
             )
             if r == QMessageBox.StandardButton.Yes:
                 try:
                     ext = EXT_FOR_TYPE.get(doc_type, ".SLDPRT")
-                    dest_ws = Path(ws_root) / f"{code}{ext}"
-                    shutil.copy2(tpl_path, dest_ws)
-                    # Archivia subito
-                    arch_dir = session.sp.archive_path(code, revision)
-                    arch_dir.mkdir(parents=True, exist_ok=True)
-                    arch_file = arch_dir / f"{code}{ext}"
-                    shutil.copy2(str(dest_ws), str(arch_file))
-                    rel_path = str(arch_file.relative_to(session.sp.root))
-                    session.db.execute(
-                        "UPDATE documents SET file_name=?, file_ext=?, archive_path=?, modified_at=datetime('now') WHERE id=?",
-                        (arch_file.name, ext, rel_path, doc_id),
-                    )
+                    ws_file = Path(ws_root) / f"{code}{ext}"
+                    _sw_open_and_saveas(Path(tpl_path), ws_file, doc_type, is_template=True)
+                    session.checkout.checkout_new_from_workspace(doc_id, ws_file)
                     QMessageBox.information(
                         self, "Documento Creato",
-                        f"Documento creato:\n{code}  rev.{revision}  [{doc_type}]\n\n"
-                        f"Workspace: {dest_ws}\nArchivio: {arch_file}"
+                        f"Documento creato e in checkout:\n{code}  rev.{revision}  [{doc_type}]\n\n"
+                        f"File aperto in SolidWorks dalla workspace:\n{ws_file}"
                     )
                 except Exception as fe:
-                    QMessageBox.warning(self, "File non creato", f"Documento registrato ma file non creato:\n{fe}")
-                    QMessageBox.information(self, "Documento Creato", f"Documento creato:\n{code}  rev.{revision}  [{doc_type}]")
+                    QMessageBox.warning(self, "File non creato",
+                                        f"Documento registrato ma file non creato in SW:\n{fe}")
+                    QMessageBox.information(self, "Documento Creato",
+                                            f"Documento creato:\n{code}  rev.{revision}  [{doc_type}]")
             else:
-                QMessageBox.information(self, "Documento Creato", f"Documento creato:\n{code}  rev.{revision}  [{doc_type}]")
+                QMessageBox.information(self, "Documento Creato",
+                                        f"Documento creato:\n{code}  rev.{revision}  [{doc_type}]")
         else:
             QMessageBox.information(
                 self, "Documento Creato",
