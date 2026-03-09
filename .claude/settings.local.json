@@ -3,7 +3,12 @@
     "allow": [
       "Bash(\"c:\\\\Users\\\\prog3\\\\Desktop\\\\APP MECCANICA\\\\PDM-SW-2\\\\ui\\\\document_dialog.py\":*)",
       "Bash(python3 -c \":*)",
-      "Bash(python -c \":*)"
+      "Bash(python -c \":*)",
+      "Bash(.venv/Scripts/pip list)",
+      "Bash(.venv/Scripts/pip install -r requirements.txt)",
+      "Bash(.venv/Scripts/python.exe -m pip install --upgrade pip)",
+      "Bash(.venv/Scripts/python.exe -c \"from PyQt6.QtCore import Qt, QSettings, pyqtSignal; print\\(''QSettings OK:'', QSettings\\)\")",
+      "Bash(.venv/Scripts/python.exe -c \":*)"
     ]
   }
 }
