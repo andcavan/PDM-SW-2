@@ -6,4 +6,7 @@ if not exist ".venv\Scripts\python.exe" (
     pause
     exit /b 1
 )
-start "" ".venv\Scripts\pythonw.exe" main.py
+
+REM Avvia in background senza console. In caso di crash, l'errore viene
+REM scritto in error.txt nella stessa cartella dell'applicazione.
+start "" ".venv\Scripts\pythonw.exe" main.py 2>error.txt

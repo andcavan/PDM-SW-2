@@ -232,6 +232,14 @@ CREATE TABLE IF NOT EXISTS hierarchical_counters (
     UNIQUE(counter_type, machine_id, group_id)
 );
 
+-- NOTE PER CODICE (condivise tra tutte le revisioni)
+CREATE TABLE IF NOT EXISTS document_notes (
+    code       TEXT PRIMARY KEY,
+    content    TEXT NOT NULL DEFAULT '',
+    updated_by INTEGER REFERENCES users(id),
+    updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%S','now'))
+);
+
 -- INDICI
 CREATE INDEX IF NOT EXISTS idx_doc_code      ON documents(code);
 CREATE INDEX IF NOT EXISTS idx_doc_state     ON documents(state);
@@ -526,3 +534,57 @@ CREATE INDEX IF NOT EXISTS idx_hcnt_type     ON hierarchical_counters(counter_ty
             with self.connection() as conn:
                 conn.executemany(sql, params_list)
                 conn.commit()
+
+    # ------------------------------------------------------------------
+    # Note per codice
+    # ------------------------------------------------------------------
+    def get_note(self, code: str) -> Optional[dict]:
+        """Restituisce la nota per il codice, oppure None se assente."""
+        row = self.fetchone(
+            """
+            SELECT n.content, n.updated_at, u.full_name AS updated_by_name
+            FROM document_notes n
+            LEFT JOIN users u ON u.id = n.updated_by
+            WHERE n.code = ?
+            """,
+            (code,),
+        )
+        return row  # None oppure {"content": ..., "updated_at": ..., "updated_by_name": ...}
+
+    def save_note(self, code: str, content: str, user_id: int):
+        """Inserisce o aggiorna la nota per il codice."""
+        with self.write_lock():
+            with self.connection() as conn:
+                conn.execute(
+                    """
+                    INSERT INTO document_notes (code, content, updated_by, updated_at)
+                    VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%S','now'))
+                    ON CONFLICT(code) DO UPDATE SET
+                        content    = excluded.content,
+                        updated_by = excluded.updated_by,
+                        updated_at = excluded.updated_at
+                    """,
+                    (code, content, user_id),
+                )
+                conn.commit()
+
+    # ------------------------------------------------------------------
+    # PDF path
+    # ------------------------------------------------------------------
+    def set_pdf_path(self, document_id: int, pdf_path: str):
+        """Aggiorna il percorso PDF del documento."""
+        with self.write_lock():
+            with self.connection() as conn:
+                conn.execute(
+                    "UPDATE documents SET pdf_path=? WHERE id=?",
+                    (pdf_path, document_id),
+                )
+                conn.commit()
+
+    def get_pdf_path(self, document_id: int) -> Optional[str]:
+        """Restituisce il percorso PDF del documento, o None."""
+        row = self.fetchone(
+            "SELECT pdf_path FROM documents WHERE id=?",
+            (document_id,),
+        )
+        return row["pdf_path"] if row else None

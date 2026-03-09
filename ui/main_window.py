@@ -164,6 +164,13 @@ class MainWindow(QMainWindow):
         act_backup.triggered.connect(self._backup_db)
         m_tools.addAction(act_backup)
 
+        m_tools.addSeparator()
+
+        act_regen_thumb = QAction("🖼️  Rigenera anteprime…", self)
+        act_regen_thumb.setToolTip("Rigenera le thumbnail dei documenti archiviati tramite eDrawings")
+        act_regen_thumb.triggered.connect(self._regen_thumbnails)
+        m_tools.addAction(act_regen_thumb)
+
         # SolidWorks
         m_sw = mb.addMenu("SolidWorks")
         act_sw_checkout = QAction("Checkout da SW…", self)
@@ -463,6 +470,14 @@ class MainWindow(QMainWindow):
             )
         except Exception as e:
             QMessageBox.critical(self, "Errore backup", str(e))
+
+    def _regen_thumbnails(self):
+        if not session.is_connected:
+            QMessageBox.warning(self, "Non connesso", "Connettersi prima al database.")
+            return
+        from ui.regen_thumbnails_dialog import RegenThumbnailsDialog
+        dlg = RegenThumbnailsDialog(parent=self)
+        dlg.exec()
 
     def _about(self):
         from config import APP_VERSION

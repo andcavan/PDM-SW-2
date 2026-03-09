@@ -9,6 +9,11 @@
 # =============================================================================
 from __future__ import annotations
 import shutil
+import subprocess
+import sys
+import tempfile
+import os
+import threading
 from pathlib import Path
 from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:
@@ -183,7 +188,50 @@ class WorkflowManager:
             self._propagate_state_to_companion(doc, new_state, user_id, notes,
                                                shared_paths=shared_paths)
 
+        # Genera PDF in background quando un DRW viene rilasciato
+        if (new_state == "Rilasciato"
+                and doc.get("doc_type") == "Disegno"
+                and doc.get("archive_path")
+                and shared_paths):
+            threading.Thread(
+                target=self._generate_pdf_background,
+                args=(document_id, doc, shared_paths),
+                daemon=True,
+            ).start()
+
         return True
+
+    # ------------------------------------------------------------------
+    def _generate_pdf_background(self, document_id: int, doc: dict, shared_paths):
+        """Genera PDF del DRW in background via subprocess pdf_worker.py."""
+        _WORKER = Path(__file__).parent / "pdf_worker.py"
+        _TIMEOUT = 120
+
+        src = shared_paths.root / doc["archive_path"]
+        code = doc.get("code", "")
+        rev  = doc.get("revision", "")
+        pdf_dir = shared_paths.root / "pdf"
+        pdf_dir.mkdir(parents=True, exist_ok=True)
+        dest = pdf_dir / f"{code}_{rev}.pdf"
+
+        try:
+            tmp_fd, tmp_log = tempfile.mkstemp(suffix=".txt", prefix="pdf_")
+            os.close(tmp_fd)
+            with open(tmp_log, "w") as lf:
+                proc = subprocess.Popen(
+                    [sys.executable, str(_WORKER), str(src), str(dest)],
+                    stdout=lf,
+                    stderr=lf,
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                )
+            proc.wait(timeout=_TIMEOUT)
+            if proc.returncode == 0 and dest.exists():
+                try:
+                    self.db.set_pdf_path(document_id, str(dest))
+                except Exception:
+                    pass
+        except Exception:
+            pass
 
     # ------------------------------------------------------------------
     def _propagate_state_to_companion(self, doc: dict, new_state: str,

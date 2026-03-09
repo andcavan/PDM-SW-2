@@ -8,7 +8,18 @@
       "Bash(.venv/Scripts/pip install -r requirements.txt)",
       "Bash(.venv/Scripts/python.exe -m pip install --upgrade pip)",
       "Bash(.venv/Scripts/python.exe -c \"from PyQt6.QtCore import Qt, QSettings, pyqtSignal; print\\(''QSettings OK:'', QSettings\\)\")",
-      "Bash(.venv/Scripts/python.exe -c \":*)"
+      "Bash(.venv/Scripts/python.exe -c \":*)",
+      "Bash(.venv/Scripts/python.exe -c \"import pythoncom; print\\(''pythoncom OK, versione pywin32:'', __import__\\(''pywin32''\\).__version__ if hasattr\\(__import__\\(''pywin32''\\), ''__version__''\\) else ''OK''\\)\")",
+      "Bash(.venv/Scripts/python.exe -c \"import pythoncom; print\\(''pythoncom OK''\\)\")",
+      "Bash(.venv/Scripts/python.exe -c \"import ast; ast.parse\\(open\\(''ui/regen_thumbnails_dialog.py'', encoding=''utf-8''\\).read\\(\\)\\); print\\(''OK''\\)\")",
+      "Bash(timeout 8 .venv/Scripts/python.exe main.py)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(.venv/Scripts/python.exe core/thumb_worker.py \"C:\\\\Users\\\\prog3\\\\Desktop\\\\APP MECCANICA\\\\_pdm2\\\\archive\\\\AAA_0100-0001\\\\00\\\\AAA_0100-0001.SLDPRT\" \"C:\\\\Users\\\\prog3\\\\Desktop\\\\APP MECCANICA\\\\_pdm2\\\\thumbnails\\\\test_thumb.png\")",
+      "Bash(.venv/Scripts/python.exe core/thumb_worker.py \"C:\\\\Users\\\\prog3\\\\Desktop\\\\APP MECCANICA\\\\_pdm2\\\\archive\\\\AAA_0100-0002\\\\00\\\\AAA_0100-0002.SLDPRT\" \"C:\\\\Users\\\\prog3\\\\Desktop\\\\APP MECCANICA\\\\_pdm2\\\\thumbnails\\\\test2.png\")",
+      "Bash(timeout 15 .venv/Scripts/python.exe core/thumb_worker.py \"C:\\\\Users\\\\prog3\\\\Desktop\\\\APP MECCANICA\\\\_pdm2\\\\archive\\\\AAA_0100-0003\\\\00\\\\AAA_0100-0003.SLDPRT\" \"C:\\\\Users\\\\prog3\\\\Desktop\\\\APP MECCANICA\\\\_pdm2\\\\thumbnails\\\\test3.png\")",
+      "Bash(timeout 45 .venv/Scripts/python.exe core/thumb_worker.py \"C:\\\\Users\\\\prog3\\\\Desktop\\\\APP MECCANICA\\\\_pdm2\\\\archive\\\\AAA_0100-0001\\\\1\\\\AAA_0100-0001.SLDPRT\" \"C:\\\\Users\\\\prog3\\\\Desktop\\\\APP MECCANICA\\\\_pdm2\\\\thumbnails\\\\__test2.png\")",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(timeout 45 .venv/Scripts/python.exe core/thumb_worker.py \"C:\\\\Users\\\\prog3\\\\Desktop\\\\APP MECCANICA\\\\_pdm2\\\\archive\\\\AAA_0100-0001\\\\00\\\\AAA_0100-0001.SLDPRT\" \"C:\\\\Users\\\\prog3\\\\Desktop\\\\APP MECCANICA\\\\_pdm2\\\\thumbnails\\\\__test2.png\")"
     ]
   }
 }

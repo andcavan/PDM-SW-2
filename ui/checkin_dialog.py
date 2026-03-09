@@ -17,38 +17,65 @@ from core.checkout_manager import READONLY_STATES
 from config import WORKFLOW_STATES
 
 
+_WORKER_SCRIPT = (
+    __import__('pathlib').Path(__file__).parent.parent / "core" / "thumb_worker.py"
+)
+_THUMB_TIMEOUT = 40   # secondi massimi per la generazione
+
+
 def _generate_thumbnail(doc: dict, sp):
-    """Genera thumbnail PNG del file archiviato tramite eDrawings (non bloccante)."""
+    """Genera thumbnail PNG del file archiviato via subprocess isolato (thumb_worker.py)."""
+    import sys, subprocess, os, tempfile
+    from pathlib import Path
+
+    ext_map = {"Parte": ".SLDPRT", "Assieme": ".SLDASM", "Disegno": ".SLDDRW"}
+    file_name = doc.get("file_name") or (
+        doc.get("code", "") + ext_map.get(doc.get("doc_type", ""), "")
+    )
     try:
-        import time
-        import win32com.client
-        file_name = doc.get("file_name") or (doc.get("code", "") +
-            {".SLDPRT": ".SLDPRT", "Parte": ".SLDPRT",
-             "Assieme": ".SLDASM", "Disegno": ".SLDDRW"}.get(doc.get("doc_type", ""), ""))
         arch_path = sp.archive_path(doc["code"], doc["revision"])
         src_file = arch_path / file_name if file_name else None
-        # prova anche archive_path diretto
-        if not src_file or not src_file.exists():
-            if doc.get("archive_path"):
-                src_file = sp.root / doc["archive_path"]
-        if not src_file or not src_file.exists():
-            return
-        sp.thumbnails.mkdir(parents=True, exist_ok=True)
-        dest = sp.thumbnails / f"{doc['code']}_{doc['revision']}.png"
-        eApp = win32com.client.Dispatch("EModelView.EModelViewControl")
-        eApp.OpenDoc(str(src_file), False, False, True, "")
-        for _ in range(30):
-            time.sleep(0.5)
-            try:
-                if eApp.FileName:
-                    break
-            except Exception:
-                pass
-        eApp.SaveAs(str(dest))
-        eApp.CloseActiveDoc("")
-        logging.info("Thumbnail generata: %s", dest)
+    except Exception:
+        src_file = None
+
+    if not src_file or not src_file.exists():
+        if doc.get("archive_path"):
+            src_file = sp.root / Path(doc["archive_path"])
+    if not src_file or not src_file.exists():
+        logging.warning("Thumbnail: file sorgente non trovato per %s rev %s",
+                        doc.get("code"), doc.get("revision"))
+        return
+
+    sp.thumbnails.mkdir(parents=True, exist_ok=True)
+    suffix = "_DRW" if doc.get("doc_type") == "Disegno" else ""
+    dest = sp.thumbnails / f"{doc['code']}_{doc['revision']}{suffix}.png"
+
+    tmp_fd, tmp_log = tempfile.mkstemp(suffix='.txt', prefix='thumb_')
+    os.close(tmp_fd)
+    try:
+        with open(tmp_log, 'w') as lf:
+            proc = subprocess.Popen(
+                [sys.executable, str(_WORKER_SCRIPT), str(src_file), str(dest)],
+                stdout=lf, stderr=lf,
+                creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0),
+            )
+        proc.wait(timeout=_THUMB_TIMEOUT)
+        if dest.exists():
+            logging.info("Thumbnail generata: %s", dest)
+        else:
+            logging.warning("Thumbnail non generata per %s (exit %s)",
+                            doc.get("code"), proc.returncode)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait()
+        logging.warning("Thumbnail timeout per %s", doc.get("code"))
     except Exception as e:
         logging.warning("Thumbnail generation fallita: %s", e)
+    finally:
+        try:
+            os.unlink(tmp_log)
+        except OSError:
+            pass
 
 
 class CheckinDialog(QDialog):

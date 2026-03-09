@@ -3,16 +3,17 @@
 # =============================================================================
 import shutil
 import subprocess
+from datetime import date
 from pathlib import Path
 
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QTabWidget, QTableWidget, QTableWidgetItem, QHeaderView,
     QGroupBox, QFormLayout, QMessageBox, QSizePolicy,
-    QStackedWidget
+    QStackedWidget, QTextEdit, QToolBar
 )
 from PyQt6.QtCore import Qt, QSize, pyqtSignal
-from PyQt6.QtGui import QPixmap, QFont
+from PyQt6.QtGui import QPixmap, QFont, QAction, QKeySequence
 
 from ui.session import session
 from ui.styles import STATE_BADGE_STYLE, TYPE_ICON
@@ -25,7 +26,10 @@ _FALLBACK_ICONS = {
     "Disegno": "📐",
 }
 
-_THUMB_SIZE = 200  # px lato thumbnail
+_THUMB_W = 360   # px larghezza thumbnail principale
+_THUMB_H = 240   # px altezza thumbnail principale (rapporto 1.5:1)
+_SUB_W   = 300   # px larghezza sub-thumbnail (code-node)
+_SUB_H   = 200   # px altezza sub-thumbnail (rapporto 1.5:1)
 
 _EXT_FOR_TYPE = {
     "Parte":   ".SLDPRT",
@@ -47,6 +51,8 @@ class DetailPanel(QWidget):
     create_from_file_requested    = pyqtSignal(int)  # doc_id PRT/ASM senza file
     add_drw_requested             = pyqtSignal(int)  # parent PRT/ASM doc_id
     create_drw_from_file_requested = pyqtSignal(int)  # parent PRT/ASM doc_id
+    # Segnale interno per aggiornamento UI da thread PDF (thread-safe)
+    _pdf_done = pyqtSignal(bool, str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -57,6 +63,7 @@ class DetailPanel(QWidget):
         self._code_prt_doc:  dict | None = None
         self._code_drw_doc:  dict | None = None
         self._build_ui()
+        self._pdf_done.connect(self._on_pdf_done)
         self.clear()
 
     # ------------------------------------------------------------------
@@ -81,7 +88,7 @@ class DetailPanel(QWidget):
 
         # Thumbnail
         self.lbl_thumb = QLabel()
-        self.lbl_thumb.setFixedSize(QSize(_THUMB_SIZE, _THUMB_SIZE))
+        self.lbl_thumb.setFixedSize(QSize(_THUMB_W, _THUMB_H))
         self.lbl_thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lbl_thumb.setStyleSheet(
             "background-color: #181825; border: 1px solid #313244; border-radius: 6px;"
@@ -122,6 +129,14 @@ class DetailPanel(QWidget):
         self.btn_edrawings.setEnabled(False)
         info.addWidget(self.btn_edrawings)
 
+        # Bottone toggle Note
+        self.btn_toggle_notes = QPushButton("📝  Note")
+        self.btn_toggle_notes.setToolTip("Mostra/nascondi il tab Note")
+        self.btn_toggle_notes.setCheckable(True)
+        self.btn_toggle_notes.setChecked(False)
+        self.btn_toggle_notes.clicked.connect(self._on_toggle_notes)
+        info.addWidget(self.btn_toggle_notes)
+
         header.addLayout(info, 1)
         layout.addLayout(header)
 
@@ -133,6 +148,9 @@ class DetailPanel(QWidget):
         self.tabs.addTab(self._build_properties_tab(), "Proprietà SW")
         self.tabs.addTab(self._build_bom_tab(), "Struttura")
         self.tabs.addTab(self._build_history_tab(), "Storico")
+        self._notes_tab_index = self.tabs.count()
+        self.tabs.addTab(self._build_notes_tab(doc_mode=True), "Note")
+        self.tabs.setTabVisible(self._notes_tab_index, False)
 
         # ---- Azioni DRW (visibile solo per PRT/ASM senza disegno archiviato) ----
         self.grp_doc_drw = QGroupBox("Disegno")
@@ -186,6 +204,40 @@ class DetailPanel(QWidget):
         form.addRow("File:", self.lbl_file)
 
         layout.addWidget(grp)
+
+        # ---- PDF ----
+        self.grp_pdf = QGroupBox("PDF")
+        pdf_layout = QVBoxLayout(self.grp_pdf)
+        pdf_layout.setSpacing(4)
+
+        self.lbl_pdf_path = QLabel("—")
+        self.lbl_pdf_path.setWordWrap(True)
+        self.lbl_pdf_path.setStyleSheet("color: #a6adc8; font-size: 11px;")
+        pdf_layout.addWidget(self.lbl_pdf_path)
+
+        pdf_btns = QHBoxLayout()
+        self.btn_gen_pdf = QPushButton("🔄  Genera PDF")
+        self.btn_gen_pdf.setToolTip("Genera PDF del disegno (solo per Disegno archiviato)")
+        self.btn_gen_pdf.clicked.connect(self._on_generate_pdf)
+        pdf_btns.addWidget(self.btn_gen_pdf)
+
+        self.btn_open_pdf = QPushButton("👁️  Apri PDF")
+        self.btn_open_pdf.setToolTip("Apre il PDF con il visualizzatore predefinito")
+        self.btn_open_pdf.clicked.connect(self._on_open_pdf)
+        self.btn_open_pdf.setEnabled(False)
+        pdf_btns.addWidget(self.btn_open_pdf)
+
+        self.btn_save_pdf = QPushButton("💾  Salva PDF")
+        self.btn_save_pdf.setToolTip("Salva una copia del PDF in una cartella a scelta")
+        self.btn_save_pdf.clicked.connect(self._on_save_pdf)
+        self.btn_save_pdf.setEnabled(False)
+        pdf_btns.addWidget(self.btn_save_pdf)
+
+        pdf_layout.addLayout(pdf_btns)
+
+        self.grp_pdf.setVisible(False)
+        layout.addWidget(self.grp_pdf)
+
         layout.addStretch()
         return w
 
@@ -250,6 +302,90 @@ class DetailPanel(QWidget):
         layout.addWidget(self.tbl_history)
         return w
 
+    # ---- Tab Note (doc mode) / GroupBox Note (code mode) ----
+    def _build_notes_tab(self, doc_mode: bool = True) -> QWidget:
+        """
+        Costruisce il pannello Note (rich text).
+        doc_mode=True → usato come tab in self.tabs (doc mode).
+        doc_mode=False → usato come GroupBox in code panel.
+        """
+        w = QWidget()
+        layout = QVBoxLayout(w)
+        layout.setSpacing(4)
+        layout.setContentsMargins(4, 4, 4, 4)
+
+        # Toolbar rich text
+        toolbar = QToolBar()
+        toolbar.setIconSize(QSize(16, 16))
+
+        if doc_mode:
+            self._notes_edit = QTextEdit()
+            edit = self._notes_edit
+        else:
+            self._notes_edit_code = QTextEdit()
+            edit = self._notes_edit_code
+
+        edit.setAcceptRichText(True)
+        edit.setMinimumHeight(120)
+
+        act_bold = QAction("B", w)
+        act_bold.setCheckable(True)
+        act_bold.setShortcut(QKeySequence.StandardKey.Bold)
+        act_bold.triggered.connect(
+            lambda checked: edit.setFontWeight(
+                700 if checked else 400
+            )
+        )
+        act_bold.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        toolbar.addAction(act_bold)
+
+        act_italic = QAction("I", w)
+        act_italic.setCheckable(True)
+        act_italic.setShortcut(QKeySequence.StandardKey.Italic)
+        act_italic.triggered.connect(edit.setFontItalic)
+        f = QFont("Segoe UI", 9)
+        f.setItalic(True)
+        act_italic.setFont(f)
+        toolbar.addAction(act_italic)
+
+        act_underline = QAction("U", w)
+        act_underline.setCheckable(True)
+        act_underline.setShortcut(QKeySequence.StandardKey.Underline)
+        act_underline.triggered.connect(edit.setFontUnderline)
+        f2 = QFont("Segoe UI", 9)
+        f2.setUnderline(True)
+        act_underline.setFont(f2)
+        toolbar.addAction(act_underline)
+
+        toolbar.addSeparator()
+
+        act_date = QAction("📅 Data", w)
+        act_date.setToolTip("Inserisce data odierna e nome utente")
+        act_date.triggered.connect(lambda _checked=False: self._insert_date_user(edit))
+        toolbar.addAction(act_date)
+
+        layout.addWidget(toolbar)
+        layout.addWidget(edit, 1)
+
+        # Footer: save button + last-updated label
+        footer = QHBoxLayout()
+        btn_save = QPushButton("💾  Salva")
+        if doc_mode:
+            self._notes_lbl_updated = QLabel("")
+            btn_save.clicked.connect(self._save_notes_doc)
+            lbl_updated = self._notes_lbl_updated
+        else:
+            self._notes_lbl_updated_code = QLabel("")
+            btn_save.clicked.connect(self._save_notes_code)
+            lbl_updated = self._notes_lbl_updated_code
+
+        lbl_updated.setStyleSheet("color: #a6adc8; font-size: 11px;")
+        footer.addWidget(btn_save)
+        footer.addWidget(lbl_updated, 1)
+        layout.addLayout(footer)
+
+        return w
+
     # ------------------------------------------------------------------
     #  API pubblica
     # ------------------------------------------------------------------
@@ -275,9 +411,19 @@ class DetailPanel(QWidget):
         self.lbl_file.setText("—")
         self.btn_edrawings.setEnabled(False)
         self.grp_doc_drw.setVisible(False)
+        self.grp_pdf.setVisible(False)
         self.tbl_props.setRowCount(0)
         self.tbl_bom.setRowCount(0)
         self.tbl_history.setRowCount(0)
+        # Nascondi note e resetta toggle
+        self.tabs.setTabVisible(self._notes_tab_index, False)
+        self.btn_toggle_notes.setChecked(False)
+        self._notes_edit.setPlainText("")
+        self._notes_lbl_updated.setText("")
+        self.grp_notes_code.setVisible(False)
+        self.btn_toggle_notes_code.setChecked(False)
+        self._notes_edit_code.setPlainText("")
+        self._notes_lbl_updated_code.setText("")
 
     def load_document(self, doc_id: int):
         """Carica e mostra i dettagli del documento indicato."""
@@ -334,6 +480,37 @@ class DetailPanel(QWidget):
 
         # eDrawings: abilitato solo se c'è un file archiviato
         self.btn_edrawings.setEnabled(bool(doc.get("archive_path")))
+
+        # ---- PDF (solo per Disegno archiviato) ----
+        is_drw_archived = (
+            doc.get("doc_type") == "Disegno" and bool(doc.get("archive_path"))
+        )
+        self.grp_pdf.setVisible(is_drw_archived)
+        if is_drw_archived:
+            pdf_path = doc.get("pdf_path") or ""
+            has_pdf = bool(pdf_path and Path(pdf_path).exists())
+            if has_pdf:
+                self.lbl_pdf_path.setText(pdf_path)
+            elif pdf_path:
+                self.lbl_pdf_path.setText(f"File non trovato:\n{pdf_path}")
+            else:
+                self.lbl_pdf_path.setText("PDF non ancora generato")
+            # Generazione PDF disabilitata per stati definitivi
+            can_gen_pdf = state not in ("Rilasciato", "Obsoleto")
+            self.btn_gen_pdf.setEnabled(can_gen_pdf)
+            self.btn_gen_pdf.setToolTip(
+                "Il PDF è stato generato al rilascio e non può essere rigenerato"
+                if not can_gen_pdf else
+                "Genera PDF del disegno"
+            )
+            self.btn_open_pdf.setEnabled(has_pdf)
+            self.btn_save_pdf.setEnabled(has_pdf)
+
+        # ---- Note ----
+        self._current_code = doc.get("code", "")
+        self._load_notes_to(self._notes_edit, self._notes_lbl_updated, self._current_code)
+        is_obsoleto = doc.get("state") == "Obsoleto"
+        self._notes_edit.setReadOnly(is_obsoleto)
 
         # ---- Azioni DRW (visibile per PRT/ASM senza disegno archiviato) ----
         if doc["doc_type"] in ("Parte", "Assieme") and doc.get("archive_path"):
@@ -435,6 +612,14 @@ class DetailPanel(QWidget):
         self.lbl_code_title.setStyleSheet("color: #a6adc8; font-size: 12px;")
         self.lbl_code_title.setWordWrap(True)
         code_info.addWidget(self.lbl_code_title)
+
+        self.btn_toggle_notes_code = QPushButton("📝  Note")
+        self.btn_toggle_notes_code.setToolTip("Mostra/nascondi le note del codice")
+        self.btn_toggle_notes_code.setCheckable(True)
+        self.btn_toggle_notes_code.setChecked(False)
+        self.btn_toggle_notes_code.clicked.connect(self._on_toggle_notes_code)
+        code_info.addWidget(self.btn_toggle_notes_code)
+
         code_info.addStretch()
         hdr.addLayout(code_info, 1)
         layout.addLayout(hdr)
@@ -445,7 +630,7 @@ class DetailPanel(QWidget):
         prt_h.setSpacing(8)
 
         self.lbl_prt_thumb = QLabel()
-        self.lbl_prt_thumb.setFixedSize(QSize(110, 110))
+        self.lbl_prt_thumb.setFixedSize(QSize(_SUB_W, _SUB_H))
         self.lbl_prt_thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lbl_prt_thumb.setStyleSheet(
             "background-color: #181825; border: 1px solid #313244; border-radius: 6px;"
@@ -492,7 +677,7 @@ class DetailPanel(QWidget):
         drw_h.setSpacing(8)
 
         self.lbl_drw_thumb = QLabel()
-        self.lbl_drw_thumb.setFixedSize(QSize(110, 110))
+        self.lbl_drw_thumb.setFixedSize(QSize(_SUB_W, _SUB_H))
         self.lbl_drw_thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lbl_drw_thumb.setStyleSheet(
             "background-color: #181825; border: 1px solid #313244; border-radius: 6px;"
@@ -532,6 +717,14 @@ class DetailPanel(QWidget):
         drw_btns.addStretch()
         drw_h.addLayout(drw_btns, 1)
         layout.addWidget(self.grp_drw_preview)
+
+        # ---- Note codice ----
+        self.grp_notes_code = QGroupBox("Note")
+        grp_notes_layout = QVBoxLayout(self.grp_notes_code)
+        grp_notes_layout.setContentsMargins(4, 4, 4, 4)
+        grp_notes_layout.addWidget(self._build_notes_tab(doc_mode=False))
+        self.grp_notes_code.setVisible(False)
+        layout.addWidget(self.grp_notes_code)
 
         layout.addStretch()
         return w
@@ -666,6 +859,10 @@ class DetailPanel(QWidget):
         ]
         self._code_action_doc_id   = prt_asm_no_file[0]["id"]   if prt_asm_no_file   else None
         self._code_prt_asm_for_drw = prt_asm_with_file[0]["id"] if prt_asm_with_file else None
+
+        # ---- Note ----
+        self._load_notes_to(self._notes_edit_code, self._notes_lbl_updated_code, code)
+        self._notes_edit_code.setReadOnly(False)
 
     def _on_create_in_sw(self):
         if self._code_action_doc_id:
@@ -808,12 +1005,13 @@ class DetailPanel(QWidget):
     def _load_thumb_to(self, doc: dict, lbl: QLabel):
         """Carica thumbnail in un QLabel specifico (con fallback icona tipo)."""
         thumb_path = self._get_thumbnail_path(doc)
-        _sz = lbl.width() or 110
+        _w = lbl.width()  or _SUB_W
+        _h = lbl.height() or _SUB_H
         if thumb_path and thumb_path.exists():
             pixmap = QPixmap(str(thumb_path))
             if not pixmap.isNull():
                 scaled = pixmap.scaled(
-                    _sz, _sz,
+                    _w, _h,
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation,
                 )
@@ -840,7 +1038,7 @@ class DetailPanel(QWidget):
             pixmap = QPixmap(str(thumb_path))
             if not pixmap.isNull():
                 scaled = pixmap.scaled(
-                    _THUMB_SIZE, _THUMB_SIZE,
+                    _THUMB_W, _THUMB_H,
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation,
                 )
@@ -861,14 +1059,17 @@ class DetailPanel(QWidget):
         )
 
     def _get_thumbnail_path(self, doc: dict) -> "Path | None":
-        """Restituisce il path della thumbnail se configurato."""
+        """Restituisce il path della thumbnail solo per documenti codificati (file archiviato)."""
         if not session.sp:
+            return None
+        if not doc.get("archive_path"):
             return None
         code = doc.get("code", "")
         rev = doc.get("revision", "")
         if not code:
             return None
-        thumb_file = session.sp.thumbnails / f"{code}_{rev}.png"
+        suffix = "_DRW" if doc.get("doc_type") == "Disegno" else ""
+        thumb_file = session.sp.thumbnails / f"{code}_{rev}{suffix}.png"
         return thumb_file
 
     # ------------------------------------------------------------------
@@ -1045,4 +1246,201 @@ class DetailPanel(QWidget):
             QMessageBox.critical(
                 self, "Errore",
                 f"Impossibile aprire eDrawings:\n{e}"
+            )
+
+    # ------------------------------------------------------------------
+    #  Toggle Note tab
+    # ------------------------------------------------------------------
+    def _on_toggle_notes(self, checked: bool):
+        self.tabs.setTabVisible(self._notes_tab_index, checked)
+        if checked:
+            self.tabs.setCurrentIndex(self._notes_tab_index)
+
+    def _on_toggle_notes_code(self, checked: bool):
+        self.grp_notes_code.setVisible(checked)
+
+    # ------------------------------------------------------------------
+    #  Note per codice
+    # ------------------------------------------------------------------
+    def _load_notes_to(self, edit: QTextEdit, lbl: QLabel, code: str):
+        """Carica la nota del codice nell'editor specificato."""
+        if not session.is_connected or not code:
+            edit.setPlainText("")
+            lbl.setText("")
+            return
+        try:
+            row = session.db.get_note(code)
+        except Exception:
+            row = None
+        if row and row.get("content"):
+            edit.setHtml(row["content"])
+        else:
+            edit.setPlainText("")
+        if row:
+            by = row.get("updated_by_name") or ""
+            at = (row.get("updated_at") or "")[:16].replace("T", " ")
+            lbl.setText(f"Ultimo aggiorn.: {at}  {by}".strip())
+        else:
+            lbl.setText("")
+
+    def _save_notes_doc(self):
+        self._save_notes_from(self._notes_edit, self._notes_lbl_updated)
+
+    def _save_notes_code(self):
+        self._save_notes_from(self._notes_edit_code, self._notes_lbl_updated_code)
+
+    def _save_notes_from(self, edit: QTextEdit, lbl: QLabel):
+        """Salva la nota dal QTextEdit specificato."""
+        code = self._current_code
+        if not session.is_connected or not code:
+            return
+        content = edit.toHtml()
+        user_id = (session.user or {}).get("id", 0)
+        try:
+            session.db.save_note(code, content, user_id)
+            row = session.db.get_note(code)
+            if row:
+                by = row.get("updated_by_name") or ""
+                at = (row.get("updated_at") or "")[:16].replace("T", " ")
+                lbl.setText(f"Ultimo aggiorn.: {at}  {by}".strip())
+        except Exception as e:
+            QMessageBox.critical(self, "Errore salvataggio nota", str(e))
+
+    def _insert_date_user(self, edit: QTextEdit):
+        """Inserisce dd/mm/yyyy - Nome Utente: nel cursore corrente."""
+        today = date.today().strftime("%d/%m/%Y")
+        user_name = (session.user or {}).get("full_name", "")
+        text = f"{today} - {user_name}: " if user_name else f"{today}: "
+        edit.insertPlainText(text)
+
+    # ------------------------------------------------------------------
+    #  PDF
+    # ------------------------------------------------------------------
+    def _current_pdf_path(self) -> "Path | None":
+        """Restituisce il Path del PDF del documento corrente, o None."""
+        if not self._current_doc_id or not session.is_connected:
+            return None
+        doc = session.files.get_document(self._current_doc_id)
+        if not doc:
+            return None
+        pdf_path = doc.get("pdf_path") or ""
+        if pdf_path:
+            p = Path(pdf_path)
+            return p if p.exists() else None
+        return None
+
+    def _on_open_pdf(self):
+        """Apre il PDF con il visualizzatore predefinito del sistema."""
+        p = self._current_pdf_path()
+        if not p:
+            QMessageBox.warning(self, "PDF non trovato", "Il file PDF non è disponibile.")
+            return
+        import os
+        os.startfile(str(p))
+
+    def _on_save_pdf(self):
+        """Copia il PDF in una cartella scelta dall'utente."""
+        p = self._current_pdf_path()
+        if not p:
+            QMessageBox.warning(self, "PDF non trovato", "Il file PDF non è disponibile.")
+            return
+        from PyQt6.QtWidgets import QFileDialog
+        dest_str, _ = QFileDialog.getSaveFileName(
+            self,
+            "Salva copia PDF",
+            p.name,
+            "PDF (*.pdf)",
+        )
+        if not dest_str:
+            return
+        try:
+            shutil.copy2(p, dest_str)
+            QMessageBox.information(self, "PDF salvato", f"Copia salvata in:\n{dest_str}")
+        except Exception as e:
+            QMessageBox.critical(self, "Errore salvataggio", str(e))
+
+    # ------------------------------------------------------------------
+    def _on_generate_pdf(self):
+        """Genera PDF del disegno corrente in background."""
+        if not self._current_doc_id or not session.is_connected:
+            return
+        doc = session.files.get_document(self._current_doc_id)
+        if not doc or not doc.get("archive_path"):
+            return
+        if not session.sp:
+            return
+
+        src = session.sp.root / doc["archive_path"]
+        code = doc.get("code", "")
+        rev  = doc.get("revision", "")
+        pdf_dir = session.sp.root / "pdf"
+        pdf_dir.mkdir(parents=True, exist_ok=True)
+        dest = pdf_dir / f"{code}_{rev}.pdf"
+
+        self.btn_gen_pdf.setEnabled(False)
+        self.lbl_pdf_path.setText("Generazione in corso…")
+
+        import threading
+        threading.Thread(
+            target=self._generate_pdf_worker,
+            args=(self._current_doc_id, src, dest),
+            daemon=True,
+        ).start()
+
+    def _generate_pdf_worker(self, doc_id: int, src: Path, dest: Path):
+        """Worker thread per la generazione PDF (subprocess pdf_worker.py)."""
+        import sys
+        import tempfile
+        import os
+        _WORKER = Path(__file__).parent.parent / "core" / "pdf_worker.py"
+        _TIMEOUT = 120
+
+        log_text = ""
+        try:
+            tmp_fd, tmp_log = tempfile.mkstemp(suffix=".txt", prefix="pdf_")
+            os.close(tmp_fd)
+            with open(tmp_log, "w") as lf:
+                proc = subprocess.Popen(
+                    [sys.executable, str(_WORKER), str(src), str(dest)],
+                    stdout=lf,
+                    stderr=lf,
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                )
+            proc.wait(timeout=_TIMEOUT)
+            log_text = Path(tmp_log).read_text(errors="replace").strip()
+            ok = proc.returncode == 0 and dest.exists()
+        except Exception as e:
+            log_text = str(e)
+            ok = False
+
+        if ok and session.db:
+            try:
+                session.db.set_pdf_path(doc_id, str(dest))
+            except Exception:
+                pass
+
+        # Aggiorna UI in modo thread-safe tramite segnale Qt
+        detail = str(dest) if ok else log_text
+        self._pdf_done.emit(ok, detail)
+
+    def _on_pdf_done(self, ok: bool, pdf_path: str):
+        """Chiamato dal thread principale dopo generazione PDF.
+        pdf_path = percorso PDF se ok=True, altrimenti log diagnostico.
+        """
+        self.btn_gen_pdf.setEnabled(True)
+        if ok:
+            self.lbl_pdf_path.setText(pdf_path)
+            self.btn_open_pdf.setEnabled(True)
+            self.btn_save_pdf.setEnabled(True)
+            QMessageBox.information(self, "PDF generato", f"PDF salvato in:\n{pdf_path}")
+        else:
+            self.lbl_pdf_path.setText("Errore nella generazione PDF")
+            self.btn_open_pdf.setEnabled(False)
+            self.btn_save_pdf.setEnabled(False)
+            # Mostra il log del subprocess per diagnostica
+            detail = pdf_path[:600] if pdf_path else "(nessun dettaglio)"
+            QMessageBox.warning(
+                self, "Errore PDF",
+                "Impossibile generare il PDF.\n\n"
+                f"Dettaglio:\n{detail}"
             )
