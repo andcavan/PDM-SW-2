@@ -205,7 +205,9 @@ class ArchiveView(QWidget):
         for d in docs:
             groups.setdefault(d["code"], []).append(d)
 
+        self.tree.blockSignals(True)
         self.tree.clear()
+        self.tree.blockSignals(False)
 
         for code in sorted(groups.keys()):
             all_docs = groups[code]

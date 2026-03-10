@@ -436,6 +436,7 @@ class DetailPanel(QWidget):
             self.clear()
             return
 
+        _same_doc = (doc_id == self._current_doc_id)
         self._current_doc_id = doc_id
         self.stack.setCurrentIndex(0)
 
@@ -508,7 +509,8 @@ class DetailPanel(QWidget):
 
         # ---- Note ----
         self._current_code = doc.get("code", "")
-        self._load_notes_to(self._notes_edit, self._notes_lbl_updated, self._current_code)
+        if not _same_doc:
+            self._load_notes_to(self._notes_edit, self._notes_lbl_updated, self._current_code)
         is_obsoleto = doc.get("state") == "Obsoleto"
         self._notes_edit.setReadOnly(is_obsoleto)
 
@@ -731,6 +733,7 @@ class DetailPanel(QWidget):
 
     def load_code(self, code: str, docs: list[dict]):
         """Carica e mostra le informazioni del nodo codice (modalità codice)."""
+        _same_code = (code == self._current_code)
         self._current_doc_id = None
         self._current_code = code
         self.stack.setCurrentIndex(1)
@@ -861,7 +864,8 @@ class DetailPanel(QWidget):
         self._code_prt_asm_for_drw = prt_asm_with_file[0]["id"] if prt_asm_with_file else None
 
         # ---- Note ----
-        self._load_notes_to(self._notes_edit_code, self._notes_lbl_updated_code, code)
+        if not _same_code:
+            self._load_notes_to(self._notes_edit_code, self._notes_lbl_updated_code, code)
         self._notes_edit_code.setReadOnly(False)
 
     def _on_create_in_sw(self):
