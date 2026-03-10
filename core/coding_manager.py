@@ -302,6 +302,62 @@ class CodingManager:
     # VALIDAZIONE / PARSING
     # ==================================================================
 
+    # ==================================================================
+    # IMPORTAZIONE MASSIVA
+    # ==================================================================
+
+    def bulk_import_machines(self, rows: list) -> dict:
+        """
+        Importa una lista di macchine in blocco.
+        rows: [{"code": str, "description": str}]
+        Ritorna {"inserted": n, "skipped": n, "errors": [str]}
+        """
+        cfg = self._cfg
+        inserted, skipped, errors = 0, 0, []
+        for row in rows:
+            code = row.get("code", "").upper().strip()
+            desc = row.get("description", "").strip()
+            ok, err = self.validate_code_string(code, cfg.mach_code_type, cfg.mach_code_length)
+            if not ok:
+                errors.append(f"{code}: {err}")
+                continue
+            if self.get_machine_by_code(code):
+                skipped += 1
+                continue
+            try:
+                self.create_machine(code, desc, cfg.mach_code_type, cfg.mach_code_length)
+                inserted += 1
+            except Exception as e:
+                errors.append(f"{code}: {e}")
+        return {"inserted": inserted, "skipped": skipped, "errors": errors}
+
+    def bulk_import_groups(self, machine_id: int, rows: list) -> dict:
+        """
+        Importa una lista di gruppi per la macchina indicata.
+        rows: [{"code": str, "description": str}]
+        Ritorna {"inserted": n, "skipped": n, "errors": [str]}
+        """
+        cfg = self._cfg
+        inserted, skipped, errors = 0, 0, []
+        existing_codes = {g["code"] for g in self.get_groups(machine_id, only_active=False)}
+        for row in rows:
+            code = row.get("code", "").upper().strip()
+            desc = row.get("description", "").strip()
+            ok, err = self.validate_code_string(code, cfg.grp_code_type, cfg.grp_code_length)
+            if not ok:
+                errors.append(f"{code}: {err}")
+                continue
+            if code in existing_codes:
+                skipped += 1
+                continue
+            try:
+                self.create_group(machine_id, code, desc, cfg.grp_code_type, cfg.grp_code_length)
+                inserted += 1
+                existing_codes.add(code)
+            except Exception as e:
+                errors.append(f"{code}: {e}")
+        return {"inserted": inserted, "skipped": skipped, "errors": errors}
+
     def validate_code_string(self, code: str, code_type: str,
                               code_length: int) -> tuple:
         """Verifica formato del codice macchina/gruppo."""

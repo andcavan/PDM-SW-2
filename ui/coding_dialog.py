@@ -113,6 +113,10 @@ class CodingDialog(QDialog):
         r.addWidget(btn_del_m)
         r.addWidget(btn_save_m)
         right.addLayout(r)
+
+        btn_bulk_m = QPushButton("Importa / Genera serie…")
+        btn_bulk_m.clicked.connect(self._bulk_machines)
+        right.addWidget(btn_bulk_m)
         right.addStretch()
 
         layout.addLayout(right, stretch=1)
@@ -192,6 +196,10 @@ class CodingDialog(QDialog):
         r.addWidget(btn_del_g)
         r.addWidget(btn_save_g)
         right.addLayout(r)
+
+        btn_bulk_g = QPushButton("Importa / Genera serie…")
+        btn_bulk_g.clicked.connect(self._bulk_groups)
+        right.addWidget(btn_bulk_g)
         right.addStretch()
 
         split.addLayout(right, stretch=1)
@@ -441,6 +449,33 @@ class CodingDialog(QDialog):
                 row["counter_type"], row["machine_id"], row["group_id"], 0
             )
             self._load_counters()
+
+    # ==================================================================
+    # IMPORTAZIONE / GENERAZIONE MASSIVA
+    # ==================================================================
+    def _bulk_machines(self):
+        from ui.bulk_coding_import_dialog import BulkCodingImportDialog
+        dlg = BulkCodingImportDialog(mode="machines", parent=self)
+        dlg.exec()
+        self._load_machines()
+
+    def _bulk_groups(self):
+        machine_id = self.cb_machine_grp.currentData()
+        if not machine_id:
+            QMessageBox.warning(self, "Attenzione", "Seleziona prima una macchina.")
+            return
+        # Ricava il codice macchina per il titolo del dialog
+        machines = session.coding.get_machines(only_active=False)
+        mach_code = next((m["code"] for m in machines if m["id"] == machine_id), "")
+        from ui.bulk_coding_import_dialog import BulkCodingImportDialog
+        dlg = BulkCodingImportDialog(
+            mode="groups",
+            machine_id=machine_id,
+            machine_code=mach_code,
+            parent=self,
+        )
+        dlg.exec()
+        self._load_groups(machine_id)
 
     # Compatibilità: ricarica quando si passa alla tab contatori
     def _tab_changed(self, idx: int):
