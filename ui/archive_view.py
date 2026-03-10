@@ -148,6 +148,8 @@ class ArchiveView(QWidget):
         self.detail_panel.create_from_file_requested.connect(self._action_create_from_file)
         self.detail_panel.add_drw_requested.connect(self._action_add_drw)
         self.detail_panel.create_drw_from_file_requested.connect(self._action_create_drw_from_file)
+        # Connetti segnale workflow (aggiorna albero dopo azioni dal pannello codice)
+        self.detail_panel.workflow_action_completed.connect(self.refresh)
 
         # Proporzioni iniziali 65/35
         self.splitter.setStretchFactor(0, 65)
@@ -221,34 +223,24 @@ class ArchiveView(QWidget):
             parent_item.setText(COL_TITLE, best.get("title") or "")
             parent_item.setText(COL_DESC,  best.get("description") or "")
 
-            # Figli visibili solo se hanno un file in archivio O sono in checkout
+            # Figli visibili: solo doc attivi (non Obsoleti) con file in archivio o in checkout
             visible_docs = [d for d in all_docs
-                            if d.get("archive_path") or d["is_locked"]]
+                            if d["state"] != "Obsoleto"
+                            and (d.get("archive_path") or d["is_locked"])]
 
-            # Separa doc attivi e obsoleti tra i visibili
-            active_docs   = [d for d in visible_docs if d["state"] != "Obsoleto"]
-            obsolete_docs = [d for d in visible_docs if d["state"] == "Obsoleto"]
-
-            # Crea nodi per documenti attivi, tracciando l'ultimo per tipo
-            type_items: dict[str, QTreeWidgetItem] = {}
-            for doc in sorted(active_docs, key=lambda d: (d["doc_type"], d["revision"])):
-                item = self._make_tree_item(parent_item, doc)
-                type_items[doc["doc_type"]] = item
-
-            # Annida obsoleti sotto l'ultimo doc attivo dello stesso tipo
-            for doc in sorted(obsolete_docs,
-                              key=lambda d: (d["doc_type"], d["revision"]),
-                              reverse=True):
-                nest_parent = type_items.get(doc["doc_type"], parent_item)
-                self._make_tree_item(nest_parent, doc)
+            for doc in sorted(visible_docs, key=lambda d: (d["doc_type"], d["revision"])):
+                self._make_tree_item(parent_item, doc)
 
             parent_item.setExpanded(code in expanded_codes)   # ripristina stato o lascia compresso
 
-        total = sum(len(v) for v in groups.values())
+        active_total = sum(
+            1 for docs in groups.values()
+            for d in docs if d["state"] != "Obsoleto"
+        )
         if self.view_mode == "uncoded":
-            self.lbl_count.setText(f"{total} documenti non codificati in {len(groups)} codici")
+            self.lbl_count.setText(f"{active_total} documenti non codificati in {len(groups)} codici")
         else:
-            self.lbl_count.setText(f"{total} documenti in {len(groups)} codici")
+            self.lbl_count.setText(f"{active_total} documenti attivi in {len(groups)} codici")
 
         # Applica filtro tipo corrente
         self._apply_type_filter()
@@ -335,9 +327,35 @@ class ArchiveView(QWidget):
         val = item.data(COL_CODE, Qt.ItemDataRole.UserRole)
         if isinstance(val, int):
             self.document_selected.emit(val)
+        elif isinstance(val, str) and val.startswith("PDF:"):
+            self._open_pdf_from_archive(val[4:])
 
     # ------------------------------------------------------------------
     #  Helpers
+    def _open_pdf_from_archive(self, pdf_rel_path: str):
+        """Copia il PDF nella workspace e lo apre con il visualizzatore predefinito."""
+        import os, shutil
+        from config import load_local_config
+        if not session.sp:
+            return
+        src = session.sp.root / pdf_rel_path
+        if not src.exists():
+            QMessageBox.warning(self, "PDF non trovato",
+                                f"Il file PDF non è disponibile:\n{src}")
+            return
+        ws = load_local_config().get("sw_workspace", "")
+        dest = src  # fallback: apri direttamente dall'archivio
+        if ws:
+            ws_path = Path(ws)
+            ws_path.mkdir(parents=True, exist_ok=True)
+            ws_dest = ws_path / src.name
+            try:
+                shutil.copy2(src, ws_dest)
+                dest = ws_dest
+            except Exception:
+                pass
+        os.startfile(str(dest))
+
     # ------------------------------------------------------------------
     @staticmethod
     def _pick_representative(docs: list[dict]) -> dict:
@@ -371,7 +389,36 @@ class ArchiveView(QWidget):
         mod_at = doc.get("modified_at") or doc.get("created_at") or ""
         child.setText(COL_DATE, str(mod_at)[:19] if mod_at else "")
         child.setData(COL_CODE, Qt.ItemDataRole.UserRole, doc["id"])
+
+        # Aggiunge PDF come figlio del DRW se presente
+        if doc.get("doc_type") == "Disegno" and doc.get("pdf_path"):
+            self._add_pdf_tree_item(child, doc)
+
         return child
+
+    def _add_pdf_tree_item(self, drw_item: QTreeWidgetItem, doc: dict):
+        """Aggiunge un nodo PDF figlio sotto un nodo DRW."""
+        pdf_path = doc["pdf_path"]
+        # Verifica esistenza
+        if session.sp:
+            p = session.sp.root / pdf_path
+            if not p.exists():
+                p_abs = Path(pdf_path)
+                if not p_abs.exists():
+                    return  # PDF registrato ma file mancante
+        else:
+            return
+
+        is_obsolete = doc.get("state") == "Obsoleto"
+        pdf_item = QTreeWidgetItem(drw_item)
+        pdf_item.setText(COL_CODE, "    📄  PDF" + (" ⚠️" if is_obsolete else ""))
+        pdf_item.setText(COL_REV, doc["revision"])
+        pdf_item.setText(COL_TITLE, f"{doc.get('title', '')} (PDF{'  – obsoleto' if is_obsolete else ''})")
+        pdf_item.setText(COL_STATE, "—")
+        pdf_item.setForeground(COL_STATE, QColor("#585b70" if is_obsolete else "#a6adc8"))
+        mod_at = doc.get("modified_at") or doc.get("created_at") or ""
+        pdf_item.setText(COL_DATE, str(mod_at)[:19] if mod_at else "")
+        pdf_item.setData(COL_CODE, Qt.ItemDataRole.UserRole, f"PDF:{pdf_path}")
 
     def _selected_doc_id(self) -> int | None:
         """Ritorna il document_id del nodo figlio selezionato, o None."""
@@ -392,9 +439,17 @@ class ArchiveView(QWidget):
     #  Menu contestuale
     # ------------------------------------------------------------------
     def _context_menu(self, pos):
-        doc_id = self._selected_doc_id()
-        if not doc_id:
+        items = self.tree.selectedItems()
+        if not items:
             return
+        item = items[0]
+        val = item.data(COL_CODE, Qt.ItemDataRole.UserRole)
+        if isinstance(val, str) and val.startswith("CODE:"):
+            self._context_menu_code(val[5:], pos)
+        elif isinstance(val, int):
+            self._context_menu_doc(val, pos)
+
+    def _context_menu_doc(self, doc_id: int, pos):
         doc = session.files.get_document(doc_id)
         if not doc:
             return
@@ -479,6 +534,95 @@ class ArchiveView(QWidget):
         menu.addAction(act_props)
 
         menu.exec(self.tree.viewport().mapToGlobal(pos))
+
+    def _context_menu_code(self, code: str, pos):
+        """Menu contestuale per il nodo padre (codice) dell'albero."""
+        from ui.detail_panel import DetailPanel
+        all_docs = [d for d in session.files.search_documents(code=code)
+                    if d["code"] == code]
+        if not all_docs:
+            return
+        rep = DetailPanel._get_code_representative_doc(all_docs)
+        if not rep:
+            return
+
+        state    = rep["state"]
+        is_latest = session.workflow.is_latest_revision(rep)
+        available = session.workflow.get_available_transitions(state)
+        is_prt_asm = rep["doc_type"] in ("Parte", "Assieme")
+
+        menu = QMenu(self)
+
+        # ---- Workflow ----
+        act_wf = QAction("🔄  Workflow…", self)
+        act_wf.setEnabled(bool(available) and session.can("release"))
+        act_wf.triggered.connect(lambda: self._action_workflow_code(rep, all_docs))
+        menu.addAction(act_wf)
+
+        menu.addSeparator()
+
+        # ---- Crea revisione ----
+        act_newrev = QAction("📋  Crea revisione", self)
+        can_new_rev = (state == "Rilasciato" and is_latest
+                       and is_prt_asm and session.can("create"))
+        act_newrev.setEnabled(can_new_rev)
+        act_newrev.triggered.connect(lambda: self._action_new_revision(rep["id"]))
+        menu.addAction(act_newrev)
+
+        # ---- Annulla revisione ----
+        act_cancel_rev = QAction("🗑  Annulla revisione", self)
+        can_cancel = (state == "In Revisione" and not rep["is_locked"]
+                      and is_prt_asm and session.can("create"))
+        act_cancel_rev.setEnabled(can_cancel)
+        act_cancel_rev.triggered.connect(lambda: self._action_cancel_revision(rep["id"]))
+        menu.addAction(act_cancel_rev)
+
+        menu.exec(self.tree.viewport().mapToGlobal(pos))
+
+    def _action_workflow_code(self, rep: dict, all_docs: list):
+        """Apre WorkflowDialog per il documento rappresentativo di un codice,
+        con controllo e avviso se il companion (DRW o PRT/ASM) è assente."""
+        from ui.workflow_dialog import WorkflowDialog
+
+        # Controlla presenza companion
+        skip_r2 = False
+        code = rep["code"]
+        rev  = rep["revision"]
+        warn_msg = None
+        if rep["doc_type"] in ("Parte", "Assieme"):
+            drw = next((d for d in all_docs
+                        if d["doc_type"] == "Disegno"
+                        and d["revision"] == rev
+                        and d["state"] != "Obsoleto"), None)
+            if not drw:
+                warn_msg = (
+                    f"Il codice {code} rev.{rev} non ha un Disegno (DRW) associato.\n\n"
+                    f"Il passaggio di stato sarà applicato solo al {rep['doc_type']}."
+                )
+        elif rep["doc_type"] == "Disegno":
+            prt_asm = next((d for d in all_docs
+                            if d["doc_type"] in ("Parte", "Assieme")
+                            and d["revision"] == rev
+                            and d["state"] != "Obsoleto"), None)
+            if not prt_asm:
+                warn_msg = (
+                    f"Il codice {code} rev.{rev} non ha un Parte/Assieme associato.\n\n"
+                    "Il passaggio di stato sarà applicato solo al Disegno."
+                )
+
+        if warn_msg:
+            r = QMessageBox.question(
+                self, "Documento companion assente",
+                warn_msg + "\n\nProcedere comunque?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            )
+            if r != QMessageBox.StandardButton.Yes:
+                return
+            skip_r2 = True
+
+        dlg = WorkflowDialog(rep["id"], parent=self, skip_r2=skip_r2)
+        if dlg.exec():
+            self.refresh()
 
     # ------------------------------------------------------------------
     #  Azioni

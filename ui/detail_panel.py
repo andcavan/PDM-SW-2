@@ -51,6 +51,8 @@ class DetailPanel(QWidget):
     create_from_file_requested    = pyqtSignal(int)  # doc_id PRT/ASM senza file
     add_drw_requested             = pyqtSignal(int)  # parent PRT/ASM doc_id
     create_drw_from_file_requested = pyqtSignal(int)  # parent PRT/ASM doc_id
+    # Segnale emesso dopo ogni azione workflow (per aggiornare l'albero)
+    workflow_action_completed     = pyqtSignal()
     # Segnale interno per aggiornamento UI da thread PDF (thread-safe)
     _pdf_done = pyqtSignal(bool, str)
 
@@ -62,6 +64,8 @@ class DetailPanel(QWidget):
         self._code_prt_asm_for_drw:  int | None = None  # PRT/ASM con file (per DRW)
         self._code_prt_doc:  dict | None = None
         self._code_drw_doc:  dict | None = None
+        self._code_docs: list[dict] = []
+        self._code_representative: dict | None = None
         self._build_ui()
         self._pdf_done.connect(self._on_pdf_done)
         self.clear()
@@ -148,6 +152,9 @@ class DetailPanel(QWidget):
         self.tabs.addTab(self._build_properties_tab(), "Proprietà SW")
         self.tabs.addTab(self._build_bom_tab(), "Struttura")
         self.tabs.addTab(self._build_history_tab(), "Storico")
+        self._revisions_tab_index = self.tabs.count()
+        self.tabs.addTab(self._build_revisions_tab(), "Revisioni")
+        self.tabs.setTabVisible(self._revisions_tab_index, False)
         self._notes_tab_index = self.tabs.count()
         self.tabs.addTab(self._build_notes_tab(doc_mode=True), "Note")
         self.tabs.setTabVisible(self._notes_tab_index, False)
@@ -302,6 +309,24 @@ class DetailPanel(QWidget):
         layout.addWidget(self.tbl_history)
         return w
 
+    # ---- Tab Revisioni ----
+    def _build_revisions_tab(self) -> QWidget:
+        w = QWidget()
+        layout = QVBoxLayout(w)
+        self.tbl_revisions = QTableWidget(0, 4)
+        self.tbl_revisions.setHorizontalHeaderLabels(
+            ["Revisione", "Data rilascio", "Data sostituzione", "Note"]
+        )
+        hdr = self.tbl_revisions.horizontalHeader()
+        hdr.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        hdr.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        hdr.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        hdr.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
+        self.tbl_revisions.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.tbl_revisions.setAlternatingRowColors(True)
+        layout.addWidget(self.tbl_revisions)
+        return w
+
     # ---- Tab Note (doc mode) / GroupBox Note (code mode) ----
     def _build_notes_tab(self, doc_mode: bool = True) -> QWidget:
         """
@@ -387,6 +412,33 @@ class DetailPanel(QWidget):
         return w
 
     # ------------------------------------------------------------------
+    #  Helpers statici
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _get_code_representative_doc(docs: list[dict]) -> "dict | None":
+        """
+        Restituisce il documento 'rappresentativo' del codice per il workflow.
+        Priorità: PRT/ASM attivo (rev. più alta) → DRW attivo → PRT/ASM obsoleto → qualsiasi.
+        """
+        def latest(pool):
+            return max(pool, key=lambda d: d["revision"]) if pool else None
+
+        active_prt_asm = [d for d in docs
+                          if d["doc_type"] in ("Parte", "Assieme")
+                          and d["state"] != "Obsoleto"]
+        if active_prt_asm:
+            return latest(active_prt_asm)
+
+        active_drw = [d for d in docs
+                      if d["doc_type"] == "Disegno"
+                      and d["state"] != "Obsoleto"]
+        if active_drw:
+            return latest(active_drw)
+
+        all_prt_asm = [d for d in docs if d["doc_type"] in ("Parte", "Assieme")]
+        return latest(all_prt_asm) or latest(docs)
+
+    # ------------------------------------------------------------------
     #  API pubblica
     # ------------------------------------------------------------------
     def clear(self):
@@ -415,6 +467,8 @@ class DetailPanel(QWidget):
         self.tbl_props.setRowCount(0)
         self.tbl_bom.setRowCount(0)
         self.tbl_history.setRowCount(0)
+        self.tbl_revisions.setRowCount(0)
+        self.tabs.setTabVisible(self._revisions_tab_index, False)
         # Nascondi note e resetta toggle
         self.tabs.setTabVisible(self._notes_tab_index, False)
         self.btn_toggle_notes.setChecked(False)
@@ -424,6 +478,14 @@ class DetailPanel(QWidget):
         self.btn_toggle_notes_code.setChecked(False)
         self._notes_edit_code.setPlainText("")
         self._notes_lbl_updated_code.setText("")
+        # Reset sezione workflow codice
+        self._code_docs = []
+        self._code_representative = None
+        self.lbl_code_wf_state.setText("")
+        self.lbl_code_wf_rev.setText("")
+        for _b in (self.btn_wf_release, self.btn_wf_obsolete,
+                   self.btn_wf_new_rev, self.btn_wf_cancel_rev):
+            _b.setVisible(False)
 
     def load_document(self, doc_id: int):
         """Carica e mostra i dettagli del documento indicato."""
@@ -488,8 +550,16 @@ class DetailPanel(QWidget):
         )
         self.grp_pdf.setVisible(is_drw_archived)
         if is_drw_archived:
+            is_obsolete_drw = (state == "Obsoleto")
+            self.grp_pdf.setTitle("PDF  ⚠️ revisione obsoleta" if is_obsolete_drw else "PDF")
             pdf_path = doc.get("pdf_path") or ""
-            has_pdf = bool(pdf_path and Path(pdf_path).exists())
+            has_pdf = False
+            if pdf_path:
+                # Support both relative paths (new) and absolute paths (legacy)
+                p = (session.sp.root / pdf_path) if session.sp else Path(pdf_path)
+                if not p.exists() and Path(pdf_path).is_absolute():
+                    p = Path(pdf_path)
+                has_pdf = p.exists()
             if has_pdf:
                 self.lbl_pdf_path.setText(pdf_path)
             elif pdf_path:
@@ -586,6 +656,43 @@ class DetailPanel(QWidget):
             self.tbl_history.setItem(i, 2, QTableWidgetItem(r.get("from_state", "")))
             self.tbl_history.setItem(i, 3, QTableWidgetItem(r.get("to_state", "")))
             self.tbl_history.setItem(i, 4, QTableWidgetItem(r.get("user_name", "")))
+
+        # ---- Tab Revisioni (revisioni obsolete dello stesso codice+tipo) ----
+        self.tbl_revisions.setRowCount(0)
+        if session.files:
+            code     = doc.get("code", "")
+            doc_type = doc.get("doc_type", "")
+            prev_docs = [
+                d for d in session.files.search_documents(code=code)
+                if d["code"] == code
+                and d["doc_type"] == doc_type
+                and d["state"] == "Obsoleto"
+            ]
+            prev_docs.sort(key=lambda d: d["revision"], reverse=True)
+            for pd in prev_docs:
+                hist = session.workflow.get_history(pd["id"])
+                release_at = next(
+                    (h["changed_at"] for h in sorted(hist, key=lambda h: h["changed_at"])
+                     if h.get("to_state") == "Rilasciato"), "—"
+                )
+                obsolete_at = next(
+                    (h["changed_at"] for h in sorted(hist, key=lambda h: h["changed_at"])
+                     if h.get("to_state") == "Obsoleto"), "—"
+                )
+                notes_parts = [h["notes"] for h in hist
+                               if h.get("to_state") == "Obsoleto" and h.get("notes")]
+                note = notes_parts[-1] if notes_parts else ""
+                i = self.tbl_revisions.rowCount()
+                self.tbl_revisions.insertRow(i)
+                self.tbl_revisions.setItem(i, 0, QTableWidgetItem(pd["revision"]))
+                self.tbl_revisions.setItem(i, 1, QTableWidgetItem(str(release_at)[:19]))
+                self.tbl_revisions.setItem(i, 2, QTableWidgetItem(str(obsolete_at)[:19]))
+                self.tbl_revisions.setItem(i, 3, QTableWidgetItem(note))
+            has_prev = bool(prev_docs)
+            self.tabs.setTabVisible(self._revisions_tab_index, has_prev)
+            if has_prev:
+                self.tabs.setTabText(self._revisions_tab_index,
+                                     f"Revisioni ({len(prev_docs)})")
 
     # ------------------------------------------------------------------
     #  Pannello modalità codice
@@ -720,6 +827,42 @@ class DetailPanel(QWidget):
         drw_h.addLayout(drw_btns, 1)
         layout.addWidget(self.grp_drw_preview)
 
+        # ---- Workflow codice ----
+        self.grp_code_workflow = QGroupBox("Workflow")
+        wf_layout = QVBoxLayout(self.grp_code_workflow)
+        wf_layout.setSpacing(6)
+        wf_layout.setContentsMargins(8, 8, 8, 8)
+
+        wf_state_row = QHBoxLayout()
+        self.lbl_code_wf_state = QLabel()
+        self.lbl_code_wf_state.setTextFormat(Qt.TextFormat.RichText)
+        wf_state_row.addWidget(self.lbl_code_wf_state)
+        self.lbl_code_wf_rev = QLabel()
+        self.lbl_code_wf_rev.setStyleSheet("color: #a6adc8; font-size: 11px;")
+        wf_state_row.addWidget(self.lbl_code_wf_rev)
+        wf_state_row.addStretch()
+        wf_layout.addLayout(wf_state_row)
+
+        wf_btns_row = QHBoxLayout()
+        self.btn_wf_release    = QPushButton("✅  Rilascia")
+        self.btn_wf_release.setObjectName("btn_success")
+        self.btn_wf_obsolete   = QPushButton("🗑  Rendi Obsoleto")
+        self.btn_wf_obsolete.setObjectName("btn_warning")
+        self.btn_wf_new_rev    = QPushButton("📋  Crea Revisione")
+        self.btn_wf_cancel_rev = QPushButton("↩️  Annulla Revisione")
+        self.btn_wf_release.clicked.connect(self._on_wf_release)
+        self.btn_wf_obsolete.clicked.connect(self._on_wf_obsolete)
+        self.btn_wf_new_rev.clicked.connect(self._on_wf_new_rev)
+        self.btn_wf_cancel_rev.clicked.connect(self._on_wf_cancel_rev)
+        for _b in (self.btn_wf_release, self.btn_wf_obsolete,
+                   self.btn_wf_new_rev, self.btn_wf_cancel_rev):
+            wf_btns_row.addWidget(_b)
+            _b.setVisible(False)
+        wf_btns_row.addStretch()
+        wf_layout.addLayout(wf_btns_row)
+
+        layout.addWidget(self.grp_code_workflow)
+
         # ---- Note codice ----
         self.grp_notes_code = QGroupBox("Note")
         grp_notes_layout = QVBoxLayout(self.grp_notes_code)
@@ -743,9 +886,18 @@ class DetailPanel(QWidget):
         rep = max(docs, key=lambda d: d["revision"]) if docs else None
         self.lbl_code_title.setText(rep.get("title", "") if rep else "")
 
-        prt = next((d for d in docs if d["doc_type"] == "Parte"),   None)
-        asm = next((d for d in docs if d["doc_type"] == "Assieme"), None)
-        drw = next((d for d in docs if d["doc_type"] == "Disegno"), None)
+        def _latest_active(dtype: str) -> "dict | None":
+            """Restituisce l'ultima revisione attiva (non Obsoleto) del tipo dato,
+            o l'ultima in assoluto se tutte obsolete."""
+            pool = [d for d in docs if d["doc_type"] == dtype]
+            if not pool:
+                return None
+            active = [d for d in pool if d["state"] != "Obsoleto"]
+            return max(active or pool, key=lambda d: d["revision"])
+
+        prt     = _latest_active("Parte")
+        asm     = _latest_active("Assieme")
+        drw     = _latest_active("Disegno")
         prt_asm = prt or asm
 
         # ---- Card PRT / ASM ----
@@ -863,6 +1015,11 @@ class DetailPanel(QWidget):
         self._code_action_doc_id   = prt_asm_no_file[0]["id"]   if prt_asm_no_file   else None
         self._code_prt_asm_for_drw = prt_asm_with_file[0]["id"] if prt_asm_with_file else None
 
+        # ---- Workflow sezione codice ----
+        self._code_docs = docs
+        self._code_representative = self._get_code_representative_doc(docs)
+        self._update_code_workflow_section()
+
         # ---- Note ----
         if not _same_code:
             self._load_notes_to(self._notes_edit_code, self._notes_lbl_updated_code, code)
@@ -891,6 +1048,196 @@ class DetailPanel(QWidget):
     def _on_doc_create_drw_from_file(self):
         if self._current_doc_id:
             self.create_drw_from_file_requested.emit(self._current_doc_id)
+
+    # ------------------------------------------------------------------
+    #  Workflow codice
+    # ------------------------------------------------------------------
+    def _update_code_workflow_section(self):
+        """Aggiorna badge stato e bottoni workflow nella sezione codice."""
+        rep = self._code_representative
+        if rep:
+            state = rep["state"]
+            badge = STATE_BADGE_STYLE.get(state, "")
+            self.lbl_code_wf_state.setText(
+                f"<span style='{badge}'>&nbsp;{state}&nbsp;</span>"
+            )
+            self.lbl_code_wf_rev.setText(
+                f"  Rev.{rep['revision']}  ({rep['doc_type']})"
+            )
+            available  = session.workflow.get_available_transitions(state)
+            is_latest  = session.workflow.is_latest_revision(rep)
+            is_prt_asm = rep["doc_type"] in ("Parte", "Assieme")
+
+            can_release  = "Rilasciato" in available and session.can("release")
+            can_obsolete = "Obsoleto"   in available and session.can("release")
+            can_new_rev  = (state == "Rilasciato" and is_latest
+                            and is_prt_asm and session.can("create"))
+            can_cancel   = (state == "In Revisione" and not rep["is_locked"]
+                            and is_prt_asm and session.can("create"))
+
+            self.btn_wf_release.setVisible(can_release)
+            self.btn_wf_obsolete.setVisible(can_obsolete)
+            self.btn_wf_new_rev.setVisible(can_new_rev)
+            self.btn_wf_cancel_rev.setVisible(can_cancel)
+        else:
+            self.lbl_code_wf_state.setText(
+                "<span style='color:#585b70;'>Nessun documento attivo</span>"
+            )
+            self.lbl_code_wf_rev.setText("")
+            for _b in (self.btn_wf_release, self.btn_wf_obsolete,
+                       self.btn_wf_new_rev, self.btn_wf_cancel_rev):
+                _b.setVisible(False)
+
+    def _reload_code_panel(self):
+        """Ricarica il pannello codice corrente senza full tree refresh."""
+        if not self._current_code or not session.is_connected:
+            return
+        docs = [d for d in session.files.search_documents(code=self._current_code)
+                if d["code"] == self._current_code]
+        self.load_code(self._current_code, docs)
+
+    def _on_wf_release(self):
+        self._do_wf_transition("Rilasciato")
+
+    def _on_wf_obsolete(self):
+        self._do_wf_transition("Obsoleto")
+
+    def _check_companion_warning(self, rep: dict, target_state: str) -> "str | None":
+        """
+        Restituisce un messaggio di avviso se il companion è assente, altrimenti None.
+        Usato prima di aprire WorkflowDialog per avvisare l'utente.
+        """
+        code = rep["code"]
+        rev  = rep["revision"]
+        if rep["doc_type"] in ("Parte", "Assieme"):
+            drw = next((d for d in self._code_docs
+                        if d["doc_type"] == "Disegno"
+                        and d["revision"] == rev
+                        and d["state"] != "Obsoleto"), None)
+            if not drw:
+                return (
+                    f"Il codice {code} rev.{rev} non ha un Disegno (DRW) associato.\n\n"
+                    f"Il passaggio a «{target_state}» sarà applicato solo al {rep['doc_type']}."
+                )
+        elif rep["doc_type"] == "Disegno":
+            prt_asm = next((d for d in self._code_docs
+                            if d["doc_type"] in ("Parte", "Assieme")
+                            and d["revision"] == rev
+                            and d["state"] != "Obsoleto"), None)
+            if not prt_asm:
+                return (
+                    f"Il codice {code} rev.{rev} non ha un Parte/Assieme associato.\n\n"
+                    f"Il passaggio a «{target_state}» sarà applicato solo al Disegno."
+                )
+        return None
+
+    def _do_wf_transition(self, target_state: str):
+        rep = self._code_representative
+        if not rep:
+            return
+
+        # Controlla presenza companion e chiede conferma se assente
+        skip_r2 = False
+        warn = self._check_companion_warning(rep, target_state)
+        if warn:
+            r = QMessageBox.question(
+                self, "Documento companion assente",
+                warn + "\n\nProcedere comunque?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            )
+            if r != QMessageBox.StandardButton.Yes:
+                return
+            skip_r2 = True  # bypassa R2 se PRT/ASM senza DRW
+
+        from ui.workflow_dialog import WorkflowDialog
+        dlg = WorkflowDialog(rep["id"], parent=self, skip_r2=skip_r2)
+        idx = dlg.cmb_target.findText(target_state)
+        if idx >= 0:
+            dlg.cmb_target.setCurrentIndex(idx)
+        dlg.exec()
+        self._reload_code_panel()
+        self.workflow_action_completed.emit()
+
+    def _on_wf_new_rev(self):
+        rep = self._code_representative
+        if not rep:
+            return
+        doc = rep
+
+        try:
+            current_num = int(doc["revision"])
+            next_rev = str(current_num + 1).zfill(len(doc["revision"]))
+        except ValueError:
+            from PyQt6.QtWidgets import QInputDialog
+            next_rev, ok = QInputDialog.getText(
+                self, "Nuova revisione",
+                f"Revisione attuale: {doc['revision']}\nInserisci nuova revisione:"
+            )
+            if not ok or not next_rev.strip():
+                return
+            next_rev = next_rev.strip()
+
+        existing = session.db.fetchone(
+            "SELECT id FROM documents WHERE code=? AND revision=?",
+            (doc["code"], next_rev),
+        )
+        if existing:
+            QMessageBox.warning(
+                self, "Revisione esistente",
+                f"La revisione {next_rev} esiste già per il codice {doc['code']}."
+            )
+            return
+
+        r = QMessageBox.question(
+            self, "Nuova revisione",
+            f"Creare revisione {next_rev} dal codice {doc['code']} rev.{doc['revision']}?\n\n"
+            "Il file archiviato verrà copiato come base per la nuova revisione.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if r != QMessageBox.StandardButton.Yes:
+            return
+
+        try:
+            new_id = session.workflow.new_revision(
+                doc["id"], session.user["id"], next_rev,
+                shared_paths=session.sp,
+            )
+            QMessageBox.information(
+                self, "Nuova revisione",
+                f"Creata revisione {next_rev} (ID: {new_id})"
+            )
+            self._reload_code_panel()
+            self.workflow_action_completed.emit()
+        except Exception as e:
+            QMessageBox.critical(self, "Errore", str(e))
+
+    def _on_wf_cancel_rev(self):
+        rep = self._code_representative
+        if not rep:
+            return
+        doc = rep
+        r = QMessageBox.question(
+            self, "Annulla revisione",
+            f"Annullare la revisione {doc['revision']} del codice {doc['code']}?\n\n"
+            "Il documento e il relativo file archiviato verranno eliminati.\n"
+            "La revisione precedente resterà inalterata.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if r != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            session.workflow.cancel_revision(
+                doc["id"], session.user["id"],
+                shared_paths=session.sp,
+            )
+            QMessageBox.information(
+                self, "Annulla revisione",
+                f"Revisione {doc['revision']} annullata."
+            )
+            self._reload_code_panel()
+            self.workflow_action_completed.emit()
+        except Exception as e:
+            QMessageBox.critical(self, "Errore", str(e))
 
     def _on_prt_export_ws(self):
         self._export_doc_to_ws(self._code_prt_doc)
@@ -1328,19 +1675,37 @@ class DetailPanel(QWidget):
         if not doc:
             return None
         pdf_path = doc.get("pdf_path") or ""
-        if pdf_path:
-            p = Path(pdf_path)
-            return p if p.exists() else None
-        return None
+        if not pdf_path:
+            return None
+        # Prova come percorso relativo (nuovo formato)
+        if session.sp:
+            p = session.sp.root / pdf_path
+            if p.exists():
+                return p
+        # Fallback percorso assoluto (vecchio formato)
+        p_abs = Path(pdf_path)
+        return p_abs if p_abs.exists() else None
 
     def _on_open_pdf(self):
-        """Apre il PDF con il visualizzatore predefinito del sistema."""
+        """Copia il PDF nella workspace e lo apre con il visualizzatore predefinito."""
         p = self._current_pdf_path()
         if not p:
             QMessageBox.warning(self, "PDF non trovato", "Il file PDF non è disponibile.")
             return
         import os
-        os.startfile(str(p))
+        from config import load_local_config
+        ws = load_local_config().get("sw_workspace", "")
+        dest = p  # fallback: apri direttamente dall'archivio
+        if ws:
+            ws_path = Path(ws)
+            ws_path.mkdir(parents=True, exist_ok=True)
+            ws_dest = ws_path / p.name
+            try:
+                shutil.copy2(p, ws_dest)
+                dest = ws_dest
+            except Exception:
+                pass  # fallback: apri dall'archivio
+        os.startfile(str(dest))
 
     def _on_save_pdf(self):
         """Copia il PDF in una cartella scelta dall'utente."""
@@ -1374,12 +1739,8 @@ class DetailPanel(QWidget):
         if not session.sp:
             return
 
-        src = session.sp.root / doc["archive_path"]
-        code = doc.get("code", "")
-        rev  = doc.get("revision", "")
-        pdf_dir = session.sp.root / "pdf"
-        pdf_dir.mkdir(parents=True, exist_ok=True)
-        dest = pdf_dir / f"{code}_{rev}.pdf"
+        src  = session.sp.root / doc["archive_path"]
+        dest = src.with_suffix(".pdf")
 
         self.btn_gen_pdf.setEnabled(False)
         self.lbl_pdf_path.setText("Generazione in corso…")
@@ -1417,9 +1778,10 @@ class DetailPanel(QWidget):
             log_text = str(e)
             ok = False
 
-        if ok and session.db:
+        if ok and session.db and session.sp:
             try:
-                session.db.set_pdf_path(doc_id, str(dest))
+                rel_path = str(dest.relative_to(session.sp.root))
+                session.db.set_pdf_path(doc_id, rel_path)
             except Exception:
                 pass
 

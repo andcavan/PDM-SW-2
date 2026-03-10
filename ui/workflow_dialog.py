@@ -14,9 +14,10 @@ from ui.styles import STATE_BADGE_STYLE
 
 
 class WorkflowDialog(QDialog):
-    def __init__(self, document_id: int, parent=None):
+    def __init__(self, document_id: int, parent=None, skip_r2: bool = False):
         super().__init__(parent)
         self.document_id = document_id
+        self.skip_r2 = skip_r2
         self.setWindowTitle("Workflow")
         self.setMinimumWidth(420)
         self._build_ui()
@@ -125,6 +126,7 @@ class WorkflowDialog(QDialog):
             session.workflow.change_state(
                 self.document_id, target, session.user["id"], notes,
                 shared_paths=session.sp,
+                skip_r2=self.skip_r2,
             )
             QMessageBox.information(
                 self, "OK", f"Stato cambiato in: {target}"

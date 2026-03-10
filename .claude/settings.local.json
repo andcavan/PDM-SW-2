@@ -22,7 +22,11 @@
       "Bash(timeout 45 .venv/Scripts/python.exe core/thumb_worker.py \"C:\\\\Users\\\\prog3\\\\Desktop\\\\APP MECCANICA\\\\_pdm2\\\\archive\\\\AAA_0100-0001\\\\00\\\\AAA_0100-0001.SLDPRT\" \"C:\\\\Users\\\\prog3\\\\Desktop\\\\APP MECCANICA\\\\_pdm2\\\\thumbnails\\\\__test2.png\")",
       "Bash(grep -rn \"detail_panel\\\\|DetailPanel\\\\|load_document\\\\|load_code_node\" \"c:\\\\Users\\\\prog3\\\\Desktop\\\\APP MECCANICA\\\\PDM-SW-2\\\\ui\"\" --include=\"*.py\" | grep -v \".venv \")",
       "Bash(grep -E \"\\\\.py$|^d\")",
-      "Read(//c/Users/prog3/.claude/projects/c--Users-prog3-Desktop-APP-MECCANICA-PDM-SW-2/2ba0aceb-1987-4d8e-b04f-1cf2b015e1fd/tool-results/**)"
+      "Read(//c/Users/prog3/.claude/projects/c--Users-prog3-Desktop-APP-MECCANICA-PDM-SW-2/2ba0aceb-1987-4d8e-b04f-1cf2b015e1fd/tool-results/**)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\(''ui/detail_panel.py''\\).read\\(\\)\\); print\\(''detail_panel.py OK''\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\(''ui/archive_view.py''\\).read\\(\\)\\); print\\(''archive_view.py OK''\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\(''ui/detail_panel.py'', encoding=''utf-8''\\).read\\(\\)\\); print\\(''detail_panel.py OK''\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\(''ui/archive_view.py'', encoding=''utf-8''\\).read\\(\\)\\); print\\(''archive_view.py OK''\\)\")"
     ]
   }
 }

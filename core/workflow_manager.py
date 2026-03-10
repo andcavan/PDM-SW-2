@@ -48,7 +48,8 @@ class WorkflowManager:
     def change_state(self, document_id: int, new_state: str,
                      user_id: int, notes: str = "",
                      _propagation: bool = False,
-                     shared_paths=None) -> bool:
+                     shared_paths=None,
+                     skip_r2: bool = False) -> bool:
         """
         Cambia stato di un documento con propagazione bidirezionale PRT/ASM ↔ DRW.
         _propagation=True evita loop infinite.
@@ -84,7 +85,9 @@ class WorkflowManager:
             )
 
         # R2: PRT/ASM che passa a 'Rilasciato' deve avere DRW associato
+        # (bypassabile via skip_r2=True quando l'utente ha confermato il warning)
         if (not _propagation
+                and not skip_r2
                 and doc["doc_type"] in ("Parte", "Assieme")
                 and new_state == "Rilasciato"):
             drw_check = self.db.fetchone(
@@ -207,12 +210,8 @@ class WorkflowManager:
         _WORKER = Path(__file__).parent / "pdf_worker.py"
         _TIMEOUT = 120
 
-        src = shared_paths.root / doc["archive_path"]
-        code = doc.get("code", "")
-        rev  = doc.get("revision", "")
-        pdf_dir = shared_paths.root / "pdf"
-        pdf_dir.mkdir(parents=True, exist_ok=True)
-        dest = pdf_dir / f"{code}_{rev}.pdf"
+        src  = shared_paths.root / doc["archive_path"]
+        dest = src.with_suffix(".pdf")
 
         try:
             tmp_fd, tmp_log = tempfile.mkstemp(suffix=".txt", prefix="pdf_")
@@ -227,7 +226,8 @@ class WorkflowManager:
             proc.wait(timeout=_TIMEOUT)
             if proc.returncode == 0 and dest.exists():
                 try:
-                    self.db.set_pdf_path(document_id, str(dest))
+                    rel_path = str(Path(doc["archive_path"]).with_suffix(".pdf"))
+                    self.db.set_pdf_path(document_id, rel_path)
                 except Exception:
                     pass
         except Exception:
