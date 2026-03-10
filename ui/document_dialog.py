@@ -53,6 +53,7 @@ class DocumentDialog(QDialog):
             btn_save = QPushButton("Crea Documento")
             btn_save.setObjectName("btn_primary")
             btn_save.clicked.connect(self._create)
+            self.btn_create = btn_save
         else:
             btn_save = QPushButton("Salva Modifiche")
             btn_save.setObjectName("btn_primary")
@@ -93,8 +94,8 @@ class DocumentDialog(QDialog):
             for _label, _data in [
                 ("LIV0  Macchina (ASM)", 0),
                 ("LIV1  Gruppo (ASM)", 1),
-                ("LIV2  Sottogruppo (ASM)", 3),
-                ("LIV2  Parte (PRT)", 2),
+                ("LIV2/1  Sottogruppo (ASM)", 2),
+                ("LIV2/2  Parte (PRT)", 3),
             ]:
                 rb = QRadioButton(_label)
                 self._level_btn_group.addButton(rb, _data)
@@ -405,11 +406,11 @@ class DocumentDialog(QDialog):
                 doc_level = 1
             elif level_data == 2:
                 code      = session.coding.next_code_liv2_part(machine_id, group_id)
-                doc_type  = "Parte"
+                doc_type  = "Assieme"
                 doc_level = 2
             elif level_data == 3:
                 code      = session.coding.next_code_liv2_subgroup(machine_id, group_id)
-                doc_type  = "Assieme"
+                doc_type  = "Parte"
                 doc_level = 2
         except Exception as e:
             QMessageBox.critical(self, "Errore generazione codice", str(e))
@@ -438,7 +439,7 @@ class DocumentDialog(QDialog):
                 self, "Documento Creato",
                 f"Codice registrato:\n{code}  rev.{revision}  [{doc_type}]"
             )
-            self.accept()
+            self._reset_for_new()
             return
 
         # Modalità 1 o 2: crea file SW da template
@@ -515,7 +516,16 @@ class DocumentDialog(QDialog):
                 self, "Documento Creato",
                 f"Documento creato:\n{code}  rev.{revision}  [{doc_type}]" + drw_msg
             )
-        self.accept()
+        self._reset_for_new()
+
+    def _reset_for_new(self):
+        """Azzera titolo e descrizione e ripristina lo stato 'nuovo documento'."""
+        self.document_id = None
+        self.is_new = True
+        self.txt_title.clear()
+        self.txt_desc.clear()
+        self.txt_title.setFocus()
+        self._update_code_preview()
 
     def _save(self):
         title = self.txt_title.text().strip()

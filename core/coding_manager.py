@@ -1,16 +1,16 @@
 # =============================================================================
 #  core/coding_manager.py  –  Gestione codifica gerarchica documenti
 #
-#  Schema codici:
-#    LIV0 – Macchina (ASM) :  MMM_V001
-#    LIV1 – Gruppo   (ASM) :  MMM_GGGG-V001
-#    LIV2 – Parte    (PRT) :  MMM_GGGG-0001  (sale da 0001)
-#    LIV2 – Sottogruppo (ASM): MMM_GGGG-9999 (scende da 9999)
+#  Schema codici (default, configurabile via CodingSchemeConfig):
+#    LIV0  – Macchina (ASM) :  MMM_V001
+#    LIV1  – Gruppo   (ASM) :  MMM_GGGG-V001
+#    LIV2/1 – Parte   (PRT) :  MMM_GGGG-0001  (sale da num_start)
+#    LIV2/2 – Sottogr.(ASM) :  MMM_GGGG-9999  (scende da num_start)
 #
-#  Separatori: '_' tra MMM e GGGG, '-' tra GGGG e numero
-#  Versione:   indipendente per ogni macchina (LIV0) e per ogni
-#              coppia macchina+gruppo (LIV1)
-#  Collisione: warning quando parte e sottogruppo si avvicinano
+#  Il formato è completamente configurabile tramite CodingSchemeConfig
+#  (salvato in shared_settings.coding_scheme_config come JSON).
+#  Se nessuna configurazione è presente nel DB, si usano i valori di default
+#  che riproducono esattamente il comportamento precedente.
 # =============================================================================
 from __future__ import annotations
 import re
@@ -20,17 +20,41 @@ from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from core.database import Database
 
-# Soglia warning collisione LIV2
-COLLISION_WARNING_THRESHOLD = 500
-# Numeri LIV2: parti salgono da 1 a PART_MAX, sottogruppi scendono da 9999
-PART_MAX    = 8999
-SUBGR_MIN   = 9000
-SUBGR_START = 9999
+from core.coding_config import CodingSchemeConfig, LevelConfig
 
 
 class CodingManager:
-    def __init__(self, db: "Database"):
+    def __init__(self, db: "Database", scheme_config: Optional[CodingSchemeConfig] = None):
         self.db = db
+        self._cfg: CodingSchemeConfig = scheme_config or self._load_config()
+
+    # ------------------------------------------------------------------
+    # Caricamento / salvataggio configurazione schema
+    # ------------------------------------------------------------------
+
+    def _load_config(self) -> CodingSchemeConfig:
+        """Carica la config dal DB (shared_settings). Ritorna il default se assente."""
+        try:
+            row = self.db.fetchone(
+                "SELECT value FROM shared_settings WHERE key='coding_scheme_config'"
+            )
+            if row and row["value"]:
+                return CodingSchemeConfig.from_json(row["value"])
+        except Exception:
+            pass
+        return CodingSchemeConfig.default()
+
+    def get_scheme_config(self) -> CodingSchemeConfig:
+        """Ritorna la configurazione schema attiva."""
+        return self._cfg
+
+    def save_scheme_config(self, cfg: CodingSchemeConfig):
+        """Salva la configurazione nel DB e aggiorna quella in memoria."""
+        self.db.execute(
+            "INSERT OR REPLACE INTO shared_settings (key, value) VALUES (?, ?)",
+            ("coding_scheme_config", cfg.to_json()),
+        )
+        self._cfg = cfg
 
     # ==================================================================
     # MACCHINE
@@ -133,43 +157,38 @@ class CodingManager:
     # ==================================================================
 
     def next_code_liv0(self, machine_id: int) -> str:
-        """LIV0 – Macchina ASM: MMM_V001"""
+        """LIV0 – Macchina ASM. Default: MMM_V001"""
         machine = self._get_machine_or_raise(machine_id)
         val = self._increment_counter("VERSION", machine_id, None)
-        return f"{machine['code']}_V{str(val).zfill(3)}"
+        return self._cfg.render(self._cfg.liv0, mach=machine["code"], ver=val)
 
     def next_code_liv1(self, machine_id: int, group_id: int) -> str:
-        """LIV1 – Gruppo ASM: MMM_GGGG-V001"""
+        """LIV1 – Gruppo ASM. Default: MMM_GGGG-V001"""
         machine = self._get_machine_or_raise(machine_id)
         group   = self._get_group_or_raise(group_id)
         val = self._increment_counter("VERSION", machine_id, group_id)
-        return f"{machine['code']}_{group['code']}-V{str(val).zfill(3)}"
+        return self._cfg.render(self._cfg.liv1,
+                                mach=machine["code"], grp=group["code"], ver=val)
 
     def next_code_liv2_part(self, machine_id: int, group_id: int) -> str:
-        """LIV2 – Parte PRT: MMM_GGGG-0001 (sale)"""
+        """LIV2/1 – Sottogruppo ASM. Contatore PART, direzione da inizio/fine config."""
         machine = self._get_machine_or_raise(machine_id)
         group   = self._get_group_or_raise(group_id)
-        val = self._increment_counter("PART", machine_id, group_id)
-        if val > PART_MAX:
-            raise ValueError(
-                f"Contatore parti esaurito per {machine['code']}_{group['code']} "
-                f"(massimo {PART_MAX})"
-            )
+        lc  = self._cfg.liv2_1
+        val = self._step_counter("PART", machine_id, group_id, lc)
+        self._check_counter_limit(val, lc, machine["code"], group["code"], "LIV2/1")
         self._check_collision(machine_id, group_id)
-        return f"{machine['code']}_{group['code']}-{str(val).zfill(4)}"
+        return self._cfg.render(lc, mach=machine["code"], grp=group["code"], num=val)
 
     def next_code_liv2_subgroup(self, machine_id: int, group_id: int) -> str:
-        """LIV2 – Sottogruppo ASM: MMM_GGGG-9999 (scende)"""
+        """LIV2/2 – Sottogruppo ASM. Contatore SUBGROUP, direzione da inizio/fine config."""
         machine = self._get_machine_or_raise(machine_id)
         group   = self._get_group_or_raise(group_id)
-        val = self._decrement_counter("SUBGROUP", machine_id, group_id)
-        if val < SUBGR_MIN:
-            raise ValueError(
-                f"Contatore sottogruppi esaurito per "
-                f"{machine['code']}_{group['code']} (minimo {SUBGR_MIN})"
-            )
+        lc  = self._cfg.liv2_2
+        val = self._step_counter("SUBGROUP", machine_id, group_id, lc)
+        self._check_counter_limit(val, lc, machine["code"], group["code"], "LIV2/2")
         self._check_collision(machine_id, group_id)
-        return f"{machine['code']}_{group['code']}-{str(val).zfill(4)}"
+        return self._cfg.render(lc, mach=machine["code"], grp=group["code"], num=val)
 
     # ------------------------------------------------------------------
     # Anteprima senza modificare il contatore
@@ -186,7 +205,7 @@ class CodingManager:
 
         if level == 0:
             val = self._peek_counter("VERSION", machine_id, None) + 1
-            return f"{machine['code']}_V{str(val).zfill(3)}"
+            return self._cfg.render(self._cfg.liv0, mach=machine["code"], ver=val)
 
         group = self.get_group(group_id) if group_id else None
         if not group:
@@ -194,16 +213,17 @@ class CodingManager:
 
         if level == 1:
             val = self._peek_counter("VERSION", machine_id, group_id) + 1
-            return f"{machine['code']}_{group['code']}-V{str(val).zfill(3)}"
+            return self._cfg.render(self._cfg.liv1,
+                                    mach=machine["code"], grp=group["code"], ver=val)
 
-        # LIV2
+        # LIV2 — contatori separati PART / SUBGROUP
         if doc_subtype == "PRT":
-            val = self._peek_counter("PART", machine_id, group_id) + 1
-            return f"{machine['code']}_{group['code']}-{str(val).zfill(4)}"
+            lc  = self._cfg.liv2_1
+            val = self._peek_next("PART", machine_id, group_id, lc)
         else:
-            cur = self._peek_counter("SUBGROUP", machine_id, group_id)
-            val = SUBGR_START if cur == 0 else cur - 1
-            return f"{machine['code']}_{group['code']}-{str(val).zfill(4)}"
+            lc  = self._cfg.liv2_2
+            val = self._peek_next("SUBGROUP", machine_id, group_id, lc)
+        return self._cfg.render(lc, mach=machine["code"], grp=group["code"], num=val)
 
     # ==================================================================
     # CONTATORI
@@ -254,20 +274,25 @@ class CodingManager:
 
     def get_collision_status(self, machine_id: int, group_id: int) -> dict:
         """
-        Ritorna lo stato dei contatori LIV2 per un gruppo.
-        Usato per mostrare indicatore visuale di spazio disponibile.
+        Ritorna lo stato dei contatori LIV2.
+        'gap' = distanza tra i due fronti (PART e SUBGROUP).
         """
+        lc1 = self._cfg.liv2_1
+        lc2 = self._cfg.liv2_2
+
         part_val  = self._peek_counter("PART",     machine_id, group_id)
         subgr_val = self._peek_counter("SUBGROUP", machine_id, group_id)
-        if subgr_val == 0:
-            subgr_val = SUBGR_START + 1   # non ancora usato
 
-        gap       = subgr_val - part_val - 1
-        warning   = gap < COLLISION_WARNING_THRESHOLD
+        part_front  = part_val  if part_val  != 0 else lc1.num_start
+        subgr_front = subgr_val if subgr_val != 0 else lc2.num_start
+
+        gap       = abs(subgr_front - part_front) - 1
+        threshold = lc1.collision_threshold
+        warning   = gap < threshold
         exhausted = gap <= 0
         return {
-            "part_last":     part_val,
-            "subgroup_last": subgr_val if (subgr_val != SUBGR_START + 1) else None,
+            "part_last":     part_val  if part_val  != 0 else None,
+            "subgroup_last": subgr_val if subgr_val != 0 else None,
             "gap":           gap,
             "warning":       warning,
             "exhausted":     exhausted,
@@ -297,6 +322,7 @@ class CodingManager:
         """
         Parsa un codice esistente e ritorna il dizionario con le parti.
         Ritorna None se il formato non è riconosciuto.
+        Usa i range configurati per distinguere LIV2/1 (PRT) da LIV2/2 (ASM sub).
         """
         # LIV0: MMM_V001
         m = re.match(r'^([A-Z0-9]+)_V(\d+)$', code)
@@ -316,7 +342,7 @@ class CodingManager:
         m = re.match(r'^([A-Z0-9]+)_([A-Z0-9]+)-(\d{4})$', code)
         if m:
             num = int(m.group(3))
-            subtype = "ASM" if num >= SUBGR_MIN else "PRT"
+            subtype = "ASM" if num >= self._cfg.liv2_2.num_min else "PRT"
             return {"level": 2, "machine": m.group(1),
                     "group": m.group(2), "subtype": subtype,
                     "number": num}
@@ -393,19 +419,47 @@ class CodingManager:
 
     def _increment_counter(self, counter_type: str,
                            machine_id: Optional[int],
-                           group_id: Optional[int]) -> int:
+                           group_id: Optional[int],
+                           num_start: int = 1) -> int:
+        """Usato per i contatori VERSION (sempre ascendenti)."""
         cur = self._peek_counter(counter_type, machine_id, group_id)
-        new_val = cur + 1
+        new_val = num_start if cur == 0 else cur + 1
         self._write_counter(counter_type, machine_id, group_id, new_val)
         return new_val
 
-    def _decrement_counter(self, counter_type: str,
-                           machine_id: Optional[int],
-                           group_id: Optional[int]) -> int:
+    def _step_counter(self, counter_type: str,
+                      machine_id: Optional[int],
+                      group_id: Optional[int],
+                      lc: "LevelConfig") -> int:
+        """Avanza il contatore LIV2 nella direzione configurata (asc o desc)."""
         cur = self._peek_counter(counter_type, machine_id, group_id)
-        new_val = SUBGR_START if cur == 0 else cur - 1
+        new_val = self._peek_next(counter_type, machine_id, group_id, lc)
         self._write_counter(counter_type, machine_id, group_id, new_val)
         return new_val
+
+    def _peek_next(self, counter_type: str,
+                   machine_id: Optional[int],
+                   group_id: Optional[int],
+                   lc: "LevelConfig") -> int:
+        """Calcola il prossimo valore senza scriverlo."""
+        cur = self._peek_counter(counter_type, machine_id, group_id)
+        if cur == 0:
+            return lc.num_start
+        return cur + 1 if lc.num_dir == "asc" else cur - 1
+
+    @staticmethod
+    def _check_counter_limit(val: int, lc: "LevelConfig",
+                              mach: str, grp: str, label: str):
+        if lc.num_dir == "asc" and val > lc.num_max:
+            raise ValueError(
+                f"Contatore {label} esaurito per {mach}_{grp} "
+                f"(massimo {lc.num_max})"
+            )
+        if lc.num_dir == "desc" and val < lc.num_min:
+            raise ValueError(
+                f"Contatore {label} esaurito per {mach}_{grp} "
+                f"(minimo {lc.num_min})"
+            )
 
     def _write_counter(self, counter_type: str,
                        machine_id: Optional[int],

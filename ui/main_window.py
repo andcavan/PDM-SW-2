@@ -134,7 +134,11 @@ class MainWindow(QMainWindow):
         # Strumenti
         m_tools = mb.addMenu("Strumenti")
 
-        act_coding = QAction("Configurazione codifica…", self)
+        act_schema = QAction("Schema di Codifica…", self)
+        act_schema.triggered.connect(self._open_coding_schema)
+        m_tools.addAction(act_schema)
+
+        act_coding = QAction("Macchine e Gruppi…", self)
         act_coding.triggered.connect(self._open_coding)
         m_tools.addAction(act_coding)
 
@@ -355,6 +359,17 @@ class MainWindow(QMainWindow):
             self._refresh_all()
             if self._workspace_view:
                 self._workspace_view.refresh()
+
+    def _open_coding_schema(self):
+        if not session.can("admin"):
+            QMessageBox.warning(
+                self, "Accesso negato",
+                "Solo gli Amministratori possono modificare lo schema di codifica."
+            )
+            return
+        from ui.coding_schema_dialog import CodingSchemaDialog
+        dlg = CodingSchemaDialog(parent=self)
+        dlg.exec()
 
     def _open_coding(self):
         from ui.coding_dialog import CodingDialog

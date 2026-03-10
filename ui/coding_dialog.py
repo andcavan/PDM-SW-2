@@ -5,9 +5,9 @@ from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QGroupBox, QFormLayout, QTabWidget, QWidget,
     QTableWidget, QTableWidgetItem, QHeaderView, QComboBox,
-    QSpinBox, QMessageBox, QAbstractItemView
+    QMessageBox, QAbstractItemView
 )
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt
 
 from ui.session import session
 
@@ -15,7 +15,7 @@ from ui.session import session
 class CodingDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Configurazione Codifica – Macchine e Gruppi")
+        self.setWindowTitle("Macchine e Gruppi")
         self.setMinimumSize(700, 520)
         self._sel_machine_id = None
         self._sel_group_id   = None
@@ -84,8 +84,10 @@ class CodingDialog(QDialog):
         form = QFormLayout(grp)
 
         self.m_code = QLineEdit()
-        self.m_code.setPlaceholderText("es. ABC (3 lettere)")
         self.m_code.setMaximumWidth(120)
+        self.m_code.textChanged.connect(
+            lambda t: self.m_code.setText(t.upper()) if t != t.upper() else None
+        )
         form.addRow("Codice:", self.m_code)
 
         self.m_desc = QLineEdit()
@@ -94,15 +96,6 @@ class CodingDialog(QDialog):
             lambda t: self.m_desc.setText(t.upper()) if t != t.upper() else None
         )
         form.addRow("Descrizione:", self.m_desc)
-
-        self.m_type = QComboBox()
-        self.m_type.addItems(["ALPHA (lettere)", "NUM (cifre)"])
-        form.addRow("Tipo codice:", self.m_type)
-
-        self.m_len = QSpinBox()
-        self.m_len.setRange(2, 8)
-        self.m_len.setValue(3)
-        form.addRow("Lunghezza:", self.m_len)
 
         right.addWidget(grp)
 
@@ -170,8 +163,10 @@ class CodingDialog(QDialog):
         form = QFormLayout(grp)
 
         self.g_code = QLineEdit()
-        self.g_code.setPlaceholderText("es. COMP (4 lettere)")
         self.g_code.setMaximumWidth(120)
+        self.g_code.textChanged.connect(
+            lambda t: self.g_code.setText(t.upper()) if t != t.upper() else None
+        )
         form.addRow("Codice:", self.g_code)
 
         self.g_desc = QLineEdit()
@@ -180,15 +175,6 @@ class CodingDialog(QDialog):
             lambda t: self.g_desc.setText(t.upper()) if t != t.upper() else None
         )
         form.addRow("Descrizione:", self.g_desc)
-
-        self.g_type = QComboBox()
-        self.g_type.addItems(["ALPHA (lettere)", "NUM (cifre)"])
-        form.addRow("Tipo codice:", self.g_type)
-
-        self.g_len = QSpinBox()
-        self.g_len.setRange(2, 8)
-        self.g_len.setValue(4)
-        form.addRow("Lunghezza:", self.g_len)
 
         right.addWidget(grp)
 
@@ -291,22 +277,19 @@ class CodingDialog(QDialog):
             self._sel_machine_id = m["id"]
             self.m_code.setText(m["code"])
             self.m_desc.setText(m["description"] or "")
-            self.m_type.setCurrentIndex(0 if m["code_type"] == "ALPHA" else 1)
-            self.m_len.setValue(m["code_length"])
 
     def _new_machine(self):
         self.tbl_machines.clearSelection()
         self._sel_machine_id = None
         self.m_code.clear(); self.m_desc.clear()
-        self.m_type.setCurrentIndex(0)
-        self.m_len.setValue(3)
         self.m_code.setFocus()
 
     def _save_machine(self):
-        code = self.m_code.text().strip().upper()
-        desc = self.m_desc.text().strip()
-        ctype = "ALPHA" if self.m_type.currentIndex() == 0 else "NUM"
-        clen  = self.m_len.value()
+        cfg   = session.coding.get_scheme_config()
+        code  = self.m_code.text().strip().upper()
+        desc  = self.m_desc.text().strip()
+        ctype = cfg.mach_code_type
+        clen  = cfg.mach_code_length
 
         ok, msg = session.coding.validate_code_string(code, ctype, clen)
         if not ok:
@@ -376,15 +359,11 @@ class CodingDialog(QDialog):
             self._sel_group_id = g["id"]
             self.g_code.setText(g["code"])
             self.g_desc.setText(g["description"] or "")
-            self.g_type.setCurrentIndex(0 if g["code_type"] == "ALPHA" else 1)
-            self.g_len.setValue(g["code_length"])
 
     def _new_group(self):
         self.tbl_groups.clearSelection()
         self._sel_group_id = None
         self.g_code.clear(); self.g_desc.clear()
-        self.g_type.setCurrentIndex(0)
-        self.g_len.setValue(4)
         self.g_code.setFocus()
 
     def _save_group(self):
@@ -393,10 +372,11 @@ class CodingDialog(QDialog):
             QMessageBox.warning(self, "Attenzione", "Seleziona prima una macchina")
             return
 
+        cfg   = session.coding.get_scheme_config()
         code  = self.g_code.text().strip().upper()
         desc  = self.g_desc.text().strip()
-        ctype = "ALPHA" if self.g_type.currentIndex() == 0 else "NUM"
-        clen  = self.g_len.value()
+        ctype = cfg.grp_code_type
+        clen  = cfg.grp_code_length
 
         ok, msg = session.coding.validate_code_string(code, ctype, clen)
         if not ok:

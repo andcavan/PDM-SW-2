@@ -1038,10 +1038,10 @@ class AsmImportWizard(QDialog):
                     code = self.coding.next_code_liv1(mid, gid)
                     doc_type = "Assieme"
                 elif subtype == "ASM_SUB":
-                    code = self.coding.next_code_liv2_subgroup(mid, gid)
+                    code = self.coding.next_code_liv2_part(mid, gid)
                     doc_type = "Assieme"
                 else:
-                    code = self.coding.next_code_liv2_part(mid, gid)
+                    code = self.coding.next_code_liv2_subgroup(mid, gid)
                     doc_type = "Parte"
 
                 if ext.upper() == ".SLDASM":

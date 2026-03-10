@@ -495,9 +495,9 @@ def action_create_code(file_path: str):
         elif subtype == "ASM_GRP":
             code = coding.next_code_liv1(machine_id, group_id)
         elif subtype == "ASM_SUB":
-            code = coding.next_code_liv2_subgroup(machine_id, group_id)
-        else:  # PRT
             code = coding.next_code_liv2_part(machine_id, group_id)
+        else:  # PRT
+            code = coding.next_code_liv2_subgroup(machine_id, group_id)
 
         fp = Path(file_path)
         from config import SW_EXTENSIONS

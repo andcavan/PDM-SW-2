@@ -388,9 +388,9 @@ class CreateCodeDialog(QDialog):
             elif subtype == "ASM_GRP":
                 code = self.coding.next_code_liv1(mid, gid)
             elif subtype == "ASM_SUB":
-                code = self.coding.next_code_liv2_subgroup(mid, gid)
-            else:
                 code = self.coding.next_code_liv2_part(mid, gid)
+            else:
+                code = self.coding.next_code_liv2_subgroup(mid, gid)
 
             from config import load_local_config
             import shutil, socket
