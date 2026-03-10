@@ -202,6 +202,10 @@ class MainWindow(QMainWindow):
 
         # Help
         m_help = mb.addMenu("?")
+        act_manual = QAction("Manuale…", self)
+        act_manual.triggered.connect(self._open_manual)
+        m_help.addAction(act_manual)
+        m_help.addSeparator()
         act_about = QAction(f"Informazioni su {APP_NAME}", self)
         act_about.triggered.connect(self._about)
         m_help.addAction(act_about)
@@ -494,8 +498,12 @@ class MainWindow(QMainWindow):
         dlg = RegenThumbnailsDialog(parent=self)
         dlg.exec()
 
+    def _open_manual(self):
+        from ui.manual_dialog import ManualDialog
+        dlg = ManualDialog(parent=self)
+        dlg.exec()
+
     def _about(self):
-        from config import APP_VERSION
         QMessageBox.about(
             self, f"Informazioni su {APP_NAME}",
             f"<h3>{APP_NAME}  v{APP_VERSION}</h3>"
