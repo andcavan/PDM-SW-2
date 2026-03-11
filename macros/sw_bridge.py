@@ -212,7 +212,7 @@ def action_checkin(file_path: str):
     if doc["doc_type"] == "Assieme":
         try:
             logging.info("Pre-checkin: aggiornamento BOM per assieme %s", doc["code"])
-            n = asm.import_bom_from_active_doc(doc["id"])
+            n = asm.import_bom_from_active_doc(doc["id"], expected_path=Path(file_path))
             logging.info("Pre-checkin: %d componenti BOM aggiornati", n)
         except Exception as e:
             sync_errors.append(f"BOM: {e}")

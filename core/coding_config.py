@@ -65,7 +65,7 @@ class CodingSchemeConfig:
     ))
 
     # Formato codici macchina e gruppo (definiti a livello schema)
-    mach_code_type: str   = "ALPHA"  # "ALPHA" o "NUM"
+    mach_code_type: str   = "ALPHA"  # "ALPHA", "NUM" o "ALPHA+NUM"
     mach_code_length: int = 3
     grp_code_type: str    = "ALPHA"
     grp_code_length: int  = 4

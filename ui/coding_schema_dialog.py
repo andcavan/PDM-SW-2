@@ -72,7 +72,7 @@ class CodingSchemaDialog(QDialog):
 
         mach_row = QHBoxLayout()
         self.cmb_mach_type = QComboBox()
-        self.cmb_mach_type.addItems(["ALPHA (lettere A-Z)", "NUM (cifre 0-9)"])
+        self.cmb_mach_type.addItems(["ALPHA (lettere A-Z)", "NUM (cifre 0-9)", "ALPHA+NUM (misto)"])
         self.cmb_mach_type.currentIndexChanged.connect(self._schedule_preview)
         self.spn_mach_len = QSpinBox()
         self.spn_mach_len.setRange(2, 8)
@@ -85,7 +85,7 @@ class CodingSchemaDialog(QDialog):
 
         grp_row = QHBoxLayout()
         self.cmb_grp_type = QComboBox()
-        self.cmb_grp_type.addItems(["ALPHA (lettere A-Z)", "NUM (cifre 0-9)"])
+        self.cmb_grp_type.addItems(["ALPHA (lettere A-Z)", "NUM (cifre 0-9)", "ALPHA+NUM (misto)"])
         self.cmb_grp_type.currentIndexChanged.connect(self._schedule_preview)
         self.spn_grp_len = QSpinBox()
         self.spn_grp_len.setRange(2, 8)
@@ -248,9 +248,10 @@ class CodingSchemaDialog(QDialog):
         cfg = self._cfg
         self.txt_name.setText(cfg.name)
 
-        self.cmb_mach_type.setCurrentIndex(0 if cfg.mach_code_type == "ALPHA" else 1)
+        _type_idx = {"ALPHA": 0, "NUM": 1, "ALPHA+NUM": 2}
+        self.cmb_mach_type.setCurrentIndex(_type_idx.get(cfg.mach_code_type, 0))
         self.spn_mach_len.setValue(cfg.mach_code_length)
-        self.cmb_grp_type.setCurrentIndex(0 if cfg.grp_code_type == "ALPHA" else 1)
+        self.cmb_grp_type.setCurrentIndex(_type_idx.get(cfg.grp_code_type, 0))
         self.spn_grp_len.setValue(cfg.grp_code_length)
 
         self._load_tmpl(self._liv0_w, cfg.liv0)
@@ -324,9 +325,9 @@ class CodingSchemaDialog(QDialog):
         default = CodingSchemeConfig.default()
         return CodingSchemeConfig(
             name=self.txt_name.text().strip() or "Schema Personalizzato",
-            mach_code_type="ALPHA" if self.cmb_mach_type.currentIndex() == 0 else "NUM",
+            mach_code_type={0: "ALPHA", 1: "NUM", 2: "ALPHA+NUM"}.get(self.cmb_mach_type.currentIndex(), "ALPHA"),
             mach_code_length=self.spn_mach_len.value(),
-            grp_code_type="ALPHA" if self.cmb_grp_type.currentIndex() == 0 else "NUM",
+            grp_code_type={0: "ALPHA", 1: "NUM", 2: "ALPHA+NUM"}.get(self.cmb_grp_type.currentIndex(), "ALPHA"),
             grp_code_length=self.spn_grp_len.value(),
             liv0=self._read_tmpl(self._liv0_w, default.liv0),
             liv1=self._read_tmpl(self._liv1_w, default.liv1),

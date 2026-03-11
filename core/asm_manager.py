@@ -121,12 +121,16 @@ class AsmManager:
             pythoncom.CoUninitialize()
         return count
 
-    def import_bom_from_active_doc(self, parent_doc_id: int) -> int:
+    def import_bom_from_active_doc(self, parent_doc_id: int,
+                                    expected_path: "Path | None" = None) -> int:
         """
         Legge la struttura BOM dal documento ATTIVO in SolidWorks.
         Usa GetActiveObject (non Dispatch) per collegarsi all'istanza aperta.
         Cancella le relazioni vecchie e le ricrea.
         Ritorna il numero di relazioni create.
+
+        Se expected_path è fornito, verifica che il documento attivo corrisponda
+        al file atteso prima di procedere (sicurezza coerenza PDM↔SW).
         """
         try:
             import win32com.client as win32
@@ -144,6 +148,23 @@ class AsmManager:
         model = sw.ActiveDoc
         if model is None:
             raise RuntimeError("Nessun documento attivo in SolidWorks.")
+
+        # Valida che il documento attivo corrisponda al file atteso
+        if expected_path is not None:
+            try:
+                active_path = model.GetPathName
+                if callable(active_path):
+                    active_path = active_path()
+                if active_path and Path(str(active_path)).resolve() != Path(expected_path).resolve():
+                    raise RuntimeError(
+                        f"Il documento attivo in SolidWorks ({Path(str(active_path)).name}) "
+                        f"non corrisponde al file da archiviare ({Path(expected_path).name}).\n\n"
+                        "Assicurarsi che il file corretto sia attivo in SolidWorks prima del check-in."
+                    )
+            except RuntimeError:
+                raise
+            except Exception:
+                pass
 
         # Leggi componenti primo livello
         # GetComponents è una proprietà con GetActiveObject

@@ -150,6 +150,7 @@ class DetailPanel(QWidget):
 
         self.tabs.addTab(self._build_general_tab(), "Generale")
         self.tabs.addTab(self._build_properties_tab(), "Proprietà SW")
+        self._bom_tab_index = self.tabs.count()
         self.tabs.addTab(self._build_bom_tab(), "Struttura")
         self.tabs.addTab(self._build_history_tab(), "Storico")
         self._revisions_tab_index = self.tabs.count()
@@ -254,18 +255,21 @@ class DetailPanel(QWidget):
         layout = QVBoxLayout(w)
 
         btn_row = QHBoxLayout()
-        btn_sync = QPushButton("🔄  Aggiorna Proprietà")
-        btn_sync.setToolTip(
+        self.btn_sync_props = QPushButton("🔄  Aggiorna Proprietà")
+        self.btn_sync_props.setToolTip(
             "Sincronizza PDM ↔ SW secondo la mappatura e importa tutte le proprietà SW nel PDM"
         )
-        btn_sync.clicked.connect(self._on_sync_props)
-        btn_import = QPushButton("⬇️  Importa da SW")
-        btn_import.setToolTip("Importa le proprietà dal file SW nel PDM (segue la mappatura)")
-        btn_import.clicked.connect(self._on_import_from_sw)
-        btn_export = QPushButton("⬆️  Esporta in SW")
-        btn_export.setToolTip("Esporta le proprietà PDM nel file SW (segue la mappatura)")
-        btn_export.clicked.connect(self._on_export_to_sw)
-        for b in (btn_sync, btn_import, btn_export):
+        self.btn_sync_props.clicked.connect(self._on_sync_props)
+        self.btn_import_props = QPushButton("⬇️  Importa da SW")
+        self.btn_import_props.setToolTip(
+            "Legge le proprietà custom dal file SolidWorks archiviato\n"
+            "(non richiede SolidWorks aperto)"
+        )
+        self.btn_import_props.clicked.connect(self._on_import_from_sw)
+        self.btn_export_props = QPushButton("⬆️  Esporta in SW")
+        self.btn_export_props.setToolTip("Esporta le proprietà PDM nel file SW (segue la mappatura)")
+        self.btn_export_props.clicked.connect(self._on_export_to_sw)
+        for b in (self.btn_sync_props, self.btn_import_props, self.btn_export_props):
             btn_row.addWidget(b)
         btn_row.addStretch()
         layout.addLayout(btn_row)
@@ -694,6 +698,15 @@ class DetailPanel(QWidget):
                 self.tabs.setTabText(self._revisions_tab_index,
                                      f"Revisioni ({len(prev_docs)})")
 
+        # ---- Tab Struttura: visibile solo per Assieme ----
+        self.tabs.setTabVisible(self._bom_tab_index, doc.get("doc_type") == "Assieme")
+
+        # ---- Bottoni Proprietà SW: disabilitati per Rilasciato/Obsoleto (tranne Admin) ----
+        is_admin = session.can("admin")
+        sw_locked = state in ("Rilasciato", "Obsoleto") and not is_admin
+        for btn in (self.btn_sync_props, self.btn_import_props, self.btn_export_props):
+            btn.setEnabled(not sw_locked)
+
     # ------------------------------------------------------------------
     #  Pannello modalità codice
     # ------------------------------------------------------------------
@@ -1071,9 +1084,9 @@ class DetailPanel(QWidget):
             can_release  = "Rilasciato" in available and session.can("release")
             can_obsolete = "Obsoleto"   in available and session.can("release")
             can_new_rev  = (state == "Rilasciato" and is_latest
-                            and is_prt_asm and session.can("create"))
+                            and session.can("create"))
             can_cancel   = (state == "In Revisione" and not rep["is_locked"]
-                            and is_prt_asm and session.can("create"))
+                            and session.can("create"))
 
             self.btn_wf_release.setVisible(can_release)
             self.btn_wf_obsolete.setVisible(can_obsolete)

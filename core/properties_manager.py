@@ -411,13 +411,19 @@ class PropertiesManager:
 
             search_name = (file_name or file_path.name).upper()
 
-            # 1) Prova il documento attivo (caso più comune)
-            #    L'utente ha premuto "Importa da SW" → vuole le props
-            #    del doc attivo in SolidWorks, indipendentemente dal nome.
+            # 1) Prova il documento attivo SOLO se corrisponde al file richiesto.
+            #    Evita di leggere proprietà da un documento SW diverso da quello PDM.
             try:
                 active = sw.ActiveDoc
                 if active is not None:
-                    model = active
+                    try:
+                        active_path = active.GetPathName
+                        if callable(active_path):
+                            active_path = active_path()
+                        if active_path and Path(str(active_path)).resolve() == file_path.resolve():
+                            model = active
+                    except Exception:
+                        pass
             except Exception:
                 pass
 

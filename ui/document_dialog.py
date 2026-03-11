@@ -43,8 +43,10 @@ class DocumentDialog(QDialog):
         self.tabs.addTab(self._build_general_tab(), "Generale")
         self.tabs.addTab(self._build_properties_tab(), "Proprietà SW")
         if not self.is_new:
+            self._bom_tab_idx = self.tabs.count()
             self.tabs.addTab(self._build_bom_tab(), "Struttura (BOM)")
             self.tabs.addTab(self._build_history_tab(), "Storico")
+            self.tabs.addTab(self._build_revisions_tab(), "Revisioni")
 
         # Bottoni
         btn_row = QHBoxLayout()
@@ -135,15 +137,14 @@ class DocumentDialog(QDialog):
             self.lbl_code_preview = QLabel("")
             self.lbl_code_preview.setStyleSheet("font-weight:bold;color:#89b4fa;")
             form.addRow("Codice:", self.lbl_code_preview)
-            self.cmb_type = QComboBox()
-            self.cmb_type.addItems(["Parte", "Assieme", "Disegno"])
+            self.lbl_type_display = QLabel()
 
         # Revisione
         self.txt_rev = QLineEdit("00")
         self.txt_rev.setMaximumWidth(60)
         self.txt_rev.setPlaceholderText("00")
         if not self.is_new:
-            form.addRow("Tipo:", self.cmb_type)
+            form.addRow("Tipo:", self.lbl_type_display)
         form.addRow("Revisione:", self.txt_rev)
 
         # Titolo
@@ -242,21 +243,25 @@ class DocumentDialog(QDialog):
         layout = QVBoxLayout(w)
 
         btn_row = QHBoxLayout()
-        btn_add  = QPushButton("+ Aggiungi")
-        btn_add.clicked.connect(self._add_property_row)
-        btn_del  = QPushButton("- Rimuovi")
-        btn_del.clicked.connect(self._remove_property_row)
-        btn_import_sw = QPushButton("Importa da SW")
-        btn_import_sw.clicked.connect(self._import_props_from_sw)
-        btn_export_xl = QPushButton("Esporta Excel")
-        btn_export_xl.clicked.connect(self._export_props_excel)
-        btn_import_xl = QPushButton("Importa Excel")
-        btn_import_xl.clicked.connect(self._import_props_excel)
-        btn_save_props = QPushButton("Salva Proprietà")
-        btn_save_props.setObjectName("btn_primary")
-        btn_save_props.clicked.connect(self._save_properties)
-        for b in [btn_add, btn_del, btn_import_sw,
-                  btn_export_xl, btn_import_xl, btn_save_props]:
+        self.btn_add_prop = QPushButton("+ Aggiungi")
+        self.btn_add_prop.clicked.connect(self._add_property_row)
+        self.btn_del_prop = QPushButton("- Rimuovi")
+        self.btn_del_prop.clicked.connect(self._remove_property_row)
+        self.btn_import_sw = QPushButton("Importa da SW")
+        self.btn_import_sw.setToolTip(
+            "Legge le proprietà custom dal file SolidWorks archiviato\n"
+            "(non richiede SolidWorks aperto)"
+        )
+        self.btn_import_sw.clicked.connect(self._import_props_from_sw)
+        self.btn_export_xl = QPushButton("Esporta Excel")
+        self.btn_export_xl.clicked.connect(self._export_props_excel)
+        self.btn_import_xl = QPushButton("Importa Excel")
+        self.btn_import_xl.clicked.connect(self._import_props_excel)
+        self.btn_save_props = QPushButton("Salva Proprietà")
+        self.btn_save_props.setObjectName("btn_primary")
+        self.btn_save_props.clicked.connect(self._save_properties)
+        for b in [self.btn_add_prop, self.btn_del_prop, self.btn_import_sw,
+                  self.btn_export_xl, self.btn_import_xl, self.btn_save_props]:
             btn_row.addWidget(b)
         btn_row.addStretch()
         layout.addLayout(btn_row)
@@ -275,15 +280,19 @@ class DocumentDialog(QDialog):
         layout = QVBoxLayout(w)
 
         btn_row = QHBoxLayout()
-        btn_add_comp  = QPushButton("+ Aggiungi componente")
-        btn_add_comp.clicked.connect(self._add_component)
-        btn_del_comp  = QPushButton("- Rimuovi")
-        btn_del_comp.clicked.connect(self._del_component)
-        btn_import_asm = QPushButton("Importa struttura da SW")
-        btn_import_asm.clicked.connect(self._import_asm_from_sw)
+        self.btn_add_comp = QPushButton("+ Aggiungi componente")
+        self.btn_add_comp.clicked.connect(self._add_component)
+        self.btn_del_comp = QPushButton("- Rimuovi")
+        self.btn_del_comp.clicked.connect(self._del_component)
+        self.btn_import_asm = QPushButton("Importa struttura da SW")
+        self.btn_import_asm.setToolTip(
+            "Importa la BOM dall'assieme (legge dal file archiviato,\n"
+            "non richiede SolidWorks aperto)"
+        )
+        self.btn_import_asm.clicked.connect(self._import_asm_from_sw)
         btn_export_bom = QPushButton("📊 Esporta BOM Excel")
         btn_export_bom.clicked.connect(self._export_bom_excel)
-        for b in [btn_add_comp, btn_del_comp, btn_import_asm, btn_export_bom]:
+        for b in [self.btn_add_comp, self.btn_del_comp, self.btn_import_asm, btn_export_bom]:
             btn_row.addWidget(b)
         btn_row.addStretch()
         layout.addLayout(btn_row)
@@ -311,6 +320,54 @@ class DocumentDialog(QDialog):
         )
         layout.addWidget(self.tbl_history)
         return w
+
+    # ---- Tab REVISIONI ----
+    def _build_revisions_tab(self) -> QWidget:
+        w = QWidget()
+        layout = QVBoxLayout(w)
+        self.tbl_revisions = QTableWidget(0, 4)
+        self.tbl_revisions.setHorizontalHeaderLabels(
+            ["Revisione", "Stato", "Data rilascio", "Data obsolescenza"]
+        )
+        hdr = self.tbl_revisions.horizontalHeader()
+        hdr.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        hdr.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        hdr.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        hdr.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
+        self.tbl_revisions.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.tbl_revisions.setAlternatingRowColors(True)
+        layout.addWidget(self.tbl_revisions)
+        return w
+
+    def _refresh_revisions(self):
+        if not hasattr(self, "tbl_revisions") or not self.document_id:
+            return
+        doc = session.files.get_document(self.document_id)
+        if not doc:
+            return
+        self.tbl_revisions.setRowCount(0)
+        all_revs = session.db.fetchall(
+            "SELECT * FROM documents WHERE code=? AND doc_type=? ORDER BY revision DESC",
+            (doc["code"], doc["doc_type"]),
+        )
+        for rd in all_revs:
+            hist = session.workflow.get_history(rd["id"])
+            release_at = next(
+                (h["changed_at"] for h in sorted(hist, key=lambda h: h["changed_at"])
+                 if h.get("to_state") == "Rilasciato"), "—"
+            )
+            obsolete_at = next(
+                (h["changed_at"] for h in sorted(hist, key=lambda h: h["changed_at"])
+                 if h.get("to_state") == "Obsoleto"), "—"
+            )
+            i = self.tbl_revisions.rowCount()
+            self.tbl_revisions.insertRow(i)
+            self.tbl_revisions.setItem(i, 0, QTableWidgetItem(rd["revision"]))
+            self.tbl_revisions.setItem(i, 1, QTableWidgetItem(rd["state"]))
+            self.tbl_revisions.setItem(i, 2, QTableWidgetItem(str(release_at)[:19]))
+            self.tbl_revisions.setItem(i, 3, QTableWidgetItem(
+                str(obsolete_at)[:19] if obsolete_at != "—" else "—"
+            ))
 
     # ------------------------------------------------------------------
     # Logica
@@ -541,9 +598,8 @@ class DocumentDialog(QDialog):
         doc = session.files.get_document(self.document_id)
         if not doc:
             return
-        idx = self.cmb_type.findText(doc["doc_type"])
-        if idx >= 0:
-            self.cmb_type.setCurrentIndex(idx)
+        doc_type = doc["doc_type"]
+        self.lbl_type_display.setText(f"{TYPE_ICON.get(doc_type, '')}  {doc_type}")
         self.lbl_code_preview.setText(doc["code"])
         self.txt_rev.setText(doc["revision"])
         self.txt_rev.setReadOnly(True)
@@ -580,12 +636,28 @@ class DocumentDialog(QDialog):
             self.tbl_props.setItem(row, 0, QTableWidgetItem(name))
             self.tbl_props.setItem(row, 1, QTableWidgetItem(value))
 
+        # BOM: visibile solo per Assieme
+        if hasattr(self, "_bom_tab_idx"):
+            self.tabs.setTabVisible(self._bom_tab_idx, doc_type == "Assieme")
+
         # BOM
         self._refresh_bom()
         # Storico
         self._refresh_history()
+        # Revisioni
+        self._refresh_revisions()
         # Companion DRW ↔ PRT/ASM
         self._refresh_companion(doc)
+
+        # Disabilita comandi SW per stati definitivi (tranne Amministratore)
+        is_admin = session.can("admin")
+        sw_locked = state in ("Rilasciato", "Obsoleto") and not is_admin
+        for btn in (self.btn_add_prop, self.btn_del_prop, self.btn_import_sw,
+                    self.btn_import_xl, self.btn_save_props):
+            btn.setEnabled(not sw_locked)
+        if hasattr(self, "btn_add_comp"):
+            for btn in (self.btn_add_comp, self.btn_del_comp, self.btn_import_asm):
+                btn.setEnabled(not sw_locked)
 
     # ------------------------------------------------------------------
     def _refresh_companion(self, doc: dict):
@@ -1251,12 +1323,26 @@ class DocumentDialog(QDialog):
                 "Questa funzione è disponibile solo per documenti di tipo Assieme."
             )
             return
+        if not doc.get("archive_path") or not session.sp:
+            QMessageBox.warning(
+                self, "File non archiviato",
+                "Il file non è ancora archiviato nel PDM.\n"
+                "Eseguire il check-in prima di importare la struttura."
+            )
+            return
+        asm_file = session.sp.root / doc["archive_path"]
+        if not asm_file.exists():
+            QMessageBox.warning(
+                self, "File non trovato",
+                f"Il file archiviato non è stato trovato:\n{asm_file}"
+            )
+            return
         try:
-            n = session.asm.import_bom_from_active_doc(self.document_id)
+            n = session.asm.import_from_sw_asm(asm_file, self.document_id)
             self._refresh_bom()
             QMessageBox.information(
                 self, "OK",
-                f"Importati {n} componenti dall'assieme attivo in SolidWorks.\n\n"
+                f"Importati {n} componenti dall'assieme.\n\n"
                 "Nota: vengono collegati solo i documenti già presenti nel PDM\n"
                 "(codice = nome file senza estensione)."
             )

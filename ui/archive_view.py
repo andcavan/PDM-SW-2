@@ -564,7 +564,7 @@ class ArchiveView(QWidget):
         # ---- Crea revisione ----
         act_newrev = QAction("📋  Crea revisione", self)
         can_new_rev = (state == "Rilasciato" and is_latest
-                       and is_prt_asm and session.can("create"))
+                       and session.can("create"))
         act_newrev.setEnabled(can_new_rev)
         act_newrev.triggered.connect(lambda: self._action_new_revision(rep["id"]))
         menu.addAction(act_newrev)
@@ -572,7 +572,7 @@ class ArchiveView(QWidget):
         # ---- Annulla revisione ----
         act_cancel_rev = QAction("🗑  Annulla revisione", self)
         can_cancel = (state == "In Revisione" and not rep["is_locked"]
-                      and is_prt_asm and session.can("create"))
+                      and session.can("create"))
         act_cancel_rev.setEnabled(can_cancel)
         act_cancel_rev.triggered.connect(lambda: self._action_cancel_revision(rep["id"]))
         menu.addAction(act_cancel_rev)
@@ -667,7 +667,26 @@ class ArchiveView(QWidget):
 
     def _action_workflow(self, doc_id: int):
         from ui.workflow_dialog import WorkflowDialog
-        dlg = WorkflowDialog(doc_id, parent=self)
+        doc = session.files.get_document(doc_id)
+        skip_r2 = False
+        if doc and doc["doc_type"] in ("Parte", "Assieme"):
+            drw = session.db.fetchone(
+                "SELECT id FROM documents WHERE code=? AND doc_type='Disegno' "
+                "AND revision=? AND state != 'Obsoleto'",
+                (doc["code"], doc["revision"]),
+            ) if session.db else None
+            if not drw:
+                r = QMessageBox.question(
+                    self, "Documento companion assente",
+                    f"Il codice {doc['code']} rev.{doc['revision']} non ha un Disegno (DRW).\n\n"
+                    f"Il passaggio di stato sarà applicato solo al {doc['doc_type']}.\n\n"
+                    "Procedere comunque?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                )
+                if r != QMessageBox.StandardButton.Yes:
+                    return
+                skip_r2 = True
+        dlg = WorkflowDialog(doc_id, parent=self, skip_r2=skip_r2)
         if dlg.exec():
             self.refresh()
 
@@ -677,14 +696,21 @@ class ArchiveView(QWidget):
         if not doc:
             return
 
-        # R3: la nuova revisione di un DRW va fatta dal PRT/ASM associato
+        # R3: la nuova revisione di un DRW va fatta dal PRT/ASM se il companion esiste
         if doc["doc_type"] == "Disegno":
-            QMessageBox.warning(
-                self, "Operazione non consentita",
-                "La nuova revisione di un Disegno deve essere creata\n"
-                "dal PRT/ASM associato, non direttamente."
-            )
-            return
+            companion = session.db.fetchone(
+                "SELECT id FROM documents WHERE code=? "
+                "AND doc_type IN ('Parte','Assieme') AND state != 'Obsoleto'",
+                (doc["code"],),
+            ) if session.db else None
+            if companion:
+                QMessageBox.warning(
+                    self, "Operazione non consentita",
+                    "La nuova revisione di un Disegno deve essere creata\n"
+                    "dal PRT/ASM associato, non direttamente."
+                )
+                return
+            # DRW senza companion PRT/ASM: consenti direttamente
 
         # Determina prossima revisione (incremento numerico semplice)
         try:

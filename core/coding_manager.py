@@ -370,6 +370,9 @@ class CodingManager:
         elif code_type == "NUM":
             if not re.match(r'^[0-9]+$', code):
                 return False, "Solo cifre (0-9)"
+        elif code_type == "ALPHA+NUM":
+            if not re.match(r'^[A-Z0-9]+$', code):
+                return False, "Solo lettere maiuscole (A-Z) e cifre (0-9)"
         else:
             return False, f"Tipo non valido: {code_type}"
         return True, ""
