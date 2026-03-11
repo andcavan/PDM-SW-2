@@ -57,7 +57,8 @@ class AsmManager:
     def get_components(self, parent_id: int) -> list:
         """Componenti diretti (primo livello) dell'assieme."""
         return self.db.fetchall(
-            """SELECT ac.*, d.code, d.revision, d.doc_type, d.title, d.state
+            """SELECT ac.*, d.code, d.revision, d.doc_type, d.title, d.state,
+                      d.description, d.archive_path, d.machine_id
                FROM asm_components ac
                JOIN documents d ON d.id = ac.child_id
                WHERE ac.parent_id=?

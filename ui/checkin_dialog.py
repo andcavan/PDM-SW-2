@@ -371,16 +371,44 @@ class CheckinDialog(QDialog):
         except Exception as e:
             QMessageBox.critical(self, "Errore check-in", str(e))
 
-    def _sync_sw_to_pdm_before_checkin(self, document_id: int):
-        """Importa le proprietà SW nel PDM dal file in workspace prima dell'archiviazione."""
+    def _sync_before_checkin(self, document_id: int):
+        """Sincronizza proprietà e BOM prima dell'archiviazione nell'ordine corretto:
+        1) PDM → SW  (scrive nel file i valori mappati: revisione, titolo, ecc.)
+        2) Azzeramento proprietà nel DB  (elimina props obsolete)
+        3) SW  → PDM (legge dal file le custom properties aggiornate)
+        4) BOM → DB  (solo per Assieme: aggiorna la struttura componenti)
+        """
+        doc = session.files.get_document(document_id)
+        ws_file = session.checkout._ws_file_path(doc) if doc else None
+        if not ws_file or not ws_file.exists():
+            return
+
+        # 1) PDM → SW: impone revisione e campi mappati nel file
         try:
-            ws_file = session.checkout._ws_file_path(
-                session.files.get_document(document_id)
-            )
-            if ws_file and ws_file.exists():
-                session.properties.sync_sw_to_pdm(document_id, ws_file)
+            session.properties.sync_pdm_to_sw(document_id, ws_file, force_revision=True)
+        except Exception as e:
+            logging.warning("Sync PDM→SW pre-checkin fallita per doc %s: %s", document_id, e)
+
+        # 2) Azzeramento proprietà DB (rimuove props eliminate in SW)
+        try:
+            session.properties.clear_properties(document_id)
+        except Exception as e:
+            logging.warning("Clear properties pre-checkin fallita per doc %s: %s", document_id, e)
+
+        # 3) SW → PDM: importa le custom properties dal file (ora aggiornato)
+        try:
+            session.properties.sync_sw_to_pdm(document_id, ws_file)
         except Exception as e:
             logging.warning("Sync SW→PDM pre-checkin fallita per doc %s: %s", document_id, e)
+
+        # 4) BOM (solo Assieme): aggiorna struttura componenti
+        if doc and doc.get("doc_type") == "Assieme":
+            try:
+                session.asm.import_bom_from_active_doc(
+                    document_id, expected_path=ws_file
+                )
+            except Exception as e:
+                logging.warning("Sync BOM pre-checkin fallita per doc %s: %s", document_id, e)
 
     def _do_checkin_single(self, notes: str, delete_ws: bool):
         mod_info = getattr(self, "_single_mod_info", {})
@@ -394,9 +422,9 @@ class CheckinDialog(QDialog):
             else:
                 archive = False
 
-        # Importa proprietà SW nel PDM prima di archiviare
+        # Sincronizza proprietà e BOM prima di archiviare
         if archive:
-            self._sync_sw_to_pdm_before_checkin(self.document_id)
+            self._sync_before_checkin(self.document_id)
 
         result = session.checkout.checkin(
             self.document_id,
@@ -469,8 +497,8 @@ class CheckinDialog(QDialog):
         errors = []
         for doc_id in checked_ids:
             try:
-                # Importa proprietà SW nel PDM prima di archiviare
-                self._sync_sw_to_pdm_before_checkin(doc_id)
+                # Sincronizza proprietà e BOM prima di archiviare
+                self._sync_before_checkin(doc_id)
                 r = session.checkout.checkin(
                     doc_id,
                     archive_file=True,

@@ -65,6 +65,13 @@ class PropertiesManager:
         )
         return {r["prop_name"]: r["prop_value"] for r in rows}
 
+    def clear_properties(self, document_id: int):
+        """Cancella tutte le custom properties di un documento dal DB."""
+        self.db.execute(
+            "DELETE FROM document_properties WHERE document_id=?",
+            (document_id,),
+        )
+
     def delete_property(self, document_id: int, prop_name: str):
         self.db.execute(
             "DELETE FROM document_properties WHERE document_id=? AND prop_name=?",

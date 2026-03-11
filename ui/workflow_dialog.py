@@ -121,6 +121,19 @@ class WorkflowDialog(QDialog):
         target = self.cmb_target.currentText()
         if not target or "Nessuna" in target:
             return
+
+        # Controllo componenti BOM per rilascio ASM
+        if target == "Rilasciato":
+            doc = session.files.get_document(self.document_id)
+            if doc and doc.get("doc_type") == "Assieme":
+                unreleased = [c for c in session.asm.get_bom_flat(self.document_id)
+                              if c["state"] != "Rilasciato"]
+                if unreleased:
+                    from ui.asm_release_check_dialog import AsmReleaseCheckDialog
+                    dlg = AsmReleaseCheckDialog(self.document_id, parent=self)
+                    if dlg.exec() != QDialog.DialogCode.Accepted:
+                        return  # utente ha annullato
+
         notes = self.txt_notes.toPlainText().strip()
         try:
             session.workflow.change_state(

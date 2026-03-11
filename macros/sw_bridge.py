@@ -176,39 +176,46 @@ def action_checkin(file_path: str):
         return
 
     # ------------------------------------------------------------------
-    #  PRE-CHECKIN: importa proprietà e BOM dal file aperto in SolidWorks
+    #  PRE-CHECKIN: sincronizza proprietà e BOM nell'ordine corretto
+    #  1) PDM→SW  (impone revisione e campi mappati nel file)
+    #  2) Clear props DB  (rimuove properties obsolete)
+    #  3) SW→PDM  (importa custom properties dal file aggiornato)
+    #  4) BOM  (solo ASM: aggiorna struttura componenti)
     # ------------------------------------------------------------------
     sync_errors = []
 
-    # 1) Importa proprieta dal file (custom + mapping SW->PDM)
+    # 1) PDM → SW: scrive nel file i valori PDM (revisione, titolo, ecc.)
     try:
-        logging.info("Pre-checkin: lettura proprieta' da SW per doc %s", doc["code"])
-        sync_in = pm.sync_sw_to_pdm(doc["id"], Path(file_path), file_name=Path(file_path).name)
-        if not sync_in.get("ok"):
-            sync_errors.append(f"Proprieta': {sync_in.get('error', '')}")
-            props = {}
-        elif int(sync_in.get("imported_count", 0)) > 0:
-            props = dict(sync_in.get("props") or {})
-            logging.info("Pre-checkin: %d proprieta' salvate", int(sync_in.get("imported_count", 0)))
-        else:
-            props = {}
-            logging.info("Pre-checkin: nessuna proprieta' custom nel file")
-    except Exception as e:
-        sync_errors.append(f"Proprieta': {e}")
-        logging.error("Pre-checkin proprieta' fallito: %s", e, exc_info=True)
-
-    # 1b) Enforce revisione PDM -> SW prima del check-in
-    try:
+        logging.info("Pre-checkin: scrittura proprieta' PDM->SW per doc %s", doc["code"])
         sync_out = pm.sync_pdm_to_sw(doc["id"], Path(file_path), force_revision=True)
         if not sync_out.get("ok"):
-            sync_errors.append(f"Revisione: {sync_out.get('error', '')}")
+            sync_errors.append(f"PDM→SW: {sync_out.get('error', '')}")
         else:
-            logging.info("Pre-checkin: %d proprieta' forzate da PDM verso SW", int(sync_out.get("written_count", 0)))
+            logging.info("Pre-checkin: %d proprieta' scritte PDM→SW", int(sync_out.get("written_count", 0)))
     except Exception as e:
-        sync_errors.append(f"Revisione: {e}")
-        logging.error("Pre-checkin revisione PDM->SW fallito: %s", e, exc_info=True)
+        sync_errors.append(f"PDM→SW: {e}")
+        logging.error("Pre-checkin PDM->SW fallito: %s", e, exc_info=True)
 
-    # 2) Per gli assiemi, aggiorna la BOM
+    # 2) Azzeramento proprietà DB (rimuove props eliminate in SW)
+    try:
+        pm.clear_properties(doc["id"])
+        logging.info("Pre-checkin: proprietà DB azzerate per doc %s", doc["code"])
+    except Exception as e:
+        logging.warning("Pre-checkin clear properties fallito per doc %s: %s", doc["code"], e)
+
+    # 3) SW → PDM: legge le custom properties dal file (ora aggiornato)
+    try:
+        logging.info("Pre-checkin: lettura proprieta' SW->PDM per doc %s", doc["code"])
+        sync_in = pm.sync_sw_to_pdm(doc["id"], Path(file_path), file_name=Path(file_path).name)
+        if not sync_in.get("ok"):
+            sync_errors.append(f"SW→PDM: {sync_in.get('error', '')}")
+        else:
+            logging.info("Pre-checkin: %d proprieta' importate SW→PDM", int(sync_in.get("imported_count", 0)))
+    except Exception as e:
+        sync_errors.append(f"SW→PDM: {e}")
+        logging.error("Pre-checkin SW->PDM fallito: %s", e, exc_info=True)
+
+    # 4) Per gli assiemi, aggiorna la BOM
     if doc["doc_type"] == "Assieme":
         try:
             logging.info("Pre-checkin: aggiornamento BOM per assieme %s", doc["code"])
