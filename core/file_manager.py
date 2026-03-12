@@ -633,7 +633,8 @@ class FileManager:
         )
 
     def search_documents(self, text: str = "", doc_type: str = "",
-                         state: str = "", code: str = "") -> list:
+                         state: str = "", code: str = "",
+                         machine_id: int = 0, group_id: int = 0) -> list:
         conditions, params = ["1=1"], []
         if text:
             conditions.append(
@@ -646,6 +647,10 @@ class FileManager:
             conditions.append("d.state=?"); params.append(state)
         if code:
             conditions.append("d.code LIKE ?"); params.append(f"%{code}%")
+        if machine_id:
+            conditions.append("d.machine_id=?"); params.append(machine_id)
+        if group_id:
+            conditions.append("d.group_id=?"); params.append(group_id)
 
         sql = f"""
             SELECT d.*,

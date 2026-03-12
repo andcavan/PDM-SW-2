@@ -1,6 +1,8 @@
 # =============================================================================
 #  ui/document_dialog.py  –  Creazione / modifica documento
 # =============================================================================
+import shutil
+import subprocess
 from pathlib import Path
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
@@ -325,6 +327,18 @@ class DocumentDialog(QDialog):
     def _build_revisions_tab(self) -> QWidget:
         w = QWidget()
         layout = QVBoxLayout(w)
+
+        # Barra pulsanti apertura file revisione
+        btn_bar = QHBoxLayout()
+        self.btn_rev_edrawings = QPushButton("👁️ Apri in eDrawings")
+        self.btn_rev_sw        = QPushButton("🔧 Apri in SW")
+        self.btn_rev_pdf       = QPushButton("📄 Apri PDF")
+        for b in (self.btn_rev_edrawings, self.btn_rev_sw, self.btn_rev_pdf):
+            b.setEnabled(False)
+            btn_bar.addWidget(b)
+        btn_bar.addStretch()
+        layout.addLayout(btn_bar)
+
         self.tbl_revisions = QTableWidget(0, 4)
         self.tbl_revisions.setHorizontalHeaderLabels(
             ["Revisione", "Stato", "Data rilascio", "Data obsolescenza"]
@@ -336,7 +350,13 @@ class DocumentDialog(QDialog):
         hdr.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
         self.tbl_revisions.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.tbl_revisions.setAlternatingRowColors(True)
+        self.tbl_revisions.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         layout.addWidget(self.tbl_revisions)
+
+        self.tbl_revisions.itemSelectionChanged.connect(self._on_revision_selection_changed)
+        self.btn_rev_edrawings.clicked.connect(lambda: self._open_revision_file("edrawings"))
+        self.btn_rev_sw.clicked.connect(lambda: self._open_revision_file("sw"))
+        self.btn_rev_pdf.clicked.connect(lambda: self._open_revision_file("pdf"))
         return w
 
     def _refresh_revisions(self):
@@ -362,12 +382,134 @@ class DocumentDialog(QDialog):
             )
             i = self.tbl_revisions.rowCount()
             self.tbl_revisions.insertRow(i)
-            self.tbl_revisions.setItem(i, 0, QTableWidgetItem(rd["revision"]))
+            item_rev = QTableWidgetItem(rd["revision"])
+            item_rev.setData(Qt.ItemDataRole.UserRole, rd["id"])
+            self.tbl_revisions.setItem(i, 0, item_rev)
             self.tbl_revisions.setItem(i, 1, QTableWidgetItem(rd["state"]))
             self.tbl_revisions.setItem(i, 2, QTableWidgetItem(str(release_at)[:19]))
             self.tbl_revisions.setItem(i, 3, QTableWidgetItem(
                 str(obsolete_at)[:19] if obsolete_at != "—" else "—"
             ))
+
+    # ------------------------------------------------------------------
+    #  Revisioni — apertura file
+    # ------------------------------------------------------------------
+    def _get_selected_revision_doc(self) -> "dict | None":
+        if not self.tbl_revisions.selectedItems():
+            return None
+        row = self.tbl_revisions.currentRow()
+        item = self.tbl_revisions.item(row, 0)
+        if not item:
+            return None
+        doc_id = item.data(Qt.ItemDataRole.UserRole)
+        return session.files.get_document(doc_id) if doc_id and session.files else None
+
+    def _get_pdf_path_for_doc(self, doc: dict) -> "Path | None":
+        pdf_path = doc.get("pdf_path") or ""
+        if not pdf_path:
+            return None
+        if session.sp:
+            p = session.sp.root / pdf_path
+            if p.exists():
+                return p
+        p_abs = Path(pdf_path)
+        return p_abs if p_abs.exists() else None
+
+    def _on_revision_selection_changed(self):
+        doc = self._get_selected_revision_doc()
+        has_archive = bool(
+            doc and doc.get("archive_path") and session.sp
+            and (session.sp.root / doc["archive_path"]).exists()
+        )
+        has_pdf = bool(doc and self._get_pdf_path_for_doc(doc))
+        self.btn_rev_edrawings.setEnabled(has_archive)
+        self.btn_rev_sw.setEnabled(has_archive)
+        self.btn_rev_pdf.setEnabled(has_pdf)
+
+    def _open_revision_file(self, action: str):
+        """Copia il file della revisione nella cartella OBSOLETI e lo apre."""
+        doc = self._get_selected_revision_doc()
+        if not doc:
+            return
+
+        from config import load_local_config
+        ws = load_local_config().get("sw_workspace", "")
+        if not ws:
+            QMessageBox.warning(
+                self, "Workspace non configurata",
+                "Configurare la workspace locale in Strumenti → Impostazioni\n"
+                "prima di aprire i file."
+            )
+            return
+
+        obsoleti_dir = Path(ws) / "OBSOLETI"
+        try:
+            obsoleti_dir.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            QMessageBox.critical(self, "Errore cartella OBSOLETI", str(e))
+            return
+
+        if action in ("edrawings", "sw"):
+            src = session.sp.root / doc["archive_path"]
+            if not src.exists():
+                QMessageBox.warning(self, "File non trovato",
+                                    f"Il file non è stato trovato nell'archivio:\n{src}")
+                return
+            dest = obsoleti_dir / src.name
+            try:
+                shutil.copy2(src, dest)
+            except Exception as e:
+                QMessageBox.critical(self, "Errore copia file", str(e))
+                return
+
+            if action == "edrawings":
+                from ui.sw_config_dialog import SWConfigDialog
+                exe = SWConfigDialog.get_edrawings_exe()
+                if exe:
+                    subprocess.Popen([str(exe), str(dest)])
+                else:
+                    QMessageBox.warning(
+                        self, "eDrawings non configurato",
+                        "Eseguibile eDrawings non configurato.\n\n"
+                        "Aprire Strumenti → Configurazione SolidWorks → tab SolidWorks\n"
+                        "e impostare il percorso di eDrawings."
+                    )
+            else:
+                from config import SW_EXTENSIONS
+                doc_type_map = {"Parte": 1, "Assieme": 2, "Disegno": 3}
+                type_id = doc_type_map.get(doc.get("doc_type", "Parte"), 1)
+                try:
+                    import win32com.client
+                    try:
+                        sw = win32com.client.GetActiveObject("SldWorks.Application")
+                    except Exception:
+                        sw = win32com.client.Dispatch("SldWorks.Application")
+                    sw.Visible = True
+                    sw.OpenDoc(str(dest).replace("/", "\\"), type_id)
+                except Exception as e:
+                    try:
+                        from ui.sw_config_dialog import SWConfigDialog
+                        sw_exe = SWConfigDialog.get_solidworks_exe()
+                        if sw_exe and Path(str(sw_exe)).exists():
+                            subprocess.Popen([str(sw_exe), str(dest)])
+                        else:
+                            subprocess.Popen(["cmd", "/c", "start", "", str(dest)])
+                    except Exception:
+                        QMessageBox.critical(self, "Errore apertura SolidWorks", str(e))
+
+        elif action == "pdf":
+            src = self._get_pdf_path_for_doc(doc)
+            if not src:
+                QMessageBox.warning(self, "PDF non trovato", "Il file PDF non è disponibile.")
+                return
+            dest = obsoleti_dir / src.name
+            try:
+                shutil.copy2(src, dest)
+            except Exception as e:
+                QMessageBox.critical(self, "Errore copia PDF", str(e))
+                return
+            import os
+            os.startfile(str(dest))
 
     # ------------------------------------------------------------------
     # Logica

@@ -75,6 +75,18 @@ class ArchiveView(QWidget):
         self.cmb_state.currentIndexChanged.connect(self.refresh)
         flt.addWidget(self.cmb_state)
 
+        flt.addWidget(QLabel("Macchina:"))
+        self.cmb_machine = QComboBox()
+        self.cmb_machine.setMinimumWidth(120)
+        self.cmb_machine.currentIndexChanged.connect(self._on_machine_filter_changed)
+        flt.addWidget(self.cmb_machine)
+
+        flt.addWidget(QLabel("Gruppo:"))
+        self.cmb_group = QComboBox()
+        self.cmb_group.setMinimumWidth(120)
+        self.cmb_group.currentIndexChanged.connect(self.refresh)
+        flt.addWidget(self.cmb_group)
+
         btn_refresh = QPushButton("\u21bb  Aggiorna")
         btn_refresh.clicked.connect(self.refresh)
         flt.addWidget(btn_refresh)
@@ -170,6 +182,42 @@ class ArchiveView(QWidget):
         s = QSettings("PDM-SW", "ArchiveView")
         s.setValue("splitterState", self.splitter.saveState())
 
+    def populate_filters(self):
+        """Popola i combo Macchina e Gruppo con i dati dal DB (chiamare dopo connessione)."""
+        if not session.is_connected or not session.coding:
+            return
+
+        # --- Macchine ---
+        self.cmb_machine.blockSignals(True)
+        self.cmb_machine.clear()
+        self.cmb_machine.addItem("Tutte", userData=0)
+        for m in session.coding.get_machines(only_active=False):
+            self.cmb_machine.addItem(f"{m['code']}  {m['description']}", userData=m["id"])
+        self.cmb_machine.blockSignals(False)
+
+        # --- Gruppi (all inizialmente) ---
+        self._reload_group_combo(machine_id=0)
+
+    def _on_machine_filter_changed(self):
+        """Quando cambia la macchina, ricarica i gruppi e lancia refresh."""
+        machine_id = self.cmb_machine.currentData() or 0
+        self._reload_group_combo(machine_id)
+        self.refresh()
+
+    def _reload_group_combo(self, machine_id: int):
+        """Ricarica il combo Gruppo in base alla macchina selezionata."""
+        self.cmb_group.blockSignals(True)
+        self.cmb_group.clear()
+        self.cmb_group.addItem("Tutti", userData=0)
+        if session.is_connected and session.coding:
+            if machine_id:
+                groups = session.coding.get_groups(machine_id, only_active=False)
+            else:
+                groups = session.coding.get_all_groups(only_active=False)
+            for g in groups:
+                self.cmb_group.addItem(f"{g['code']}  {g['description']}", userData=g["id"])
+        self.cmb_group.blockSignals(False)
+
     # ------------------------------------------------------------------
     #  Refresh dati
     # ------------------------------------------------------------------
@@ -177,12 +225,21 @@ class ArchiveView(QWidget):
         if not session.is_connected:
             return
 
+        # Popola i combo macchina/gruppo al primo refresh dopo connessione
+        if self.cmb_machine.count() <= 1:
+            self.populate_filters()
+
         text  = self.txt_search.text().strip()
         state = self.cmb_state.currentText()
         if state == "Tutti":
             state = ""
 
-        docs = session.files.search_documents(text=text, state=state)
+        machine_id = self.cmb_machine.currentData() or 0
+        group_id   = self.cmb_group.currentData() or 0
+
+        docs = session.files.search_documents(
+            text=text, state=state, machine_id=machine_id, group_id=group_id
+        )
         if self.view_mode == "uncoded":
             docs = [d for d in docs if self._is_non_coded(d)]
         else:
@@ -218,10 +275,15 @@ class ArchiveView(QWidget):
             # Nodo codice: selezionabile, memorizza il codice stringa
             parent_item.setData(COL_CODE, Qt.ItemDataRole.UserRole, f"CODE:{code}")
 
-            # Titolo e descrizione dal documento rappresentativo
+            # Titolo, descrizione, revisione e stato dal documento rappresentativo
             best = self._pick_representative(all_docs)
             parent_item.setText(COL_TITLE, best.get("title") or "")
             parent_item.setText(COL_DESC,  best.get("description") or "")
+            parent_item.setText(COL_REV,   best.get("revision") or "")
+            st = best.get("state") or ""
+            parent_item.setText(COL_STATE, st)
+            color = WORKFLOW_STATES.get(st, {}).get("color", "#9E9E9E")
+            parent_item.setForeground(COL_STATE, QColor(color))
 
             # Figli visibili: solo doc attivi (non Obsoleti) con file in archivio o in checkout
             visible_docs = [d for d in all_docs
