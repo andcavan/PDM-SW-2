@@ -53,6 +53,9 @@ class DetailPanel(QWidget):
     create_drw_from_file_requested = pyqtSignal(int)  # parent PRT/ASM doc_id
     # Segnale emesso dopo ogni azione workflow (per aggiornare l'albero)
     workflow_action_completed     = pyqtSignal()
+    # Segnale emesso per delegare l'apertura del dialog workflow all'ArchiveView
+    # args: rep (dict), all_docs (list), target_state (str — "" = nessuna pre-selezione)
+    workflow_requested            = pyqtSignal(dict, list, str)
     # Segnale interno per aggiornamento UI da thread PDF (thread-safe)
     _pdf_done = pyqtSignal(bool, str)
 
@@ -1130,66 +1133,14 @@ class DetailPanel(QWidget):
         self.load_code(self._current_code, docs)
 
     def _on_wf_release(self):
-        self._do_wf_transition("Rilasciato")
+        rep = self._code_representative
+        if rep:
+            self.workflow_requested.emit(rep, list(self._code_docs), "Rilasciato")
 
     def _on_wf_obsolete(self):
-        self._do_wf_transition("Obsoleto")
-
-    def _check_companion_warning(self, rep: dict, target_state: str) -> "str | None":
-        """
-        Restituisce un messaggio di avviso se il companion è assente, altrimenti None.
-        Usato prima di aprire WorkflowDialog per avvisare l'utente.
-        """
-        code = rep["code"]
-        rev  = rep["revision"]
-        if rep["doc_type"] in ("Parte", "Assieme"):
-            drw = next((d for d in self._code_docs
-                        if d["doc_type"] == "Disegno"
-                        and d["revision"] == rev
-                        and d["state"] != "Obsoleto"), None)
-            if not drw:
-                return (
-                    f"Il codice {code} rev.{rev} non ha un Disegno (DRW) associato.\n\n"
-                    f"Il passaggio a «{target_state}» sarà applicato solo al {rep['doc_type']}."
-                )
-        elif rep["doc_type"] == "Disegno":
-            prt_asm = next((d for d in self._code_docs
-                            if d["doc_type"] in ("Parte", "Assieme")
-                            and d["revision"] == rev
-                            and d["state"] != "Obsoleto"), None)
-            if not prt_asm:
-                return (
-                    f"Il codice {code} rev.{rev} non ha un Parte/Assieme associato.\n\n"
-                    f"Il passaggio a «{target_state}» sarà applicato solo al Disegno."
-                )
-        return None
-
-    def _do_wf_transition(self, target_state: str):
         rep = self._code_representative
-        if not rep:
-            return
-
-        # Controlla presenza companion e chiede conferma se assente
-        skip_r2 = False
-        warn = self._check_companion_warning(rep, target_state)
-        if warn:
-            r = QMessageBox.question(
-                self, "Documento companion assente",
-                warn + "\n\nProcedere comunque?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            )
-            if r != QMessageBox.StandardButton.Yes:
-                return
-            skip_r2 = True  # bypassa R2 se PRT/ASM senza DRW
-
-        from ui.workflow_dialog import WorkflowDialog
-        dlg = WorkflowDialog(rep["id"], parent=self, skip_r2=skip_r2)
-        idx = dlg.cmb_target.findText(target_state)
-        if idx >= 0:
-            dlg.cmb_target.setCurrentIndex(idx)
-        dlg.exec()
-        self._reload_code_panel()
-        self.workflow_action_completed.emit()
+        if rep:
+            self.workflow_requested.emit(rep, list(self._code_docs), "Obsoleto")
 
     def _on_wf_new_rev(self):
         rep = self._code_representative

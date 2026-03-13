@@ -162,6 +162,7 @@ class ArchiveView(QWidget):
         self.detail_panel.create_drw_from_file_requested.connect(self._action_create_drw_from_file)
         # Connetti segnale workflow (aggiorna albero dopo azioni dal pannello codice)
         self.detail_panel.workflow_action_completed.connect(self.refresh)
+        self.detail_panel.workflow_requested.connect(self._action_workflow_code)
 
         # Proporzioni iniziali 65/35
         self.splitter.setStretchFactor(0, 65)
@@ -576,14 +577,6 @@ class ArchiveView(QWidget):
 
         menu.addSeparator()
 
-        # ---- Workflow ----
-        act_wf = QAction("🔄  Workflow", self)
-        act_wf.setEnabled(is_latest and (not is_readonly or is_admin))
-        act_wf.triggered.connect(lambda: self._action_workflow(doc_id))
-        menu.addAction(act_wf)
-
-        menu.addSeparator()
-
         # ---- Apri in eDrawings ----
         act_edraw = QAction("👁️  Apri in eDrawings", self)
         act_edraw.setEnabled(bool(doc.get("archive_path")))
@@ -641,15 +634,66 @@ class ArchiveView(QWidget):
 
         menu.exec(self.tree.viewport().mapToGlobal(pos))
 
-    def _action_workflow_code(self, rep: dict, all_docs: list):
-        """Apre WorkflowDialog per il documento rappresentativo di un codice,
-        con controllo e avviso se il companion (DRW o PRT/ASM) è assente."""
+    def action_workflow_toolbar(self):
+        """Punto di ingresso dalla toolbar: esegue workflow solo se un codice è selezionato."""
+        items = self.tree.selectedItems()
+        if not items:
+            return False
+        val = items[0].data(COL_CODE, Qt.ItemDataRole.UserRole)
+        if not (isinstance(val, str) and val.startswith("CODE:")):
+            return False  # selezione su documento, non su codice
+        from ui.detail_panel import DetailPanel
+        code = val[5:]
+        all_docs = [d for d in session.files.search_documents(code=code) if d["code"] == code]
+        if not all_docs:
+            return False
+        rep = DetailPanel._get_code_representative_doc(all_docs)
+        if not rep:
+            return False
+        self._action_workflow_code(rep, all_docs)
+        return True
+
+    def _action_workflow_code(self, rep: dict, all_docs: list, target_state: str = ""):
+        """Procedura unica per il workflow su un codice.
+        Controlla il companion, chiede conferma se assente, apre WorkflowDialog.
+        Invocata sia dal context menu codice che dai bottoni del DetailPanel."""
         from ui.workflow_dialog import WorkflowDialog
+
+        # Controlla che il codice abbia almeno un documento con file in archivio o in checkout
+        docs_with_content = [
+            d for d in all_docs
+            if d.get("archive_path") or d.get("is_locked")
+        ]
+        if not docs_with_content:
+            QMessageBox.critical(
+                self, "Nessun documento",
+                f"Il codice {rep['code']} non ha documenti con file in archivio.\n\n"
+                "Caricare almeno un documento prima di eseguire il workflow."
+            )
+            return
+
+        # Controlla che nessun documento della revisione corrente sia in checkout
+        rev  = rep["revision"]
+        locked_docs = [
+            d for d in all_docs
+            if d["revision"] == rev and d["state"] != "Obsoleto" and d["is_locked"]
+        ]
+        if locked_docs:
+            names = "\n".join(
+                f"  • {d['doc_type']}  —  🔒 {d.get('locked_by_name', '?')}"
+                for d in locked_docs
+            )
+            QMessageBox.critical(
+                self, "Documento in checkout",
+                f"Impossibile modificare il workflow: i seguenti documenti sono in checkout:\n\n"
+                f"{names}\n\n"
+                "Effettuare il check-in prima di procedere."
+            )
+            return
 
         # Controlla presenza companion
         skip_r2 = False
         code = rep["code"]
-        rev  = rep["revision"]
         warn_msg = None
         if rep["doc_type"] in ("Parte", "Assieme"):
             drw = next((d for d in all_docs
@@ -683,8 +727,13 @@ class ArchiveView(QWidget):
             skip_r2 = True
 
         dlg = WorkflowDialog(rep["id"], parent=self, skip_r2=skip_r2)
+        if target_state:
+            idx = dlg.cmb_target.findText(target_state)
+            if idx >= 0:
+                dlg.cmb_target.setCurrentIndex(idx)
         if dlg.exec():
             self.refresh()
+            self.detail_panel.workflow_action_completed.emit()
 
     # ------------------------------------------------------------------
     #  Azioni
@@ -726,31 +775,6 @@ class ArchiveView(QWidget):
             )
         except Exception as e:
             QMessageBox.critical(self, "Errore", str(e))
-
-    def _action_workflow(self, doc_id: int):
-        from ui.workflow_dialog import WorkflowDialog
-        doc = session.files.get_document(doc_id)
-        skip_r2 = False
-        if doc and doc["doc_type"] in ("Parte", "Assieme"):
-            drw = session.db.fetchone(
-                "SELECT id FROM documents WHERE code=? AND doc_type='Disegno' "
-                "AND revision=? AND state != 'Obsoleto'",
-                (doc["code"], doc["revision"]),
-            ) if session.db else None
-            if not drw:
-                r = QMessageBox.question(
-                    self, "Documento companion assente",
-                    f"Il codice {doc['code']} rev.{doc['revision']} non ha un Disegno (DRW).\n\n"
-                    f"Il passaggio di stato sarà applicato solo al {doc['doc_type']}.\n\n"
-                    "Procedere comunque?",
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                )
-                if r != QMessageBox.StandardButton.Yes:
-                    return
-                skip_r2 = True
-        dlg = WorkflowDialog(doc_id, parent=self, skip_r2=skip_r2)
-        if dlg.exec():
-            self.refresh()
 
     def _action_new_revision(self, doc_id: int):
         """Crea nuova revisione del documento."""

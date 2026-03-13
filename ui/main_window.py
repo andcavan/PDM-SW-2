@@ -236,7 +236,7 @@ class MainWindow(QMainWindow):
         tb.addSeparator()
 
         act_wf = QAction("🔄 Workflow", self)
-        act_wf.setToolTip("Cambia stato workflow")
+        act_wf.setToolTip("Cambia stato workflow (richiede selezione codice)")
         act_wf.triggered.connect(self._toolbar_workflow)
         tb.addAction(act_wf)
 
@@ -325,17 +325,14 @@ class MainWindow(QMainWindow):
 
     def _toolbar_workflow(self):
         view = self._active_archive_like_view()
-        if view:
-            doc_id = view._selected_doc_id()
-            if not doc_id:
-                QMessageBox.information(
-                    self, "Info", "Selezionare un documento nell'archivio"
-                )
-                return
-            from ui.workflow_dialog import WorkflowDialog
-            dlg = WorkflowDialog(doc_id, parent=self)
-            dlg.exec()
-            self._refresh_all()
+        if not view:
+            return
+        handled = view.action_workflow_toolbar()
+        if not handled:
+            QMessageBox.information(
+                self, "Workflow",
+                "Selezionare un nodo codice nell'archivio per aprire il workflow."
+            )
 
     # ------------------------------------------------------------------
     def _refresh_all(self):
