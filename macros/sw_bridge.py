@@ -204,6 +204,7 @@ def action_checkin(file_path: str):
         logging.warning("Pre-checkin clear properties fallito per doc %s: %s", doc["code"], e)
 
     # 3) SW → PDM: legge le custom properties dal file (ora aggiornato)
+    sync_in = {}
     try:
         logging.info("Pre-checkin: lettura proprieta' SW->PDM per doc %s", doc["code"])
         sync_in = pm.sync_sw_to_pdm(doc["id"], Path(file_path), file_name=Path(file_path).name)
@@ -216,6 +217,7 @@ def action_checkin(file_path: str):
         logging.error("Pre-checkin SW->PDM fallito: %s", e, exc_info=True)
 
     # 4) Per gli assiemi, aggiorna la BOM
+    n = 0
     if doc["doc_type"] == "Assieme":
         try:
             logging.info("Pre-checkin: aggiornamento BOM per assieme %s", doc["code"])
@@ -254,7 +256,7 @@ def action_checkin(file_path: str):
                    "Il file in archivio era stato modificato.\n"
 
         # Riepilogo sync
-        msg += f"\nProprieta' importate: {len(props) if props else 0}"
+        msg += f"\nProprieta' importate: {int(sync_in.get('imported_count', 0))}"
         if doc["doc_type"] == "Assieme":
             msg += f"\nComponenti BOM aggiornati: {n}"
 
@@ -293,18 +295,28 @@ def _generate_thumbnail(doc: dict, sp):
         eApp = win32com.client.Dispatch("EModelView.EModelViewControl")
         eApp.OpenDoc(str(src_file), False, False, True, "")
 
-        # Attendi che il documento sia caricato
-        for _ in range(30):
-            time.sleep(0.5)
+        # Attendi che il documento sia caricato (polling adattivo, max 20s)
+        _timeout = 20.0
+        _interval = 0.3
+        _elapsed = 0.0
+        _loaded = False
+        while _elapsed < _timeout:
+            time.sleep(_interval)
+            _elapsed += _interval
             try:
                 if eApp.FileName:
+                    _loaded = True
                     break
             except Exception:
                 pass
 
+        if not _loaded:
+            logging.warning("Thumbnail: eDrawings non ha caricato il file entro %.0fs", _timeout)
+            return
+
         eApp.SaveAs(str(dest))
         eApp.CloseActiveDoc("")
-        logging.info("Thumbnail generata: %s", dest)
+        logging.info("Thumbnail generata in %.1fs: %s", _elapsed, dest)
 
     except Exception as e:
         logging.warning("Thumbnail generation fallita (non bloccante): %s", e)
@@ -507,15 +519,102 @@ def action_create_code(file_path: str):
             code = coding.next_code_liv2_subgroup(machine_id, group_id)
 
         fp = Path(file_path)
-        from config import SW_EXTENSIONS
-        doc_type = SW_EXTENSIONS.get(fp.suffix.upper(), "Parte")
+        from config import SW_EXTENSIONS, load_local_config
+        ext = fp.suffix if fp.suffix else ""
+        doc_type = SW_EXTENSIONS.get(ext.upper(), "Parte")
+        if not ext:
+            ext = {"Assieme": ".SLDASM", "Disegno": ".SLDDRW"}.get(doc_type, ".SLDPRT")
 
         doc_id = files.create_document(
             code=code, revision="00", doc_type=doc_type, title=title,
             machine_id=machine_id, group_id=group_id, doc_level=doc_level,
         )
         logging.info("create_code: codice=%s id=%d", code, doc_id)
-        write_result(f"Documento creato:\nCodice: {code}  rev.00  [{doc_type}]\n{title}")
+
+        # --- Salva in workspace ---
+        import shutil
+        cfg_local = load_local_config()
+        ws_root = Path(cfg_local.get("sw_workspace", "") or "")
+        dest_ws = None
+        if ws_root and ws_root.is_dir():
+            dest_ws = ws_root / f"{code}{ext}"
+            saved = False
+            try:
+                import win32com.client
+                sw_app = win32com.client.GetActiveObject("SldWorks.Application")
+                sw_doc = sw_app.ActiveDoc if sw_app else None
+                if sw_doc:
+                    if fp.exists() and fp.resolve() == dest_ws.resolve():
+                        saved = True
+                    else:
+                        sw_doc.SaveAs3(str(dest_ws), 0, 0)
+                        saved = dest_ws.exists()
+            except Exception as sw_err:
+                logging.warning("SaveAs3 fallita: %s", sw_err)
+            if not saved and fp.exists():
+                shutil.copy2(str(fp), str(dest_ws))
+                saved = dest_ws.exists()
+            if not saved:
+                db.execute("DELETE FROM documents WHERE id=?", (doc_id,))
+                write_result("File non copiabile nella workspace. Verificare il percorso workspace.", error=True)
+                return
+
+        # --- Archivia ---
+        src_arch = dest_ws if (dest_ws and dest_ws.exists()) else (fp if fp.exists() else None)
+        if src_arch:
+            arch_dir = sp.archive_path(code, "00")
+            arch_dir.mkdir(parents=True, exist_ok=True)
+            arch_file = arch_dir / f"{code}{ext}"
+            try:
+                shutil.copy2(str(src_arch), str(arch_file))
+                rel_path = str(arch_file.relative_to(sp.root))
+                db.execute(
+                    "UPDATE documents SET file_name=?, file_ext=?, archive_path=?, "
+                    "modified_by=?, modified_at=datetime('now') WHERE id=?",
+                    (arch_file.name, ext, rel_path, user["id"], doc_id),
+                )
+                logging.info("File archiviato → %s", arch_file)
+            except Exception as arch_err:
+                try:
+                    db.execute("DELETE FROM documents WHERE id=?", (doc_id,))
+                except Exception:
+                    pass
+                raise RuntimeError(f"Archiviazione fallita: {arch_err}") from arch_err
+
+        # --- Lock come checkout ---
+        if dest_ws:
+            import socket as _socket
+            uid = user["id"]
+            ws_host = _socket.gethostname()
+            db.execute(
+                "UPDATE documents SET is_locked=1, locked_by=?, locked_at=datetime('now'), "
+                "locked_ws=? WHERE id=?",
+                (uid, ws_host, doc_id),
+            )
+            db.execute(
+                "INSERT INTO checkout_log (document_id, user_id, action, workstation, workspace_path) "
+                "VALUES (?,?,'checkout',?,?)",
+                (doc_id, uid, ws_host, str(dest_ws)),
+            )
+            existing = db.fetchone(
+                "SELECT id FROM workspace_files WHERE document_id=? AND user_id=?",
+                (doc_id, uid),
+            )
+            if existing:
+                db.execute(
+                    "UPDATE workspace_files SET role='checkout', workspace_path=?, "
+                    "copied_at=datetime('now') WHERE id=?",
+                    (str(dest_ws), existing["id"]),
+                )
+            else:
+                db.execute(
+                    "INSERT INTO workspace_files (document_id, user_id, role, workspace_path) "
+                    "VALUES (?,?,?,?)",
+                    (doc_id, uid, "checkout", str(dest_ws)),
+                )
+
+        ws_info = f"\nIn workspace: {dest_ws}" if dest_ws else ""
+        write_result(f"Documento creato:\nCodice: {code}  rev.00  [{doc_type}]\n{title}{ws_info}")
 
     except Exception as e:
         logging.error("Errore create_code: %s", e, exc_info=True)

@@ -29,10 +29,10 @@ sys.path.insert(0, str(ROOT))
 from PyQt6.QtWidgets import (
     QApplication, QDialog, QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QPushButton, QFrame, QMessageBox, QLineEdit,
-    QComboBox, QGroupBox, QSizePolicy,
+    QComboBox, QGroupBox, QSizePolicy, QSystemTrayIcon, QMenu, QCheckBox,
 )
-from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QFont, QIcon
+from PyQt6.QtCore import Qt, QTimer, QThread, pyqtSignal
+from PyQt6.QtGui import QFont, QIcon, QPixmap, QPainter, QColor
 
 # ---------------------------------------------------------------------------
 LOG_FILE = ROOT / "macros" / "sw_bridge.log"
@@ -124,6 +124,8 @@ QPushButton#btn_refresh {
     font-size: 14px;
 }
 QPushButton#btn_refresh:hover { color: #89b4fa; }
+QPushButton#btn_release { border-left: 3px solid #a6e3a1; }
+QPushButton#btn_folder  { border-left: 3px solid #94e2d5; }
 QLineEdit, QComboBox {
     background-color: #313244;
     border: 1px solid #45475a;
@@ -144,6 +146,39 @@ QFrame#separator {
     background-color: #45475a;
 }
 """
+
+
+# ===========================================================================
+#  Thread di polling: rileva il documento attivo in SolidWorks ogni 1.5s
+# ===========================================================================
+class SWPollerThread(QThread):
+    """Emette doc_changed(percorso) quando il documento attivo in SolidWorks cambia."""
+
+    doc_changed = pyqtSignal(str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._current_path = ""
+        self._running = True
+
+    def run(self):
+        import time
+        while self._running:
+            try:
+                import win32com.client
+                sw = win32com.client.GetActiveObject("SldWorks.Application")
+                doc = sw.ActiveDoc if sw else None
+                path = doc.GetPathName() if doc else ""
+            except Exception:
+                path = ""
+            if path != self._current_path:
+                self._current_path = path
+                self.doc_changed.emit(path)
+            time.sleep(1.5)
+
+    def stop(self):
+        self._running = False
+        self.wait(3000)
 
 
 # ===========================================================================
@@ -233,6 +268,12 @@ class CreateCodeDialog(QDialog):
         self.ext   = fp.suffix.upper()
         self.doc_type = EXT_TO_TYPE.get(self.ext, "Parte")
 
+        # Rileva file companion (DRW↔PRT/ASM) non ancora nel PDM
+        self.companion_path: Optional[Path] = self._find_companion_path()
+        if self.companion_path:
+            if _find_doc(db, str(self.companion_path)):
+                self.companion_path = None  # già codificato — non proporre
+
         self.setWindowTitle("Genera Codice PDM")
         self.setMinimumWidth(360)
         self.setStyleSheet(STYLE)
@@ -289,6 +330,20 @@ class CreateCodeDialog(QDialog):
         )
         self.lbl_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.lbl_preview)
+
+        # Checkbox companion (visibile solo se companion rilevato)
+        self.chk_companion = QCheckBox()
+        self.chk_companion.setChecked(True)
+        self.chk_companion.setStyleSheet("color:#a6e3a1; font-size:11px; padding:2px 0;")
+        if self.companion_path:
+            comp_type = EXT_TO_TYPE.get(self.companion_path.suffix.upper(), "?")
+            comp_icon = TYPE_ICONS.get(comp_type, "")
+            self.chk_companion.setText(
+                f"Codifica anche: {comp_icon} {self.companion_path.name}"
+            )
+        else:
+            self.chk_companion.hide()
+        layout.addWidget(self.chk_companion)
 
         # Bottoni
         btn_row = QHBoxLayout()
@@ -536,18 +591,157 @@ class CreateCodeDialog(QDialog):
 
             self.created_doc_id = doc_id
             self.created_path   = dest_ws
+
+            # Codifica companion se richiesto
+            comp_msg = ""
+            if self.companion_path and self.chk_companion.isChecked():
+                try:
+                    self._code_companion(code, doc_id, mid, gid, level, title)
+                    comp_type = EXT_TO_TYPE.get(self.companion_path.suffix.upper(), "")
+                    comp_msg = f"\n\nCompanion ({comp_type}) codificato: {self.companion_path.name}"
+                except Exception as comp_err:
+                    logging.warning("Companion non codificato: %s", comp_err)
+                    comp_msg = f"\n\n⚠ Companion non codificato:\n{comp_err}"
+
             QMessageBox.information(
                 self, "Documento creato",
                 f"Codice: {code}  rev.00  [{self.doc_type}]\n"
                 f"Titolo: {title}\n\n"
                 f"Workspace:  {dest_ws}\n"
                 f"Archivio:   {arch_file}"
+                f"{comp_msg}"
             )
             self.accept()
 
         except Exception as e:
             logging.error("Errore creazione documento: %s", e, exc_info=True)
             QMessageBox.critical(self, "Errore", str(e))
+
+    # ------------------------------------------------------------------
+    def _find_companion_path(self) -> Optional[Path]:
+        """
+        Cerca il file companion (DRW↔PRT/ASM) con lo stesso nome base.
+        Prima prova filesystem (stessa cartella), poi SolidWorks COM.
+        """
+        if not self.file_path:
+            return None
+        fp = Path(self.file_path)
+
+        if self.doc_type == "Disegno":
+            # DRW → cerca PRT o ASM stesso nome nella stessa cartella
+            for ext in (".SLDPRT", ".SLDASM", ".sldprt", ".sldasm"):
+                c = fp.with_suffix(ext)
+                if c.exists():
+                    return c
+            # Fallback COM: legge il documento referenziato dal disegno
+            try:
+                import win32com.client
+                sw = win32com.client.GetActiveObject("SldWorks.Application")
+                drw = sw.ActiveDoc if sw else None
+                if drw:
+                    for sheet in (drw.GetSheets() or []):
+                        for view in (sheet.GetViews() or []):
+                            ref = view.ReferencedDocument
+                            if ref:
+                                path = ref.GetPathName()
+                                if path:
+                                    return Path(path)
+            except Exception:
+                pass
+        else:
+            # PRT/ASM → cerca DRW stesso nome
+            if self.files:
+                return self.files.find_companion_drw(fp)
+        return None
+
+    # ------------------------------------------------------------------
+    def _code_companion(self, code: str, parent_doc_id: int,
+                        mid: int, gid, level: int, title: str):
+        """
+        Codifica il file companion con lo stesso codice PDM del documento principale.
+        Il DRW riceve parent_doc_id = id del PRT/ASM; il PRT/ASM riceve None.
+        """
+        import shutil
+        comp = self.companion_path
+        comp_ext  = comp.suffix
+        comp_type = EXT_TO_TYPE.get(comp_ext.upper(), "Parte")
+
+        # Solo il DRW viene collegato al PRT/ASM (non viceversa)
+        pdi = parent_doc_id if comp_type == "Disegno" else None
+
+        # Workspace
+        from config import load_local_config
+        ws_root = Path(load_local_config().get("sw_workspace", "") or "")
+        if not ws_root or not ws_root.is_dir():
+            raise RuntimeError("Workspace non configurata.")
+
+        dest_ws = ws_root / f"{code}{comp_ext}"
+
+        # Salva in workspace: COM SaveAs3 se il file è aperto, altrimenti copia
+        saved = False
+        try:
+            import win32com.client
+            sw = win32com.client.GetActiveObject("SldWorks.Application")
+            comp_doc = sw.GetOpenDocumentByName(str(comp)) if sw else None
+            if comp_doc:
+                comp_doc.SaveAs3(str(dest_ws), 0, 0)
+                saved = dest_ws.exists()
+        except Exception:
+            pass
+        if not saved and comp.exists():
+            shutil.copy2(str(comp), str(dest_ws))
+            saved = dest_ws.exists()
+        if not saved:
+            raise RuntimeError(f"Impossibile copiare il companion in workspace:\n{dest_ws}")
+
+        # Crea record DB
+        comp_id = self.files.create_document(
+            code=code, revision="00", doc_type=comp_type,
+            title=title, machine_id=mid, group_id=gid,
+            doc_level=level if level > 0 else 2,
+            parent_doc_id=pdi,
+        )
+
+        # Archivia
+        arch_dir = self.sp.archive_path(code, "00")
+        arch_dir.mkdir(parents=True, exist_ok=True)
+        arch_file = arch_dir / f"{code}{comp_ext}"
+        shutil.copy2(str(dest_ws), str(arch_file))
+        rel_path = str(arch_file.relative_to(self.sp.root))
+        uid = self.user["id"]
+        self.db.execute(
+            "UPDATE documents SET file_name=?, file_ext=?, archive_path=?, "
+            "modified_by=?, modified_at=datetime('now') WHERE id=?",
+            (arch_file.name, comp_ext, rel_path, uid, comp_id),
+        )
+
+        # Lock come checkout
+        self.db.execute(
+            "UPDATE documents SET is_locked=1, locked_by=?, locked_at=datetime('now'), "
+            "locked_ws=? WHERE id=?",
+            (uid, socket.gethostname(), comp_id),
+        )
+        self.db.execute(
+            "INSERT INTO checkout_log (document_id, user_id, action, workstation, workspace_path) "
+            "VALUES (?,?,'checkout',?,?)",
+            (comp_id, uid, socket.gethostname(), str(dest_ws)),
+        )
+        existing = self.db.fetchone(
+            "SELECT id FROM workspace_files WHERE document_id=? AND user_id=?", (comp_id, uid)
+        )
+        if existing:
+            self.db.execute(
+                "UPDATE workspace_files SET role='checkout', workspace_path=?, "
+                "copied_at=datetime('now') WHERE id=?",
+                (str(dest_ws), existing["id"]),
+            )
+        else:
+            self.db.execute(
+                "INSERT INTO workspace_files (document_id, user_id, role, workspace_path) "
+                "VALUES (?,?,?,?)",
+                (comp_id, uid, "checkout", str(dest_ws)),
+            )
+        logging.info("Companion codificato: code=%s type=%s id=%d", code, comp_type, comp_id)
 
 
 # ===========================================================================
@@ -590,6 +784,30 @@ class PDMPanel(QDialog):
         self._build_ui()
         if not self.session_error:
             self._refresh()
+
+        # --- Ripristina posizione/dimensione salvata (M-2) ---
+        self._restore_geometry()
+
+        # --- Avvia thread di polling documento attivo (M-1) ---
+        if not self.session_error:
+            self._poller = SWPollerThread(self)
+            self._poller.doc_changed.connect(self._on_doc_changed)
+            self._poller.start()
+        else:
+            self._poller = None
+
+        # --- System Tray Icon (M-3) ---
+        pix = QPixmap(16, 16)
+        pix.fill(QColor("#89b4fa"))
+        self._tray = QSystemTrayIcon(QIcon(pix), self)
+        tray_menu = QMenu()
+        tray_menu.addAction("Mostra", self.showNormal)
+        tray_menu.addSeparator()
+        tray_menu.addAction("Esci", self._quit_app)
+        self._tray.setContextMenu(tray_menu)
+        self._tray.setToolTip("PDM-SW Panel")
+        self._tray.activated.connect(self._on_tray_activated)
+        self._tray.show()
 
     # ------------------------------------------------------------------
     def _build_ui(self):
@@ -694,6 +912,20 @@ class PDMPanel(QDialog):
         grid.addWidget(sep, 3, 0, 1, 2)
 
         grid.addWidget(self.btn_open_app, 4, 0, 1, 2)
+
+        self.btn_release = QPushButton("🏁  Rilascia")
+        self.btn_release.setObjectName("btn_release")
+        self.btn_release.setToolTip("Avanza lo stato workflow (richiede ruolo Responsabile)")
+        self.btn_release.clicked.connect(self._do_release)
+        self.btn_release.hide()
+
+        self.btn_folder = QPushButton("📁  Apri Cartella")
+        self.btn_folder.setObjectName("btn_folder")
+        self.btn_folder.setToolTip("Apre in Esplora risorse la cartella del file corrente")
+        self.btn_folder.clicked.connect(self._do_open_folder)
+
+        grid.addWidget(self.btn_release, 5, 0)
+        grid.addWidget(self.btn_folder, 5, 1)
 
         self._main_layout.addWidget(self._grp_actions)
 
@@ -806,9 +1038,23 @@ class PDMPanel(QDialog):
         self.btn_props_out.setEnabled(bool(d.get("archive_path")) and is_mine)
         self.btn_open_app.setEnabled(True)
 
+        # Bottone Rilascia: solo per ruoli con permesso release (M-6)
+        from config import ROLE_PERMISSIONS, WORKFLOW_TRANSITIONS
+        can_release = ROLE_PERMISSIONS.get(self.user.get("role", ""), {}).get("release", False)
+        self.btn_release.setVisible(can_release)
+        if can_release:
+            next_states = WORKFLOW_TRANSITIONS.get(state, [])
+            self.btn_release.setEnabled(bool(next_states) and not is_locked)
+            if next_states:
+                self.btn_release.setText(f"🏁  → {next_states[0]}")
+
+        # Bottone Apri Cartella: abilitato se il file esiste localmente (M-7)
+        self.btn_folder.setEnabled(bool(self.file_path and Path(self.file_path).parent.exists()))
+
     def _set_buttons_enabled(self, enabled: bool):
         for btn in (self.btn_co, self.btn_ci, self.btn_undo,
-                    self.btn_consult, self.btn_props_in, self.btn_props_out):
+                    self.btn_consult, self.btn_props_in, self.btn_props_out,
+                    self.btn_release, self.btn_folder):
             btn.setEnabled(enabled)
         self.btn_open_app.setEnabled(True)
 
@@ -959,6 +1205,98 @@ class PDMPanel(QDialog):
             self._refresh()
 
     # ------------------------------------------------------------------
+    #  M-1: callback dal poller quando il documento attivo cambia
+    # ------------------------------------------------------------------
+    def _on_doc_changed(self, path: str):
+        if path != self.file_path:
+            self.file_path = path
+            self._refresh()
+
+    # ------------------------------------------------------------------
+    #  M-6: transizione workflow (Rilascia)
+    # ------------------------------------------------------------------
+    def _do_release(self):
+        if not self.doc or not self.db:
+            return
+        from config import WORKFLOW_TRANSITIONS
+        from core.workflow_manager import WorkflowManager
+        wf = WorkflowManager(self.db)
+        state = self.doc["state"]
+        next_states = WORKFLOW_TRANSITIONS.get(state, [])
+        if not next_states:
+            return
+        new_state = next_states[0]
+        r = QMessageBox.question(
+            self, "Conferma rilascio",
+            f"Avanzare lo stato da '{state}' a '{new_state}'?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if r != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            wf.change_state(self.doc["id"], new_state, self.user["id"], shared_paths=self.sp)
+            QMessageBox.information(self, "Stato aggiornato", f"Stato → {new_state}")
+            self._refresh()
+        except Exception as e:
+            QMessageBox.critical(self, "Errore", str(e))
+
+    # ------------------------------------------------------------------
+    #  M-7: apri cartella in Esplora risorse
+    # ------------------------------------------------------------------
+    def _do_open_folder(self):
+        if not self.file_path:
+            return
+        import os
+        folder = Path(self.file_path).parent
+        if folder.exists():
+            os.startfile(str(folder))
+
+    # ------------------------------------------------------------------
+    #  M-2: ripristina geometria salvata
+    # ------------------------------------------------------------------
+    def _restore_geometry(self):
+        try:
+            from config import load_local_config
+            cfg = load_local_config()
+            g = cfg.get("panel_geometry", {})
+            if g and all(k in g for k in ("x", "y", "w", "h")):
+                self.setGeometry(g["x"], g["y"], g["w"], g["h"])
+        except Exception:
+            pass
+
+    # ------------------------------------------------------------------
+    #  M-3: tray icon callbacks
+    # ------------------------------------------------------------------
+    def _on_tray_activated(self, reason):
+        if reason == QSystemTrayIcon.ActivationReason.DoubleClick:
+            self.showNormal()
+            self.activateWindow()
+
+    def _quit_app(self):
+        if self._poller:
+            self._poller.stop()
+        self._tray.hide()
+        QApplication.quit()
+
+    # ------------------------------------------------------------------
+    #  M-2+M-3: intercetta chiusura → nasconde nel tray + salva geometria
+    # ------------------------------------------------------------------
+    def closeEvent(self, event):
+        # Salva posizione e dimensione
+        try:
+            from config import save_local_config
+            g = self.geometry()
+            save_local_config({"panel_geometry": {
+                "x": g.x(), "y": g.y(), "w": g.width(), "h": g.height()
+            }})
+        except Exception:
+            pass
+        # Nascondi nel tray invece di chiudere
+        event.ignore()
+        self.hide()
+
+    # ------------------------------------------------------------------
     def _save_active_sw_doc(self):
         """Salva il documento attivo in SolidWorks via COM (silenzioso se SW non disponibile)."""
         try:
@@ -980,6 +1318,7 @@ def main():
     app = QApplication(sys.argv)
     app.setApplicationName("PDM-SW Panel")
     app.setStyle("Fusion")
+    app.setQuitOnLastWindowClosed(False)  # Il tray mantiene vivo il processo
 
     panel = PDMPanel(file_path)
     panel.show()
