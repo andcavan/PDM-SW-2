@@ -3975,3 +3975,9 @@ RuntimeError: Pack and Go non disponibile: (-2147352571, 'Incompatibilità tra ti
 2026-03-14 14:52:56 [DEBUG] Lock 1569685074480 acquired on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
 2026-03-14 14:52:56 [DEBUG] Attempting to release lock 1569685074480 on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
 2026-03-14 14:52:56 [DEBUG] Lock 1569685074480 released on C:\Users\prog3\Desktop\APP MECCANICA\_pdm2\database\pdm.lock
+2026-03-14 16:17:42 [INFO] pdm_panel avviato  |  file=
+2026-03-14 16:18:11 [INFO] pdm_panel avviato  |  file=
+2026-03-14 16:18:35 [INFO] pdm_panel avviato  |  file=C:\Users\prog3\Namas Dropbox\E\Namas\BAT\PROJECT POUCHES\03 - DESIGN SKETCHES\RPM014\RPM38\RPM38006.SLDDRW
+2026-03-16 22:24:58 [INFO] pdm_panel avviato  |  file=C:\Users\prog3\Desktop\APP MECCANICA\_ws2\AAA_0100-9991.SLDASM
+2026-03-16 22:25:44 [INFO] pdm_panel avviato  |  file=C:\Users\prog3\Desktop\APP MECCANICA\_ws2\AAA_0100-9991.SLDDRW
+2026-03-16 22:28:53 [INFO] pdm_panel avviato  |  file=C:\Users\prog3\Desktop\APP MECCANICA\_ws2\AAA_0100-V001.SLDASM

@@ -30,6 +30,7 @@ from PyQt6.QtWidgets import (
     QApplication, QDialog, QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QPushButton, QFrame, QMessageBox, QLineEdit,
     QComboBox, QGroupBox, QSizePolicy, QSystemTrayIcon, QMenu, QCheckBox,
+    QButtonGroup, QRadioButton,
 )
 from PyQt6.QtCore import Qt, QTimer, QThread, pyqtSignal
 from PyQt6.QtGui import QFont, QIcon, QPixmap, QPainter, QColor
@@ -345,6 +346,30 @@ class CreateCodeDialog(QDialog):
             self.chk_companion.hide()
         layout.addWidget(self.chk_companion)
 
+        # --- Modalità salvataggio ---
+        self._save_mode_group = QButtonGroup(self)
+        self.rdo_rename = QRadioButton("Salva con nome")
+        self.rdo_copy   = QRadioButton("Salva come copia")
+        self.rdo_rename.setChecked(True)
+        self.rdo_rename.setToolTip(
+            "Il file viene rinominato in SolidWorks.\n"
+            "I riferimenti di DRW e ASM aperti vengono aggiornati automaticamente.\n"
+            "Se DRW + PRT: il PRT viene salvato prima così il DRW referenzia il file codificato."
+        )
+        self.rdo_copy.setToolTip(
+            "Viene salvata una copia con il nuovo nome codice.\n"
+            "Il file originale rimane aperto e invariato in SolidWorks.\n"
+            "⚠ Il DRW copiato manterrà il riferimento al PRT/ASM originale."
+        )
+        self._save_mode_group.addButton(self.rdo_rename, 0)
+        self._save_mode_group.addButton(self.rdo_copy,   1)
+        save_grp = QGroupBox("Modalità salvataggio")
+        save_layout = QVBoxLayout(save_grp)
+        save_layout.setSpacing(4)
+        save_layout.addWidget(self.rdo_rename)
+        save_layout.addWidget(self.rdo_copy)
+        layout.addWidget(save_grp)
+
         # Bottoni
         btn_row = QHBoxLayout()
         btn_row.addStretch()
@@ -483,10 +508,31 @@ class CreateCodeDialog(QDialog):
             # Tipo documento coerente con l'estensione effettiva
             doc_type = EXT_TO_TYPE.get(ext, self.doc_type)
             dest_ws = ws_root / f"{code}{ext}"
+            copy_mode = self.rdo_copy.isChecked()
+
+            # --- Pre-save companion PRT prima del DRW (solo "Salva con nome") ---
+            # SW aggiorna automaticamente il riferimento DRW→PRT in memoria
+            if (doc_type == "Disegno"
+                    and not copy_mode
+                    and self.companion_path
+                    and self.chk_companion.isChecked()):
+                comp_ext_pre = self.companion_path.suffix
+                comp_dest_pre = ws_root / f"{code}{comp_ext_pre}"
+                try:
+                    import win32com.client as _wc
+                    _sw_pre = _wc.GetActiveObject("SldWorks.Application")
+                    comp_doc_pre = _sw_pre.GetOpenDocumentByName(str(self.companion_path)) if _sw_pre else None
+                    if comp_doc_pre:
+                        self._sw_save_as(comp_doc_pre, comp_dest_pre, copy=False)
+                        logging.info("Pre-save companion PRT per aggiornare riferimenti DRW: %s", comp_dest_pre)
+                    else:
+                        logging.warning("Pre-save companion: documento non aperto in SW")
+                except Exception as pre_err:
+                    logging.warning("Pre-save companion fallito (riferimento DRW non aggiornato): %s", pre_err)
 
             # --- Save As via COM oppure copia fisica ---
             saved = False
-            logging.info("Tentativo salvataggio: sw_doc=%s dest_ws=%s", bool(sw_doc), dest_ws)
+            logging.info("Tentativo salvataggio: sw_doc=%s dest_ws=%s copy_mode=%s", bool(sw_doc), dest_ws, copy_mode)
             if sw_doc:
                 try:
                     # Se destinazione == sorgente non serve SaveAs
@@ -495,9 +541,8 @@ class CreateCodeDialog(QDialog):
                         logging.info("File già in workspace con nome corretto, skip SaveAs")
                         saved = True
                     else:
-                        sw_doc.SaveAs3(str(dest_ws), 0, 0)
-                        if dest_ws.exists():
-                            saved = True
+                        saved = self._sw_save_as(sw_doc, dest_ws, copy=copy_mode)
+                        if saved:
                             logging.info("SW SaveAs3 OK → %s", dest_ws)
                         else:
                             logging.warning("SaveAs3 non ha creato il file")
@@ -596,19 +641,21 @@ class CreateCodeDialog(QDialog):
             comp_msg = ""
             if self.companion_path and self.chk_companion.isChecked():
                 try:
-                    self._code_companion(code, doc_id, mid, gid, level, title)
+                    self._code_companion(code, doc_id, mid, gid, level, title, copy_mode=copy_mode)
                     comp_type = EXT_TO_TYPE.get(self.companion_path.suffix.upper(), "")
                     comp_msg = f"\n\nCompanion ({comp_type}) codificato: {self.companion_path.name}"
                 except Exception as comp_err:
                     logging.warning("Companion non codificato: %s", comp_err)
                     comp_msg = f"\n\n⚠ Companion non codificato:\n{comp_err}"
 
+            mode_note = "Salva con nome" if not copy_mode else "Salva come copia  ⚠ riferimenti DRW → PRT non aggiornati"
             QMessageBox.information(
                 self, "Documento creato",
                 f"Codice: {code}  rev.00  [{self.doc_type}]\n"
                 f"Titolo: {title}\n\n"
                 f"Workspace:  {dest_ws}\n"
-                f"Archivio:   {arch_file}"
+                f"Archivio:   {arch_file}\n"
+                f"Modalità:   {mode_note}"
                 f"{comp_msg}"
             )
             self.accept()
@@ -616,6 +663,17 @@ class CreateCodeDialog(QDialog):
         except Exception as e:
             logging.error("Errore creazione documento: %s", e, exc_info=True)
             QMessageBox.critical(self, "Errore", str(e))
+
+    # ------------------------------------------------------------------
+    def _sw_save_as(self, sw_doc, dest_path: Path, copy: bool) -> bool:
+        """SaveAs3 con flag corretto: copy=False → Save As (flag 0), copy=True → Save as Copy (flag 2)."""
+        try:
+            options = 2 if copy else 0
+            sw_doc.SaveAs3(str(dest_path), 0, options)
+            return dest_path.exists()
+        except Exception as e:
+            logging.warning("SaveAs3 fallita: %s", e)
+            return False
 
     # ------------------------------------------------------------------
     def _find_companion_path(self) -> Optional[Path]:
@@ -656,10 +714,11 @@ class CreateCodeDialog(QDialog):
 
     # ------------------------------------------------------------------
     def _code_companion(self, code: str, parent_doc_id: int,
-                        mid: int, gid, level: int, title: str):
+                        mid: int, gid, level: int, title: str, copy_mode: bool = False):
         """
         Codifica il file companion con lo stesso codice PDM del documento principale.
         Il DRW riceve parent_doc_id = id del PRT/ASM; il PRT/ASM riceve None.
+        copy_mode=True usa SaveAs Copy (flag 2), False usa SaveAs (flag 0).
         """
         import shutil
         comp = self.companion_path
@@ -678,14 +737,15 @@ class CreateCodeDialog(QDialog):
         dest_ws = ws_root / f"{code}{comp_ext}"
 
         # Salva in workspace: COM SaveAs3 se il file è aperto, altrimenti copia
+        # Nota: se main=DRW + rename mode, il PRT potrebbe essere già stato pre-salvato
+        # da _create(); in tal caso dest_ws esiste già e il SaveAs3 sovrascrive (OK).
         saved = False
         try:
             import win32com.client
             sw = win32com.client.GetActiveObject("SldWorks.Application")
             comp_doc = sw.GetOpenDocumentByName(str(comp)) if sw else None
             if comp_doc:
-                comp_doc.SaveAs3(str(dest_ws), 0, 0)
-                saved = dest_ws.exists()
+                saved = self._sw_save_as(comp_doc, dest_ws, copy=copy_mode)
         except Exception:
             pass
         if not saved and comp.exists():
