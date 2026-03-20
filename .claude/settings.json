@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(python main.py)",
-      "Bash(python -c \":*)"
+      "Bash(python -c \":*)",
+      "Bash(python -m py_compile ui/commercial_item_dialog.py)"
     ]
   }
 }

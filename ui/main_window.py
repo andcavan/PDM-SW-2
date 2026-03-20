@@ -14,6 +14,7 @@ from ui.session import session
 from ui.archive_view import ArchiveView
 from ui.workspace_view import WorkspaceView
 from ui.document_dialog import DocumentDialog
+from ui.commercial_view import CommercialView
 
 
 class MainWindow(QMainWindow):
@@ -24,6 +25,7 @@ class MainWindow(QMainWindow):
         self._archive_view: ArchiveView | None = None
         self._uncoded_view: ArchiveView | None = None
         self._workspace_view: WorkspaceView | None = None
+        self._commercial_view: CommercialView | None = None
         self._build_ui()
         self._build_menu()
         self._build_toolbar()
@@ -64,6 +66,8 @@ class MainWindow(QMainWindow):
             self._uncoded_view.save_layout()
         if self._workspace_view:
             self._workspace_view.save_layout()
+        if self._commercial_view:
+            self._commercial_view.save_layout()
         super().closeEvent(event)
 
     # ------------------------------------------------------------------
@@ -82,12 +86,15 @@ class MainWindow(QMainWindow):
         self._uncoded_view   = ArchiveView(view_mode="uncoded")
         self._workspace_view = WorkspaceView()
 
+        self._commercial_view = CommercialView()
+
         self._archive_view.document_selected.connect(self._open_document)
         self._uncoded_view.document_selected.connect(self._open_document)
 
-        self.tabs.addTab(self._archive_view,   "🗄️  Archivio CAD")
-        self.tabs.addTab(self._uncoded_view,   "🗂️  Non codificati")
-        self.tabs.addTab(self._workspace_view, "📁  Workspace")
+        self.tabs.addTab(self._archive_view,    "🗄️  Archivio CAD")
+        self.tabs.addTab(self._uncoded_view,    "🗂️  Non codificati")
+        self.tabs.addTab(self._workspace_view,  "📁  Workspace")
+        self.tabs.addTab(self._commercial_view, "🏷️  Commerciali")
 
         layout.addWidget(self.tabs)
 
@@ -175,6 +182,23 @@ class MainWindow(QMainWindow):
         act_regen_thumb.triggered.connect(self._regen_thumbnails)
         m_tools.addAction(act_regen_thumb)
 
+        m_tools.addSeparator()
+
+        act_comm_cat = QAction("🏷️  Categorie commerciali…", self)
+        act_comm_cat.setToolTip("Gestisci categorie e sottocategorie degli articoli commerciali")
+        act_comm_cat.triggered.connect(self._open_commercial_categories)
+        m_tools.addAction(act_comm_cat)
+
+        act_comm_sup = QAction("🏭  Fornitori…", self)
+        act_comm_sup.setToolTip("Gestisci il registro fornitori/produttori")
+        act_comm_sup.triggered.connect(self._open_commercial_suppliers)
+        m_tools.addAction(act_comm_sup)
+
+        act_comm_settings = QAction("⚙️  Impostazioni commerciali…", self)
+        act_comm_settings.setToolTip("Configura il percorso archivio file SW commerciali")
+        act_comm_settings.triggered.connect(self._open_commercial_settings)
+        m_tools.addAction(act_comm_settings)
+
         # SolidWorks
         m_sw = mb.addMenu("SolidWorks")
         act_sw_checkout = QAction("Checkout da SW…", self)
@@ -239,6 +263,13 @@ class MainWindow(QMainWindow):
         act_wf.setToolTip("Cambia stato workflow (richiede selezione codice)")
         act_wf.triggered.connect(self._toolbar_workflow)
         tb.addAction(act_wf)
+
+        tb.addSeparator()
+
+        act_new_comm = QAction("🏷️ Nuovo commerciale", self)
+        act_new_comm.setToolTip("Crea nuovo articolo commerciale/normalizzato")
+        act_new_comm.triggered.connect(self._new_commercial_item)
+        tb.addAction(act_new_comm)
 
         tb.addSeparator()
 
@@ -342,6 +373,8 @@ class MainWindow(QMainWindow):
             self._uncoded_view.refresh()
         if self._workspace_view:
             self._workspace_view.refresh()
+        if self._commercial_view:
+            self._commercial_view.refresh()
 
     def _auto_refresh(self):
         try:
@@ -511,6 +544,33 @@ class MainWindow(QMainWindow):
             "<li>Gestione workflow documenti</li>"
             "<li>Codifica automatica</li>"
             "<li>Integrazione SolidWorks via COM / Macro</li>"
+            "<li>Gestione articoli commerciali e normalizzati</li>"
             "</ul>"
             "<p>Nessun server richiesto – max 5 utenti simultanei</p>"
         )
+
+    def _open_commercial_categories(self):
+        from ui.commercial_category_dialog import CommercialCategoryDialog
+        dlg = CommercialCategoryDialog(parent=self)
+        dlg.exec()
+        if self._commercial_view:
+            self._commercial_view.refresh()
+
+    def _open_commercial_suppliers(self):
+        from ui.commercial_supplier_dialog import CommercialSupplierDialog
+        dlg = CommercialSupplierDialog(parent=self)
+        dlg.exec()
+        if self._commercial_view:
+            self._commercial_view.refresh()
+
+    def _open_commercial_settings(self):
+        from ui.commercial_settings_dialog import CommercialSettingsDialog
+        CommercialSettingsDialog(parent=self).exec()
+
+    def _new_commercial_item(self):
+        if not session.commercial:
+            return
+        from ui.commercial_item_dialog import CommercialItemDialog
+        dlg = CommercialItemDialog(parent=self)
+        dlg.saved.connect(lambda _: self._refresh_all())
+        dlg.exec()

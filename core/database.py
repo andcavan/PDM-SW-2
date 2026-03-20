@@ -249,6 +249,148 @@ CREATE INDEX IF NOT EXISTS idx_asm_parent    ON asm_components(parent_id);
 CREATE INDEX IF NOT EXISTS idx_asm_child     ON asm_components(child_id);
 CREATE INDEX IF NOT EXISTS idx_mgrp_machine  ON machine_groups(machine_id);
 CREATE INDEX IF NOT EXISTS idx_hcnt_type     ON hierarchical_counters(counter_type, machine_id, group_id);
+
+-- ============================================================
+-- COMMERCIALI / NORMALIZZATI
+-- ============================================================
+
+-- Categorie commerciali (es. Viteria, Cuscinetti, Elettronica)
+CREATE TABLE IF NOT EXISTS commercial_categories (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_type   TEXT    NOT NULL DEFAULT 'commerciale',  -- 'commerciale' | 'normalizzato'
+    code        TEXT    NOT NULL,               -- es. '0001', '0002'
+    description TEXT    NOT NULL,
+    created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(item_type, code)
+);
+
+-- Sottocategorie (es. Metriche ISO, Cuscinetti a sfere SKF)
+CREATE TABLE IF NOT EXISTS commercial_subcategories (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    category_id     INTEGER NOT NULL REFERENCES commercial_categories(id),
+    code            TEXT    NOT NULL,           -- es. 'ISO', 'DIN', 'SKF'
+    description     TEXT    NOT NULL,
+    desc_template   TEXT,                       -- template descrizione: es. 'Vite M{size} x {length}'
+    active          INTEGER NOT NULL DEFAULT 1,
+    created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(category_id, code)
+);
+
+-- Articoli commerciali e normalizzati
+CREATE TABLE IF NOT EXISTS commercial_items (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    code            TEXT    NOT NULL UNIQUE,    -- es. 5-VIT-ISO-0001
+    item_type       TEXT    NOT NULL DEFAULT 'commerciale', -- 'commerciale' | 'normalizzato'
+    category_id     INTEGER NOT NULL REFERENCES commercial_categories(id),
+    subcategory_id  INTEGER REFERENCES commercial_subcategories(id),
+    description     TEXT    NOT NULL,
+    notes           TEXT,
+    state           TEXT    NOT NULL DEFAULT 'Attivo', -- 'Attivo' | 'Obsoleto'
+    -- Collegamento opzionale a file SolidWorks
+    file_name       TEXT,
+    file_ext        TEXT,                       -- .SLDPRT | .SLDASM
+    archive_path    TEXT,                       -- percorso relativo in archive/
+    thumbnail       TEXT,
+    -- Lock checkout (stesso schema di documents)
+    is_locked       INTEGER NOT NULL DEFAULT 0,
+    locked_by       INTEGER REFERENCES users(id),
+    locked_at       TEXT,
+    locked_ws       TEXT,
+    checkout_md5    TEXT,
+    checkout_size   INTEGER,
+    checkout_mtime  REAL,
+    -- Audit
+    created_by      INTEGER REFERENCES users(id),
+    created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
+    modified_by     INTEGER REFERENCES users(id),
+    modified_at     TEXT    DEFAULT (datetime('now'))
+);
+
+-- Proprietà SolidWorks degli articoli commerciali
+CREATE TABLE IF NOT EXISTS commercial_properties (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_id     INTEGER NOT NULL REFERENCES commercial_items(id),
+    prop_name   TEXT    NOT NULL,
+    prop_value  TEXT,
+    UNIQUE(item_id, prop_name)
+);
+
+-- Fornitori / Produttori
+CREATE TABLE IF NOT EXISTS commercial_suppliers (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT    NOT NULL UNIQUE,
+    short_code  TEXT,                           -- sigla breve, es. 'RS', 'SKF'
+    contact     TEXT,
+    email       TEXT,
+    phone       TEXT,
+    website     TEXT,
+    notes       TEXT,
+    active      INTEGER NOT NULL DEFAULT 1,
+    created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Associazione articolo-fornitore (N:M con dati extra)
+CREATE TABLE IF NOT EXISTS commercial_item_suppliers (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_id         INTEGER NOT NULL REFERENCES commercial_items(id),
+    supplier_id     INTEGER NOT NULL REFERENCES commercial_suppliers(id),
+    supplier_code   TEXT,                       -- codice articolo del fornitore
+    unit_price      REAL,
+    currency        TEXT    NOT NULL DEFAULT 'EUR',
+    lead_time_days  INTEGER,
+    is_preferred    INTEGER NOT NULL DEFAULT 0,
+    notes           TEXT,
+    updated_at      TEXT    NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(item_id, supplier_id)
+);
+
+-- Contatori per la codifica commerciale
+CREATE TABLE IF NOT EXISTS commercial_counters (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_type       TEXT    NOT NULL,           -- 'commerciale' | 'normalizzato'
+    category_id     INTEGER NOT NULL REFERENCES commercial_categories(id),
+    subcategory_id  INTEGER REFERENCES commercial_subcategories(id),
+    last_value      INTEGER NOT NULL DEFAULT 0,
+    UNIQUE(item_type, category_id, subcategory_id)
+);
+
+-- Log checkout articoli commerciali
+CREATE TABLE IF NOT EXISTS commercial_checkout_log (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_id         INTEGER NOT NULL REFERENCES commercial_items(id),
+    user_id         INTEGER NOT NULL REFERENCES users(id),
+    action          TEXT    NOT NULL,           -- 'checkout' | 'checkin' | 'undo_checkout'
+    workstation     TEXT,
+    workspace_path  TEXT,
+    timestamp       TEXT    NOT NULL DEFAULT (datetime('now')),
+    notes           TEXT,
+    checkout_md5    TEXT,
+    checkout_size   INTEGER,
+    checkout_mtime  REAL
+);
+
+-- Componenti commerciali nelle BOM degli assiemi CAD
+CREATE TABLE IF NOT EXISTS asm_commercial_components (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    parent_doc_id       INTEGER NOT NULL REFERENCES documents(id),
+    child_commercial_id INTEGER NOT NULL REFERENCES commercial_items(id),
+    quantity            REAL    NOT NULL DEFAULT 1,
+    position            TEXT,
+    notes               TEXT,
+    UNIQUE(parent_doc_id, child_commercial_id)
+);
+
+-- INDICI COMMERCIALI
+CREATE INDEX IF NOT EXISTS idx_comm_item_code    ON commercial_items(code);
+CREATE INDEX IF NOT EXISTS idx_comm_item_state   ON commercial_items(state);
+CREATE INDEX IF NOT EXISTS idx_comm_item_type    ON commercial_items(item_type);
+CREATE INDEX IF NOT EXISTS idx_comm_item_cat     ON commercial_items(category_id);
+CREATE INDEX IF NOT EXISTS idx_comm_item_subcat  ON commercial_items(subcategory_id);
+CREATE INDEX IF NOT EXISTS idx_comm_item_locked  ON commercial_items(is_locked);
+CREATE INDEX IF NOT EXISTS idx_comm_isup_item    ON commercial_item_suppliers(item_id);
+CREATE INDEX IF NOT EXISTS idx_comm_isup_sup     ON commercial_item_suppliers(supplier_id);
+CREATE INDEX IF NOT EXISTS idx_asm_comm_parent   ON asm_commercial_components(parent_doc_id);
+CREATE INDEX IF NOT EXISTS idx_asm_comm_child    ON asm_commercial_components(child_commercial_id);
                 """)
                 conn.commit()
         # Ripara eventuali FK corrotti da migration precedente
@@ -256,6 +398,8 @@ CREATE INDEX IF NOT EXISTS idx_hcnt_type     ON hierarchical_counters(counter_ty
         # Esegui migrazioni colonne aggiuntive su tabelle esistenti
         self._migrate()
         self._migrate_documents_unique()
+        # Crea le tabelle commerciali su DB esistenti
+        self._migrate_commercial()
 
     def _migrate_documents_unique(self):
         """
@@ -503,6 +647,150 @@ CREATE INDEX IF NOT EXISTS idx_hcnt_type     ON hierarchical_counters(counter_ty
                             UNIQUE(document_id, user_id)
                         )
                     """)
+                    conn.commit()
+        except Exception:
+            pass
+
+    # ------------------------------------------------------------------
+    # Migrazione tabelle commerciali (per DB creati prima di questa feature)
+    # ------------------------------------------------------------------
+    def _migrate_commercial(self):
+        """Crea le tabelle commerciali se non esistono (migrazioni DB esistenti)."""
+        tables_sql = [
+            """CREATE TABLE IF NOT EXISTS commercial_categories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                item_type TEXT NOT NULL DEFAULT 'commerciale',
+                code TEXT NOT NULL,
+                description TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                UNIQUE(item_type, code)
+            )""",
+            """CREATE TABLE IF NOT EXISTS commercial_subcategories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                category_id INTEGER NOT NULL REFERENCES commercial_categories(id),
+                code TEXT NOT NULL,
+                description TEXT NOT NULL,
+                desc_template TEXT,
+                active INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                UNIQUE(category_id, code)
+            )""",
+            """CREATE TABLE IF NOT EXISTS commercial_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                code TEXT NOT NULL UNIQUE,
+                item_type TEXT NOT NULL DEFAULT 'commerciale',
+                category_id INTEGER NOT NULL REFERENCES commercial_categories(id),
+                subcategory_id INTEGER REFERENCES commercial_subcategories(id),
+                description TEXT NOT NULL,
+                notes TEXT,
+                state TEXT NOT NULL DEFAULT 'Attivo',
+                file_name TEXT,
+                file_ext TEXT,
+                archive_path TEXT,
+                thumbnail TEXT,
+                is_locked INTEGER NOT NULL DEFAULT 0,
+                locked_by INTEGER REFERENCES users(id),
+                locked_at TEXT,
+                locked_ws TEXT,
+                checkout_md5 TEXT,
+                checkout_size INTEGER,
+                checkout_mtime REAL,
+                created_by INTEGER REFERENCES users(id),
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                modified_by INTEGER REFERENCES users(id),
+                modified_at TEXT DEFAULT (datetime('now'))
+            )""",
+            """CREATE TABLE IF NOT EXISTS commercial_properties (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                item_id INTEGER NOT NULL REFERENCES commercial_items(id),
+                prop_name TEXT NOT NULL,
+                prop_value TEXT,
+                UNIQUE(item_id, prop_name)
+            )""",
+            """CREATE TABLE IF NOT EXISTS commercial_suppliers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                short_code TEXT,
+                contact TEXT,
+                email TEXT,
+                phone TEXT,
+                website TEXT,
+                notes TEXT,
+                active INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            )""",
+            """CREATE TABLE IF NOT EXISTS commercial_item_suppliers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                item_id INTEGER NOT NULL REFERENCES commercial_items(id),
+                supplier_id INTEGER NOT NULL REFERENCES commercial_suppliers(id),
+                supplier_code TEXT,
+                unit_price REAL,
+                currency TEXT NOT NULL DEFAULT 'EUR',
+                lead_time_days INTEGER,
+                is_preferred INTEGER NOT NULL DEFAULT 0,
+                notes TEXT,
+                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+                UNIQUE(item_id, supplier_id)
+            )""",
+            """CREATE TABLE IF NOT EXISTS commercial_counters (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                item_type TEXT NOT NULL,
+                category_id INTEGER NOT NULL REFERENCES commercial_categories(id),
+                subcategory_id INTEGER REFERENCES commercial_subcategories(id),
+                last_value INTEGER NOT NULL DEFAULT 0,
+                UNIQUE(item_type, category_id, subcategory_id)
+            )""",
+            """CREATE TABLE IF NOT EXISTS commercial_checkout_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                item_id INTEGER NOT NULL REFERENCES commercial_items(id),
+                user_id INTEGER NOT NULL REFERENCES users(id),
+                action TEXT NOT NULL,
+                workstation TEXT,
+                workspace_path TEXT,
+                timestamp TEXT NOT NULL DEFAULT (datetime('now')),
+                notes TEXT,
+                checkout_md5 TEXT,
+                checkout_size INTEGER,
+                checkout_mtime REAL
+            )""",
+            """CREATE TABLE IF NOT EXISTS asm_commercial_components (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                parent_doc_id INTEGER NOT NULL REFERENCES documents(id),
+                child_commercial_id INTEGER NOT NULL REFERENCES commercial_items(id),
+                quantity REAL NOT NULL DEFAULT 1,
+                position TEXT,
+                notes TEXT,
+                UNIQUE(parent_doc_id, child_commercial_id)
+            )""",
+        ]
+        # Migrazioni colonne per DB esistenti
+        alter_sql = [
+            # Aggiunge item_type a commercial_categories se mancante
+            "ALTER TABLE commercial_categories ADD COLUMN item_type TEXT NOT NULL DEFAULT 'commerciale'",
+        ]
+        indexes_sql = [
+            "CREATE INDEX IF NOT EXISTS idx_comm_item_code   ON commercial_items(code)",
+            "CREATE INDEX IF NOT EXISTS idx_comm_item_state  ON commercial_items(state)",
+            "CREATE INDEX IF NOT EXISTS idx_comm_item_type   ON commercial_items(item_type)",
+            "CREATE INDEX IF NOT EXISTS idx_comm_item_cat    ON commercial_items(category_id)",
+            "CREATE INDEX IF NOT EXISTS idx_comm_item_subcat ON commercial_items(subcategory_id)",
+            "CREATE INDEX IF NOT EXISTS idx_comm_item_locked ON commercial_items(is_locked)",
+            "CREATE INDEX IF NOT EXISTS idx_comm_isup_item   ON commercial_item_suppliers(item_id)",
+            "CREATE INDEX IF NOT EXISTS idx_comm_isup_sup    ON commercial_item_suppliers(supplier_id)",
+            "CREATE INDEX IF NOT EXISTS idx_asm_comm_parent  ON asm_commercial_components(parent_doc_id)",
+            "CREATE INDEX IF NOT EXISTS idx_asm_comm_child   ON asm_commercial_components(child_commercial_id)",
+        ]
+        try:
+            with self.write_lock():
+                with self.connection() as conn:
+                    for sql in tables_sql + indexes_sql:
+                        conn.execute(sql)
+                    # ALTER TABLE per DB esistenti: ignora errori se colonna già presente
+                    for sql in alter_sql:
+                        try:
+                            conn.execute(sql)
+                        except Exception:
+                            pass
                     conn.commit()
         except Exception:
             pass

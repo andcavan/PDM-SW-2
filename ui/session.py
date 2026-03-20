@@ -13,6 +13,7 @@ from core.checkout_manager import CheckoutManager
 from core.workflow_manager import WorkflowManager
 from core.properties_manager import PropertiesManager
 from core.asm_manager import AsmManager
+from core.commercial_manager import CommercialManager
 
 
 class AppSession:
@@ -27,13 +28,14 @@ class AppSession:
         self.profile_name: str      = get_active_profile_name()
 
         # Manager (inizializzati dopo connessione DB)
-        self.users:      Optional[UserManager]       = None
-        self.coding:     Optional[CodingManager]     = None
-        self.files:      Optional[FileManager]       = None
-        self.checkout:   Optional[CheckoutManager]   = None
-        self.workflow:   Optional[WorkflowManager]   = None
-        self.properties: Optional[PropertiesManager] = None
-        self.asm:        Optional[AsmManager]        = None
+        self.users:      Optional[UserManager]        = None
+        self.coding:     Optional[CodingManager]      = None
+        self.files:      Optional[FileManager]        = None
+        self.checkout:   Optional[CheckoutManager]    = None
+        self.workflow:   Optional[WorkflowManager]    = None
+        self.properties: Optional[PropertiesManager]  = None
+        self.asm:        Optional[AsmManager]         = None
+        self.commercial: Optional[CommercialManager]  = None
 
     # ------------------------------------------------------------------
     def connect(self, shared_root: str):
@@ -48,6 +50,7 @@ class AppSession:
         self.workflow   = WorkflowManager(self.db)
         self.properties = PropertiesManager(self.db)
         self.asm        = AsmManager(self.db)
+        self.commercial = CommercialManager(self.db)
 
     def switch_profile(self, name: str):
         """Cambia profilo attivo, riconnette al DB e ri-autentica l'utente."""

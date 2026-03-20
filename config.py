@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 
 APP_NAME    = "PDM-SW"
-APP_VERSION = "2.10.19"
+APP_VERSION = "2.10.20"
 
 # Cartella locale dell'applicazione (stessa posizione di questo file)
 APP_DIR = Path(__file__).parent.resolve()
@@ -285,3 +285,24 @@ ROLE_PERMISSIONS = {
         "release": True, "admin": True,
     },
 }
+
+# ---- Commerciali / Normalizzati ------------------------------------------
+
+# Prefisso numerico nel codice: 5 = commerciale, 6 = normalizzato
+COMMERCIAL_ITEM_TYPES = {
+    "commerciale":  "5",
+    "normalizzato": "6",
+}
+
+COMMERCIAL_WORKFLOW_STATES = {
+    "Attivo":   {"color": "#4CAF50"},
+    "Obsoleto": {"color": "#9E9E9E"},
+}
+
+COMMERCIAL_WORKFLOW_TRANSITIONS = {
+    "Attivo":   ["Obsoleto"],
+    "Obsoleto": [],
+}
+
+# Stati in cui non è consentito checkout/modifica
+COMMERCIAL_READONLY_STATES = ("Obsoleto",)

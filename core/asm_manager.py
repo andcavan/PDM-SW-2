@@ -82,6 +82,41 @@ class AsmManager:
                 result.extend(children)
         return result
 
+    def get_full_bom(self, parent_id: int,
+                     _visited: Optional[set] = None) -> list:
+        """
+        BOM completa che include anche gli articoli commerciali.
+
+        Ogni elemento ha 'bom_type': 'cad' o 'commercial'.
+        Articoli commerciali vengono aggiunti al primo livello
+        (non hanno gerarchia propria).
+        """
+        cad_items  = self.get_bom_flat(parent_id, _visited)
+        for it in cad_items:
+            it["bom_type"] = "cad"
+
+        # Articoli commerciali diretti dell'assieme
+        comm_rows = self.db.fetchall(
+            """
+            SELECT acc.*, ci.code, ci.item_type, ci.description AS title,
+                   ci.state,
+                   (SELECT s.name
+                    FROM commercial_item_suppliers cis
+                    JOIN commercial_suppliers s ON s.id = cis.supplier_id
+                    WHERE cis.item_id = ci.id AND cis.is_preferred = 1
+                    LIMIT 1) AS preferred_supplier
+            FROM asm_commercial_components acc
+            JOIN commercial_items ci ON ci.id = acc.child_commercial_id
+            WHERE acc.parent_doc_id = ?
+            ORDER BY ci.code
+            """,
+            (parent_id,),
+        )
+        for it in comm_rows:
+            it["bom_type"] = "commercial"
+
+        return cad_items + list(comm_rows)
+
     def get_where_used(self, child_id: int) -> list:
         """In quali assiemi è usato questo documento."""
         return self.db.fetchall(

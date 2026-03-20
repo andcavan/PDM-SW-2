@@ -1,6 +1,6 @@
 # PDM-SW – Sistema PDM per SolidWorks
 
-> **Versione 2.10.19** - Fix alias duplicati e sync bidirezionale title/description
+> **Versione 2.10.20** - Modulo Commerciali/Normalizzati: categoria per tipo, codici manuali, duplica articolo, percorso archivio configurabile
 
 Sistema PDM (Product Data Management) leggero, senza server, per la gestione di documenti SolidWorks in ambiente di rete con architettura peer‑to‑peer.
 
@@ -28,6 +28,19 @@ python make_dist.py --clean   # pulisce dist/ prima di procedere
 ---
 
 ## Changelog
+
+### v2.10.20 — 2026-03-20
+**Modulo Commerciali/Normalizzati: miglioramenti e nuove funzionalità**
+
+- **`core/database.py`** — aggiunta colonna `item_type` in `commercial_categories` (con migrazione ALTER TABLE); constraint UNIQUE cambiato in `(item_type, code)`; rimossa colonna `active`.
+- **`core/commercial_coding_config.py`** — codici categoria/sottocategoria a 4 cifre; aggiunto campo `commercial_archive_path`; metodi helper `next_cat_code`, `next_sub_code`.
+- **`core/commercial_manager.py`** — `get_categories` e `create_category` filtrano/accettano `item_type`; aggiunto `_commercial_archive_root()` per percorso archivio configurabile; aggiornati `_archive_file_path()` e `link_sw_file()`; aggiunto `duplicate_item()`.
+- **`ui/commercial_category_dialog.py`** — riscrittura completa: due schede (Commerciali/Normalizzati), box separati categorie e sottocategorie, campi codice editabili con pre-compilazione suggerita, rimosso campo "Attivo".
+- **`ui/commercial_view.py`** — colonne albero ampliate a 7 (Descrizione, Sottocategoria); pulsante "Nuovo" spostato in toolbar; rimosso pulsante ↻ (usa toolbar); aggiunta voce "Duplica articolo" nel menu contestuale.
+- **`ui/commercial_item_dialog.py`** — sottocategoria obbligatoria; supporto parametro `prefill` per duplica (mostra finestra pre-compilata prima di generare codice); filtro categorie per tipo articolo.
+- **`ui/commercial_settings_dialog.py`** — nuovo dialog per configurare il percorso archivio file SW commerciali.
+- **`ui/main_window.py`** — aggiunto pulsante "🏷️ Nuovo commerciale" in toolbar; aggiunta voce "⚙️ Impostazioni commerciali…" nel menu Strumenti.
+- **`config.py`** — versione aggiornata a `2.10.20`.
 
 ### v2.10.19
 **Fix: alias duplicati e mancato aggiornamento title/description**

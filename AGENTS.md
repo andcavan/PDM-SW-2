@@ -13,7 +13,7 @@
 - Non proporre architetture complesse se non richieste.
 - Alla creazione dell'app genera la versione.
 - Ogni modifica o upgrade deve aggiornare la versione.
-- Ad ogni versione aggiorna il readme
+- Ad ogni versione aggiorna il readme con versione, data e modifche apportate
 
 ## Codice
 - Mantieni modifiche piccole e focalizzate.

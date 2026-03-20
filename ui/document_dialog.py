@@ -307,6 +307,36 @@ class DocumentDialog(QDialog):
             3, QHeaderView.ResizeMode.Stretch
         )
         layout.addWidget(self.tbl_bom)
+
+        # ── Sezione articoli commerciali nella BOM ─────────────────────
+        from PyQt6.QtWidgets import QGroupBox
+        grp_comm = QGroupBox("Articoli Commerciali / Normalizzati")
+        comm_lay = QVBoxLayout(grp_comm)
+
+        comm_btn_row = QHBoxLayout()
+        self.btn_add_commercial = QPushButton("+ Aggiungi articolo commerciale")
+        self.btn_add_commercial.clicked.connect(self._add_commercial_component)
+        self.btn_del_commercial = QPushButton("- Rimuovi")
+        self.btn_del_commercial.clicked.connect(self._del_commercial_component)
+        comm_btn_row.addWidget(self.btn_add_commercial)
+        comm_btn_row.addWidget(self.btn_del_commercial)
+        comm_btn_row.addStretch()
+        comm_lay.addLayout(comm_btn_row)
+
+        self.tbl_bom_commercial = QTableWidget(0, 5)
+        self.tbl_bom_commercial.setHorizontalHeaderLabels(
+            ["Codice", "Tipo", "Descrizione", "Fornitore pref.", "Qtà"]
+        )
+        self.tbl_bom_commercial.horizontalHeader().setSectionResizeMode(
+            2, QHeaderView.ResizeMode.Stretch
+        )
+        self.tbl_bom_commercial.setMaximumHeight(160)
+        self.tbl_bom_commercial.setEditTriggers(
+            QTableWidget.EditTrigger.NoEditTriggers
+        )
+        comm_lay.addWidget(self.tbl_bom_commercial)
+        layout.addWidget(grp_comm)
+
         return w
 
     # ---- Tab STORICO ----
@@ -943,6 +973,7 @@ class DocumentDialog(QDialog):
             return
         comps = self._collect_bom_rows(self.document_id)
         self.tbl_bom.setRowCount(0)
+        self._refresh_bom_commercial()
         for depth, c in comps:
             row = self.tbl_bom.rowCount()
             self.tbl_bom.insertRow(row)
@@ -978,6 +1009,54 @@ class DocumentDialog(QDialog):
             if c.get("doc_type") == "Assieme":
                 rows.extend(self._collect_bom_rows(c["child_id"], depth + 1, visited))
         return rows
+
+    def _refresh_bom_commercial(self):
+        """Aggiorna la tabella articoli commerciali nella BOM."""
+        if not hasattr(self, "tbl_bom_commercial") or not self.document_id:
+            return
+        if not session.commercial:
+            return
+        items = session.commercial.get_commercial_bom(self.document_id)
+        self.tbl_bom_commercial.setRowCount(0)
+        for it in items:
+            r = self.tbl_bom_commercial.rowCount()
+            self.tbl_bom_commercial.insertRow(r)
+            type_label = "5-COM" if it.get("item_type") == "commerciale" else "6-NOR"
+            self.tbl_bom_commercial.setItem(r, 0, QTableWidgetItem(it.get("code") or ""))
+            self.tbl_bom_commercial.setItem(r, 1, QTableWidgetItem(type_label))
+            self.tbl_bom_commercial.setItem(r, 2, QTableWidgetItem(it.get("description") or ""))
+            self.tbl_bom_commercial.setItem(r, 3, QTableWidgetItem(it.get("preferred_supplier") or ""))
+            qty_item = QTableWidgetItem(str(it.get("quantity", 1)))
+            qty_item.setData(Qt.ItemDataRole.UserRole, it["id"])  # link_id
+            self.tbl_bom_commercial.setItem(r, 4, qty_item)
+
+    def _add_commercial_component(self):
+        """Aggiunge un articolo commerciale alla BOM dell'assieme."""
+        if not self.document_id or not session.commercial:
+            return
+        from ui.commercial_item_selector import CommercialItemSelectorDialog
+        dlg = CommercialItemSelectorDialog(parent=self)
+        if dlg.exec() and dlg.selected_id:
+            try:
+                session.commercial.add_to_bom(
+                    self.document_id, dlg.selected_id, quantity=1.0
+                )
+                self._refresh_bom_commercial()
+            except Exception as e:
+                QMessageBox.critical(self, "Errore", str(e))
+
+    def _del_commercial_component(self):
+        """Rimuove l'articolo commerciale selezionato dalla BOM."""
+        row = self.tbl_bom_commercial.currentRow()
+        if row < 0:
+            return
+        qty_item = self.tbl_bom_commercial.item(row, 4)
+        if not qty_item:
+            return
+        link_id = qty_item.data(Qt.ItemDataRole.UserRole)
+        if link_id is not None and session.commercial:
+            session.commercial.remove_from_bom(link_id)
+            self._refresh_bom_commercial()
 
     def _refresh_history(self):
         if not hasattr(self, "tbl_history"):
