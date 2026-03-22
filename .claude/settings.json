@@ -3,7 +3,9 @@
     "allow": [
       "Bash(python main.py)",
       "Bash(python -c \":*)",
-      "Bash(python -m py_compile ui/commercial_item_dialog.py)"
+      "Bash(python -m py_compile ui/commercial_item_dialog.py)",
+      "Bash(find 'c:\\\\Users\\\\prog3\\\\Desktop\\\\APP MECCANICA\\\\PDM-SW-2' -name *commercial_manager* -o -name *manager*.py)",
+      "Bash(find 'c:\\\\Users\\\\prog3\\\\Desktop\\\\APP MECCANICA\\\\PDM-SW-2' -name *.sql -o -name *schema* -o -name database.py)"
     ]
   }
 }

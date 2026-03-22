@@ -114,7 +114,7 @@ class CodingDialog(QDialog):
         r.addWidget(btn_save_m)
         right.addLayout(r)
 
-        btn_bulk_m = QPushButton("Importa / Genera serie…")
+        btn_bulk_m = QPushButton("Importa…")
         btn_bulk_m.clicked.connect(self._bulk_machines)
         right.addWidget(btn_bulk_m)
         right.addStretch()
@@ -197,7 +197,7 @@ class CodingDialog(QDialog):
         r.addWidget(btn_save_g)
         right.addLayout(r)
 
-        btn_bulk_g = QPushButton("Importa / Genera serie…")
+        btn_bulk_g = QPushButton("Importa…")
         btn_bulk_g.clicked.connect(self._bulk_groups)
         right.addWidget(btn_bulk_g)
         right.addStretch()

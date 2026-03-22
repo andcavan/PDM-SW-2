@@ -3,8 +3,8 @@
 # =============================================================================
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-    QPushButton, QListWidget, QListWidgetItem, QSplitter,
-    QWidget, QTabWidget, QMessageBox, QFrame,
+    QPushButton, QGroupBox, QListWidget, QListWidgetItem, QSplitter,
+    QWidget, QTabWidget, QMessageBox,
 )
 from PyQt6.QtCore import Qt
 
@@ -50,13 +50,9 @@ class _CategoryPanel(QWidget):
         self.lst_cat.currentItemChanged.connect(self._on_cat_selected)
         cat_lay.addWidget(self.lst_cat)
 
-        sep = QFrame()
-        sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setFrameShadow(QFrame.Shadow.Sunken)
-        cat_lay.addWidget(sep)
-
-        form_cat = QVBoxLayout()
-        form_cat.setSpacing(3)
+        grp_cat = QGroupBox("Categoria")
+        form_cat = QVBoxLayout(grp_cat)
+        form_cat.setSpacing(6)
 
         row_code = QHBoxLayout()
         row_code.addWidget(QLabel("Codice:"))
@@ -74,22 +70,26 @@ class _CategoryPanel(QWidget):
         row_desc.addWidget(self.txt_cat_desc)
         form_cat.addLayout(row_desc)
 
-        cat_lay.addLayout(form_cat)
+        cat_lay.addWidget(grp_cat)
 
         btn_row_cat = QHBoxLayout()
         self.btn_cat_new = QPushButton("+ Nuova")
-        self.btn_cat_new.setFixedHeight(26)
         self.btn_cat_new.clicked.connect(self._create_category)
         self.btn_cat_edit = QPushButton("Modifica")
-        self.btn_cat_edit.setFixedHeight(26)
+        self.btn_cat_edit.setObjectName("btn_primary")
         self.btn_cat_edit.clicked.connect(self._edit_category)
         self.btn_cat_del = QPushButton("Elimina")
-        self.btn_cat_del.setFixedHeight(26)
+        self.btn_cat_del.setObjectName("btn_warning")
         self.btn_cat_del.clicked.connect(self._delete_category)
         btn_row_cat.addWidget(self.btn_cat_new)
-        btn_row_cat.addWidget(self.btn_cat_edit)
+        btn_row_cat.addStretch()
         btn_row_cat.addWidget(self.btn_cat_del)
+        btn_row_cat.addWidget(self.btn_cat_edit)
         cat_lay.addLayout(btn_row_cat)
+
+        self.btn_cat_bulk = QPushButton("Importa…")
+        self.btn_cat_bulk.clicked.connect(self._bulk_categories)
+        cat_lay.addWidget(self.btn_cat_bulk)
 
         splitter.addWidget(cat_widget)
 
@@ -107,13 +107,9 @@ class _CategoryPanel(QWidget):
         self.lst_sub.currentItemChanged.connect(self._on_sub_selected)
         sub_lay.addWidget(self.lst_sub)
 
-        sep2 = QFrame()
-        sep2.setFrameShape(QFrame.Shape.HLine)
-        sep2.setFrameShadow(QFrame.Shadow.Sunken)
-        sub_lay.addWidget(sep2)
-
-        form_sub = QVBoxLayout()
-        form_sub.setSpacing(3)
+        grp_sub = QGroupBox("Sottocategoria")
+        form_sub = QVBoxLayout(grp_sub)
+        form_sub.setSpacing(6)
 
         row_scode = QHBoxLayout()
         row_scode.addWidget(QLabel("Codice:"))
@@ -138,22 +134,26 @@ class _CategoryPanel(QWidget):
         row_tpl.addWidget(self.txt_sub_tpl)
         form_sub.addLayout(row_tpl)
 
-        sub_lay.addLayout(form_sub)
+        sub_lay.addWidget(grp_sub)
 
         btn_row_sub = QHBoxLayout()
         self.btn_sub_new = QPushButton("+ Nuova")
-        self.btn_sub_new.setFixedHeight(26)
         self.btn_sub_new.clicked.connect(self._create_subcategory)
         self.btn_sub_edit = QPushButton("Modifica")
-        self.btn_sub_edit.setFixedHeight(26)
+        self.btn_sub_edit.setObjectName("btn_primary")
         self.btn_sub_edit.clicked.connect(self._edit_subcategory)
         self.btn_sub_del = QPushButton("Elimina")
-        self.btn_sub_del.setFixedHeight(26)
+        self.btn_sub_del.setObjectName("btn_warning")
         self.btn_sub_del.clicked.connect(self._delete_subcategory)
         btn_row_sub.addWidget(self.btn_sub_new)
-        btn_row_sub.addWidget(self.btn_sub_edit)
+        btn_row_sub.addStretch()
         btn_row_sub.addWidget(self.btn_sub_del)
+        btn_row_sub.addWidget(self.btn_sub_edit)
         sub_lay.addLayout(btn_row_sub)
+
+        self.btn_sub_bulk = QPushButton("Importa…")
+        self.btn_sub_bulk.clicked.connect(self._bulk_subcategories)
+        sub_lay.addWidget(self.btn_sub_bulk)
 
         splitter.addWidget(sub_widget)
         splitter.setSizes([320, 380])
@@ -384,6 +384,37 @@ class _CategoryPanel(QWidget):
         cat_id = self._current_cat_id()
         if cat_id:
             self._load_subcategories(cat_id)
+
+    # ------------------------------------------------------------------
+    # Importazione massiva
+    # ------------------------------------------------------------------
+
+    def _bulk_categories(self):
+        from ui.bulk_commercial_import_dialog import BulkCommercialImportDialog
+        dlg = BulkCommercialImportDialog(
+            mode="categories",
+            item_type=self.item_type,
+            parent=self,
+        )
+        dlg.exec()
+        self._load_categories()
+
+    def _bulk_subcategories(self):
+        cat_id = self._current_cat_id()
+        if cat_id is None:
+            QMessageBox.information(self, "Seleziona", "Selezionare prima una categoria.")
+            return
+        cat_item = self.lst_cat.currentItem()
+        cat_code = cat_item.text().split()[0] if cat_item else ""
+        from ui.bulk_commercial_import_dialog import BulkCommercialImportDialog
+        dlg = BulkCommercialImportDialog(
+            mode="subcategories",
+            category_id=cat_id,
+            category_code=cat_code,
+            parent=self,
+        )
+        dlg.exec()
+        self._load_subcategories(cat_id)
 
 
 # =============================================================================

@@ -1,9 +1,9 @@
 # =============================================================================
-#  ui/bulk_coding_import_dialog.py  –  Importazione massiva Macchine e Gruppi
+#  ui/bulk_commercial_import_dialog.py  –  Importazione massiva Categorie/Sottocategorie
 # =============================================================================
 from __future__ import annotations
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QGroupBox,
     QTableWidget, QTableWidgetItem, QHeaderView, QTextEdit,
     QMessageBox
@@ -14,44 +14,37 @@ from PyQt6.QtGui import QColor
 from ui.session import session
 
 
-# ---------------------------------------------------------------------------
-# Dialog principale
-# ---------------------------------------------------------------------------
-
-class BulkCodingImportDialog(QDialog):
+class BulkCommercialImportDialog(QDialog):
     """
-    Wizard per importare una serie di Macchine o Gruppi tramite lista libera.
+    Importazione massiva di Categorie o Sottocategorie commerciali/normalizzate.
 
-    mode  = "machines"  → gestisce tabella machines
-    mode  = "groups"    → gestisce tabella machine_groups per machine_id
+    mode = "categories"    → crea categorie per item_type
+    mode = "subcategories" → crea sottocategorie per category_id
     """
 
     _STATUS_NEW   = "✅ Nuovo"
     _STATUS_EXIST = "ℹ️ Esistente"
     _STATUS_ERR   = "⚠️ Errore"
 
-    def __init__(self, mode: str = "machines",
-                 machine_id: int | None = None,
-                 machine_code: str = "",
+    def __init__(self, mode: str = "categories",
+                 item_type: str = "commerciale",
+                 category_id: int | None = None,
+                 category_code: str = "",
                  parent=None):
         super().__init__(parent)
-        self._mode        = mode          # "machines" | "groups"
-        self._machine_id  = machine_id
-        self._machine_code = machine_code
-        self._preview_rows: list[dict] = []   # [{"code","desc","status","note"}]
+        self._mode        = mode
+        self._item_type   = item_type
+        self._category_id = category_id
+        self._preview_rows: list[dict] = []
 
-        cfg = session.coding.get_scheme_config()
-        if mode == "machines":
-            self._code_type   = cfg.mach_code_type
-            self._code_length = cfg.mach_code_length
-            title = "Importa Macchine"
+        if mode == "categories":
+            tipo = "Commerciali (5)" if item_type == "commerciale" else "Normalizzati (6)"
+            title = f"Importa Categorie — {tipo}"
         else:
-            self._code_type   = cfg.grp_code_type
-            self._code_length = cfg.grp_code_length
-            title = f"Importa Gruppi  —  Macchina: {machine_code}"
+            title = f"Importa Sottocategorie — Categoria: {category_code}"
 
         self.setWindowTitle(title)
-        self.setMinimumSize(700, 520)
+        self.setMinimumSize(680, 500)
         self._build_ui()
 
     # ==================================================================
@@ -62,14 +55,6 @@ class BulkCodingImportDialog(QDialog):
         root.setSpacing(10)
         root.setContentsMargins(16, 16, 16, 16)
 
-        # Info schema
-        what = "Macchina" if self._mode == "machines" else "Gruppo"
-        info = QLabel(
-            f"Schema attivo — {what}: <b>{self._code_type}</b>, "
-            f"<b>{self._code_length}</b> caratteri"
-        )
-        root.addWidget(info)
-
         # Lista libera
         input_grp = QGroupBox("Lista libera")
         input_lyt = QVBoxLayout(input_grp)
@@ -77,17 +62,24 @@ class BulkCodingImportDialog(QDialog):
 
         lbl = QLabel(
             "Inserisci una riga per codice nel formato  <b>CODICE ; Descrizione</b>\n"
-            "(la descrizione è opzionale)"
+            "(la descrizione è opzionale — codice max 10 caratteri)"
         )
         lbl.setWordWrap(True)
         input_lyt.addWidget(lbl)
 
         self._txt_lista = QTextEdit()
-        self._txt_lista.setPlaceholderText(
-            "ABC ; Macchina ABC\n"
-            "DEF ; Macchina DEF\n"
-            "GHI"
-        )
+        if self._mode == "categories":
+            self._txt_lista.setPlaceholderText(
+                "VIT ; Viteria\n"
+                "BUL ; Bulloneria\n"
+                "RON"
+            )
+        else:
+            self._txt_lista.setPlaceholderText(
+                "ISO ; Metriche ISO\n"
+                "UNI ; Norme UNI\n"
+                "DIN"
+            )
         input_lyt.addWidget(self._txt_lista)
         root.addWidget(input_grp)
 
@@ -129,29 +121,32 @@ class BulkCodingImportDialog(QDialog):
     # Logica analisi
     # ==================================================================
     def _run_analysis(self):
-        """Legge input dalla lista libera, valida e popola la preview."""
         rows = self._rows_from_lista()
-
         if not rows:
             QMessageBox.warning(self, "Nessun dato", "Nessun codice da analizzare.")
             return
 
-        # Carica codici esistenti per confronto rapido
-        if self._mode == "machines":
-            existing = {m["code"] for m in session.coding.get_machines(only_active=False)}
+        # Codici già esistenti
+        if self._mode == "categories":
+            existing = {
+                c["code"]
+                for c in session.commercial.get_categories(item_type=self._item_type)
+            }
         else:
-            existing = {g["code"] for g in session.coding.get_groups(
-                self._machine_id, only_active=False
-            )} if self._machine_id else set()
+            existing = {
+                s["code"]
+                for s in session.commercial.get_subcategories(self._category_id)
+            } if self._category_id else set()
 
         preview = []
         for code, desc in rows:
-            ok, err = session.coding.validate_code_string(
-                code, self._code_type, self._code_length
-            )
-            if not ok:
+            if not code:
                 preview.append({"code": code, "desc": desc,
-                                 "status": self._STATUS_ERR, "note": err})
+                                 "status": self._STATUS_ERR, "note": "codice vuoto"})
+            elif len(code) > 10:
+                preview.append({"code": code, "desc": desc,
+                                 "status": self._STATUS_ERR,
+                                 "note": "codice supera 10 caratteri"})
             elif code in existing:
                 preview.append({"code": code, "desc": desc,
                                  "status": self._STATUS_EXIST, "note": "già presente"})
@@ -215,25 +210,31 @@ class BulkCodingImportDialog(QDialog):
         if not to_insert:
             return
 
-        try:
-            if self._mode == "machines":
-                result = session.coding.bulk_import_machines(to_insert)
-            else:
-                result = session.coding.bulk_import_groups(self._machine_id, to_insert)
-        except Exception as e:
-            QMessageBox.critical(self, "Errore importazione", str(e))
-            return
+        inserted = 0
+        errors = []
+        for item in to_insert:
+            try:
+                if self._mode == "categories":
+                    session.commercial.create_category(
+                        item["code"], item["description"], self._item_type
+                    )
+                else:
+                    session.commercial.create_subcategory(
+                        self._category_id, item["code"], item["description"], ""
+                    )
+                inserted += 1
+            except Exception as e:
+                errors.append(f"{item['code']}: {e}")
 
         msg = (
             f"Importazione completata:\n\n"
-            f"  Inseriti:  {result['inserted']}\n"
-            f"  Saltati:   {result['skipped']}\n"
-            f"  Errori:    {len(result['errors'])}"
+            f"  Inseriti:  {inserted}\n"
+            f"  Errori:    {len(errors)}"
         )
-        if result["errors"]:
-            msg += "\n\nErrori:\n" + "\n".join(result["errors"][:10])
+        if errors:
+            msg += "\n\nErrori:\n" + "\n".join(errors[:10])
 
         QMessageBox.information(self, "Importazione completata", msg)
 
-        # Rianalizza per aggiornare la preview (i nuovi diventano "esistenti")
+        # Rianalizza per aggiornare la preview
         self._run_analysis()

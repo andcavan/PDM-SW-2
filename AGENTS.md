@@ -26,3 +26,9 @@
 - Usa riferimenti file con path cliccabile quando spieghi modifiche.
 - Se ci sono rischi o limiti, dichiarali in modo esplicito.
 - Se utile, proponi massimo 3 prossimi passi numerati.
+
+## Strutturazione
+- Python - Linguaggio programmazione
+
+## UI
+- PyQt6 – interfaccia grafica
